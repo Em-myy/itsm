@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -20,6 +21,7 @@ export default function Home() {
     email: "",
     password: "",
   });
+  const [email, setEmail] = useState<string>("");
   const supabase = createClient();
   const router = useRouter();
 
@@ -40,7 +42,7 @@ export default function Home() {
   ): Promise<void> => {
     event.preventDefault();
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: signUpForm.email,
       password: signUpForm.password,
       options: {
@@ -161,6 +163,10 @@ export default function Home() {
               <button>Sign In</button>
             </form>
           </div>
+        </div>
+
+        <div>
+          <Link href="/forgot-password">Forgot Password</Link>
         </div>
       </main>
     </div>
