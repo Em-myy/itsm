@@ -45,7 +45,7 @@ export default function Home() {
       email: signUpForm.email,
       password: signUpForm.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/home`,
         data: {
           username: signUpForm.username,
         },
@@ -54,6 +54,7 @@ export default function Home() {
 
     if (error) {
       console.log(error);
+      return;
     }
   };
 
@@ -69,9 +70,10 @@ export default function Home() {
 
     if (error) {
       console.log(error);
+      return;
+    } else {
+      router.push("/home");
     }
-
-    router.push("/dashboard");
   };
 
   return (
