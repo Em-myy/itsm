@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-type formType = {
+interface formType {
   username?: string;
   email: string;
   password: string;
-};
+}
 
 export default function Home() {
   const [signUpForm, setSignUpForm] = useState<formType>({
