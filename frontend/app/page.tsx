@@ -21,7 +21,6 @@ export default function Home() {
     email: "",
     password: "",
   });
-  const [email, setEmail] = useState<string>("");
   const supabase = createClient();
   const router = useRouter();
 
@@ -63,16 +62,16 @@ export default function Home() {
   ): Promise<void> => {
     event.preventDefault();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: signInForm.email,
       password: signInForm.password,
     });
 
-    router.push("/dashboard");
-
     if (error) {
       console.log(error);
     }
+
+    router.push("/dashboard");
   };
 
   return (
@@ -82,11 +81,7 @@ export default function Home() {
         <div>
           <h2>Sign Up</h2>
           <div>
-            <form
-              onSubmit={(event: React.ChangeEvent<HTMLFormElement>) =>
-                handleSignUp(event)
-              }
-            >
+            <form onSubmit={handleSignUp}>
               <div>
                 <label>Username: </label>
                 <input
@@ -94,9 +89,7 @@ export default function Home() {
                   value={signUpForm.username}
                   name="username"
                   required
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    handleSignUpChange(event)
-                  }
+                  onChange={handleSignUpChange}
                 />
               </div>
               <div>
@@ -106,9 +99,7 @@ export default function Home() {
                   value={signUpForm.email}
                   name="email"
                   required
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    handleSignUpChange(event)
-                  }
+                  onChange={handleSignUpChange}
                 />
               </div>
               <div>
@@ -118,9 +109,7 @@ export default function Home() {
                   value={signUpForm.password}
                   name="password"
                   required
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    handleSignUpChange(event)
-                  }
+                  onChange={handleSignUpChange}
                 />
               </div>
               <button>Sign Up</button>
@@ -131,11 +120,7 @@ export default function Home() {
         <div>
           <h2>Sign In</h2>
           <div>
-            <form
-              onSubmit={(event: React.ChangeEvent<HTMLFormElement>) =>
-                handleSignIn(event)
-              }
-            >
+            <form onSubmit={handleSignIn}>
               <div>
                 <label>E-Mail: </label>
                 <input
@@ -143,9 +128,7 @@ export default function Home() {
                   name="email"
                   value={signInForm.email}
                   required
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    handleSignInChange(event)
-                  }
+                  onChange={handleSignInChange}
                 />
               </div>
               <div>
@@ -155,9 +138,7 @@ export default function Home() {
                   name="password"
                   value={signInForm.password}
                   required
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    handleSignInChange(event)
-                  }
+                  onChange={handleSignInChange}
                 />
               </div>
               <button>Sign In</button>
