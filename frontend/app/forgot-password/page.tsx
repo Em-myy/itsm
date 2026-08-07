@@ -24,21 +24,10 @@ const ForgotPage = () => {
     <div>
       <h1>Forgot Password Page</h1>
       <p>Input your email</p>
-      <form
-        onSubmit={(event: React.ChangeEvent<HTMLFormElement>) =>
-          handleSubmit(event)
-        }
-      >
+      <form onSubmit={handleSubmit}>
         <div>
           <label>E-mail: </label>
-          <input
-            type="email"
-            name="email"
-            required
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              handleChange(event)
-            }
-          />
+          <input type="email" name="email" required onChange={handleChange} />
         </div>
         <button>Forgot Password</button>
       </form>
