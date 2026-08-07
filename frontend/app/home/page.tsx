@@ -1,23 +1,14 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const HomePage = () => {
-  const supabase = createClient();
-  const router = useRouter();
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.log(error);
-    }
-    router.push("/");
-  };
+  const { handleSignout, user } = useAuth();
   return (
     <div>
       <h1>This is the home page</h1>
-      <button type="button" onClick={signOut}>
+      <h2>Welcome {user?.email}</h2>
+      <button type="button" onClick={handleSignout}>
         Sign Out
       </button>
     </div>
