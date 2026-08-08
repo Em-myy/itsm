@@ -1,5 +1,6 @@
 "use client";
 
+import GoogleButton from "@/components/GoogleButton";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -45,7 +46,7 @@ export default function Home() {
       email: signUpForm.email,
       password: signUpForm.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/home`,
+        emailRedirectTo: `${window.location.origin}/home`,
         data: {
           username: signUpForm.username,
         },
@@ -150,6 +151,10 @@ export default function Home() {
 
         <div>
           <Link href="/forgot-password">Forgot Password</Link>
+        </div>
+
+        <div>
+          <GoogleButton />
         </div>
       </main>
     </div>
