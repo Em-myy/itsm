@@ -18,6 +18,7 @@ export default function Home() {
     email: "",
     password: "",
   });
+  const [department, setDepartment] = useState<string>("");
   const [signInForm, setSignInForm] = useState<formType>({
     email: "",
     password: "",
@@ -31,6 +32,12 @@ export default function Home() {
     setSignUpForm({ ...signUpForm, [event.target.name]: event.target.value });
   };
 
+  const handleDepartment = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ): void => {
+    setDepartment(event.target.value);
+  };
+
   const handleSignInChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
@@ -42,6 +49,11 @@ export default function Home() {
   ): Promise<void> => {
     event.preventDefault();
 
+    if (!department) {
+      console.log("Select a Department");
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
       email: signUpForm.email,
       password: signUpForm.password,
@@ -49,6 +61,7 @@ export default function Home() {
         emailRedirectTo: `${window.location.origin}/home`,
         data: {
           username: signUpForm.username,
+          department: department,
         },
       },
     });
@@ -114,6 +127,18 @@ export default function Home() {
                   required
                   onChange={handleSignUpChange}
                 />
+              </div>
+              <div>
+                <label>Department: </label>
+                <select value={department} onChange={handleDepartment}>
+                  <option value="">Select a department</option>
+                  <option value="Admin/HR">Admin/HR</option>
+                  <option value="Environment">Environment</option>
+                  <option value="Education">Education</option>
+                  <option value="Tourism">Tourism</option>
+                  <option value="Finance">Finance</option>
+                  <option value="ICT">ICT</option>
+                </select>
               </div>
               <button>Sign Up</button>
             </form>
