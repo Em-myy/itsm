@@ -8,6 +8,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 interface authContextType {
   user: User | null;
   loading: boolean;
+  avatar: any;
+  initials: string;
   handleSignout: () => void;
 }
 
@@ -51,8 +53,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.push("/");
   };
 
+  const avatar =
+    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+
+  const displayName =
+    user?.user_metadata?.username ||
+    user?.user_metadata?.display_name ||
+    user?.user_metadata?.full_name ||
+    user?.email ||
+    "Unknown User";
+
+  const initials =
+    displayName !== "Unknown User" ? displayName.charAt(0).toUpperCase() : "?";
+
   return (
-    <AuthContext.Provider value={{ user, loading, handleSignout }}>
+    <AuthContext.Provider
+      value={{ user, loading, avatar, initials, handleSignout }}
+    >
       {children}
     </AuthContext.Provider>
   );
