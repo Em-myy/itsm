@@ -1,9 +1,20 @@
-const NavBar = () => {
-  return (
-    <div>
-     <h2>Search Tickets</h2>
-    </div>
-  )
-}
+"use client";
 
-export default NavBar
+import { useAuth } from "@/context/AuthContext";
+
+const Navbar = () => {
+  const { avatar, initials } = useAuth();
+  return (
+    <div className="w-5xl">
+      <div className="flex justify-between">
+        <div>Search Tickets</div>
+        <div className="flex gap-1">
+          <h2>Role</h2>
+          {avatar ? <div>{avatar}</div> : <div>{initials}</div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Navbar;
