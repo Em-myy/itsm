@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"itsm/database"
 	"log"
@@ -17,13 +16,13 @@ func main() {
 		log.Fatal("Error loading .env")
 	}
 
-	conn, err := database.Connect()
+	pool, err := database.Connect()
 
 	if err != nil {
 		log.Fatal("Database connection failed: ", err)
 	}
 
-	defer conn.Close(context.Background())
+	defer pool.Close()
 
 	fmt.Println("Connected to postgres database")
 
