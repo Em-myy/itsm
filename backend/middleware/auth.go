@@ -1,0 +1,71 @@
+package middleware
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/MicahParks/keyfunc/v2"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type contextKey string
+
+const UserIDKey contextKey = "userId"
+
+func SupabaseAuth(supabaseURL string) (func(http.Handler) http.Handler, error) {
+	jwksURL := fmt.Sprintf("%s/auth/v1/.well-known/jwks.json", supabaseURL)
+
+	options := keyfunc.Options{
+		RefreshInterval: time.Hour,
+		RefreshTimeout:  time.Second * 10,
+		RefreshErrorHandler: func(err error) {
+			fmt.Printf("Error refreshing Supabase JWKS: %s\n", err.Error())
+		},
+	}
+
+	jwks, err := keyfunc.Get(jwksURL, options)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to fetch JWKS from Supabase: %w", err)
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				http.Error(w, "Missing authorization header", http.StatusUnauthorized)
+				return
+			}
+
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				http.Error(w, "Missing authorization header format", http.StatusUnauthorized)
+				return
+			}
+			tokenString := parts[1]
+
+			token, err := jwt.Parse(tokenString, jwks.Keyfunc)
+			if err != nil {
+				http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+				return
+			}
+
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok {
+				http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+				return
+			}
+
+			userID, ok := claims["sub"].(string)
+			if !ok {
+				http.Error(w, "User ID not found in token", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}, nil
+}
