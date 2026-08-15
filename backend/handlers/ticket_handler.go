@@ -50,7 +50,7 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		Priority:     input.Priority,
 		RelatedAsset: input.RelatedAsset,
 		Description:  input.Description,
-		RequesterId:  input.RequesterId,
+		RequesterId:  userID,
 		AssigneeId:   input.AssigneeId,
 		Picture:      input.Picture,
 	}
