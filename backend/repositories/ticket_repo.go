@@ -10,8 +10,8 @@ import (
 
 func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket) (int, error) {
 	query := `
-		INSERT INTO tickets (id, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO tickets (title, category, department, priority, related_asset, description, requester_id, picture)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
 		`
 	var newID int
@@ -25,7 +25,6 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 		ticket.RelatedAsset,
 		ticket.Description,
 		ticket.RequesterId,
-		ticket.AssigneeId,
 		ticket.Picture,
 	).Scan(&newID)
 	if err != nil {
@@ -75,7 +74,7 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 	query := `
 		SELECT id, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
-		WHERE requesterId == $1
+		WHERE requester_Id = $1
 		ORDER BY created_at DESC
 		`
 	rows, err := pool.Query(ctx, query, requesterID)
