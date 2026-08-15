@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"itsm/database"
+	"itsm/routes"
 	"log"
 	"net/http"
 
@@ -30,11 +31,11 @@ func main() {
 		fmt.Fprintln(w, "ITSM backend is running")
 	})
 
+	router := routes.SetupRouter(pool)
+
 	fmt.Println("Server is running on http://localhost:8080")
 
-	err = http.ListenAndServe(":8080", nil)
-
-	if err != nil {
+	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatal(err)
 	}
 }
