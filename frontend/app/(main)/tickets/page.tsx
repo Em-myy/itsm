@@ -19,7 +19,7 @@ const TicketsPage = () => {
   const [tickets, setTickets] = useState<TicketType[] | null>(null);
 
   useEffect(() => {
-    const fetchTickets = async () => {
+    const fetchTickets = async (): Promise<void> => {
       try {
         const response = await api.get("/tickets/mine");
         setTickets(response.data);
