@@ -31,7 +31,7 @@ const HomePage = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const fetchTickets = async () => {
+    const fetchTickets = async (): Promise<void> => {
       try {
         const response = await api.get("/tickets/mine");
         setTickets(response.data);
