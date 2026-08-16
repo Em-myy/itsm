@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket) (int, error) {
-	query := `
+func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket) (int, string, error) {
+	insertQuery := `
 		INSERT INTO tickets (title, category, department, priority, related_asset, description, requester_id, picture)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
@@ -17,7 +17,7 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 	var newID int
 	err := pool.QueryRow(
 		ctx,
-		query,
+		insertQuery,
 		ticket.Title,
 		ticket.Category,
 		ticket.Department,
@@ -28,14 +28,28 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 		ticket.Picture,
 	).Scan(&newID)
 	if err != nil {
-		return 0, fmt.Errorf("Failed to create ticket: %w", err)
+		return 0, "", fmt.Errorf("Failed to create ticket: %w", err)
 	}
-	return newID, nil
+
+	updateQuery := `
+		UPDATE tickets
+		SET reference = 'TKT.' || TO_CHAR(created_at, 'YYYY') || '.' || TO_CHAR(id, 'FM000')
+		WHERE id = $1
+		RETURNING reference;
+	`
+	var newRef string
+	err = pool.QueryRow(ctx, updateQuery, &newID).Scan(&newRef)
+
+	if err != nil {
+		return 0, "", fmt.Errorf("Failed to update ticket reference: %w", err)
+	}
+
+	return newID, newRef, nil
 }
 
 func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error) {
 	query := `
-		SELECT title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		SELECT id, reference, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
 		ORDER BY created_at DESC
 		`
@@ -50,6 +64,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 		var t models.Ticket
 		err := rows.Scan(
 			&t.ID,
+			&t.Reference,
 			&t.Title,
 			&t.Category,
 			&t.Department,
@@ -72,9 +87,9 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 
 func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID string) ([]models.Ticket, error) {
 	query := `
-		SELECT id, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		SELECT id, reference, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
-		WHERE requester_Id = $1
+		WHERE requester_id = $1
 		ORDER BY created_at DESC
 		`
 	rows, err := pool.Query(ctx, query, requesterID)
@@ -88,6 +103,7 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 		var t models.Ticket
 		err := rows.Scan(
 			&t.ID,
+			&t.Reference,
 			&t.Title,
 			&t.Category,
 			&t.Department,
