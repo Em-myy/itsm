@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"itsm/database"
+	"itsm/middleware"
 	"itsm/routes"
 	"log"
 	"net/http"
@@ -35,7 +36,9 @@ func main() {
 
 	fmt.Println("Server is running on http://localhost:8080")
 
-	if err := http.ListenAndServe(":8080", router); err != nil {
+	handler := middleware.CorsMiddleware(router)
+
+	if err := http.ListenAndServe(":8080", handler); err != nil {
 		log.Fatal(err)
 	}
 }
