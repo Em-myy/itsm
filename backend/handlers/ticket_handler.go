@@ -55,7 +55,7 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		Picture:      input.Picture,
 	}
 
-	id, err := repositories.CreateTicket(r.Context(), h.DB, ticket)
+	id, ref, err := repositories.CreateTicket(r.Context(), h.DB, ticket)
 	if err != nil {
 		log.Println("Error creating ticket:", err)
 		http.Error(w, "Could not create ticket", http.StatusInternalServerError)
@@ -67,7 +67,26 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":   "Ticket created successfully",
 		"ticket_id": id,
+		"reference": ref,
 	})
+}
+
+func (h *TicketHandler) GetTickets(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tickets, err := repositories.GetTickets(r.Context(), h.DB)
+	if err != nil {
+		log.Println("Error fetching tickets:", err)
+		http.Error(w, "Could not fetch tickets", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tickets)
 }
 
 func (h *TicketHandler) GetMyTickets(w http.ResponseWriter, r *http.Request) {
