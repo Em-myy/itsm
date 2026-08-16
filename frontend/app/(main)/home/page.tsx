@@ -1,8 +1,10 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import api from "@/src/lib/axios";
 import { Calendar, Edit2, Menu, MoveRight } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface cardType {
   icon: React.ReactNode;
@@ -12,8 +14,33 @@ interface cardType {
   link: string;
 }
 
+interface TicketType {
+  reference: string;
+  title: string;
+  category: string;
+  department: string;
+  priority: string;
+  related_asset: string;
+  description: string;
+  created_at: string;
+}
+
 const HomePage = () => {
+  const [tickets, setTickets] = useState<TicketType[] | null>(null);
+
   const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await api.get("/tickets/mine");
+        setTickets(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchTickets();
+  }, []);
 
   const hour = new Date().getHours();
 
@@ -40,7 +67,7 @@ const HomePage = () => {
       title: "My tickets",
       text: "See where every request you've filled currently stands.",
       path: "View history",
-      link: "ticket",
+      link: "tickets",
     },
   ];
   return (
@@ -64,6 +91,30 @@ const HomePage = () => {
             </div>
           </Link>
         ))}
+      </div>
+
+      <div>
+        <h3>Recent Requests</h3>
+        <div>
+          {tickets === null ? (
+            <h2>
+              No tickets filed yet......{" "}
+              <Link href="submit-ticket">Report an issue</Link>
+            </h2>
+          ) : (
+            tickets?.map((ticket) => (
+              <div key={ticket.reference}>
+                <div>{ticket.title}</div>
+                <div>
+                  <div>{ticket.department}</div>
+                  <div>{ticket.category}</div>
+                  <div>{ticket.priority}</div>
+                </div>
+                <div>{ticket.reference}</div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
