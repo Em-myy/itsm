@@ -27,6 +27,7 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 	})
 
 	mux.Handle("POST /tickets", authMiddleware(http.HandlerFunc(ticketHandler.CreateTicket)))
+	mux.Handle("GET /tickets", authMiddleware(http.HandlerFunc(ticketHandler.GetTickets)))
 	mux.Handle("GET /tickets/mine", authMiddleware(http.HandlerFunc(ticketHandler.GetMyTickets)))
 
 	mux.Handle("POST /users/sync", authMiddleware(http.HandlerFunc(userHandler.SyncProfile)))
