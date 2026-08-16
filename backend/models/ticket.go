@@ -4,6 +4,7 @@ import "time"
 
 type Ticket struct {
 	ID           int       `json:"id"`
+	Reference    string    `json:"reference"`
 	Title        string    `json:"title"`
 	Category     string    `json:"category"`
 	Department   string    `json:"department"`
