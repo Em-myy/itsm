@@ -15,6 +15,7 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 
 	ticketHandler := handlers.NewTicketHandler(db)
 	userHandler := handlers.NewUserHandler(db)
+	roleHandler := handlers.NewRoleHandler(db)
 
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	authMiddleware, err := middleware.SupabaseAuth(supabaseURL)
@@ -31,6 +32,8 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 	mux.Handle("GET /tickets/mine", authMiddleware(http.HandlerFunc(ticketHandler.GetMyTickets)))
 
 	mux.Handle("POST /users/sync", authMiddleware(http.HandlerFunc(userHandler.SyncProfile)))
+
+	mux.Handle("GET /role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
 
 	return mux
 }
