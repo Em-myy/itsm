@@ -10,7 +10,7 @@ const Navbar = () => {
         <div>Search Tickets</div>
         <div className="flex gap-1">
           <h2>Role</h2>
-          {avatar ? <div>{avatar}</div> : <div>{initials}</div>}
+          <div>{avatar ? <div>{avatar}</div> : <div>{initials}</div>}</div>
         </div>
       </div>
     </div>
