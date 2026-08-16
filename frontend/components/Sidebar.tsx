@@ -12,7 +12,7 @@ interface NavType {
 
 const Sidebar = () => {
   const Nav: NavType[] = [
-    { icon: <HomeIcon />, name: "Dashboard", path: "dashboard" },
+    { icon: <HomeIcon />, name: "Dashboard", path: "home" },
     { icon: <Edit2 />, name: "Submit a ticket", path: "submit-ticket" },
     { icon: <Menu />, name: "My tickets", path: "tickets" },
     { icon: <Calendar />, name: "Venue calendar", path: "calendar" },
