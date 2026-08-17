@@ -27,7 +27,7 @@ interface SelectType {
 
 const SubmitTicketPage = () => {
   const [tickets, setTickets] = useState<TicketType[] | null>(null);
-  const [inputElements, setInputElements] = useState({
+  const [inputElements, setInputElements] = useState<InputType>({
     title: "",
     priority: "",
   });
