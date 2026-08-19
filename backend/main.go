@@ -10,7 +10,6 @@ import (
 
 	"github.com/joho/godotenv"
 )
-matbe
 
 func main() {
 	err := godotenv.Load()
