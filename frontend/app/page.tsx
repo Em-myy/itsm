@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface FormType {
   username?: string;
@@ -33,6 +33,7 @@ interface FormPanelProps {
   showPassword: boolean;
   loading: boolean;
   message: Message | null;
+  showDoorTransition: boolean;
   onSignUpChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSignInChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDepartmentChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -140,6 +141,7 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<Message | null>(null);
+  const [showDoorTransition, setShowDoorTransition] = useState<boolean>(false);
 
   const supabase = createClient();
   const router = useRouter();
@@ -219,10 +221,24 @@ export default function Home() {
     if (error) {
       setMessage({ type: "error", text: error.message });
       return;
-    } else {
-      router.push("/home");
     }
+
+    setShowDoorTransition(true);
   };
+
+  useEffect(() => {
+    if (!showDoorTransition) return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const timer = setTimeout(
+      () => router.push("/home"),
+      prefersReducedMotion ? 150 : 1100,
+    );
+
+    return () => clearTimeout(timer);
+  }, [showDoorTransition, router]);
 
   const formPanelProps: FormPanelProps = {
     mode,
@@ -233,6 +249,7 @@ export default function Home() {
     showPassword,
     loading,
     message,
+    showDoorTransition,
     onSignUpChange: handleSignUpChange,
     onSignInChange: handleSignInChange,
     onDepartmentChange: handleDepartmentChange,
@@ -256,6 +273,24 @@ export default function Home() {
         }
         @media (max-width: 767px) {
           .diagonal-end { clip-path: none; margin-left: 0; }
+        }
+        @keyframes btnDoorSwing {
+          from { transform: rotateY(0deg); }
+          to { transform: rotateY(-100deg); }
+        }
+        @keyframes btnWalkerEnter {
+          0% { transform: translateX(0); opacity: 1; }
+          70% { transform: translateX(32px); opacity: 1; }
+          100% { transform: translateX(38px); opacity: 0; }
+        }
+        .door-btn-scene { perspective: 200px; }
+        .door-btn-panel {
+          transform-origin: left center;
+          animation: btnDoorSwing 450ms 150ms ease-in-out both;
+        }
+        .door-btn-walker { animation: btnWalkerEnter 900ms 150ms ease-in both; }
+        @media (prefers-reduced-motion: reduce) {
+          .door-btn-panel, .door-btn-walker { animation: none !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           .panel-fade { animation: none; }
@@ -377,6 +412,56 @@ const Field = ({
   );
 };
 
+const ButtonDoorScene = (): React.ReactElement => {
+  return (
+    <span className="door-btn-scene relative inline-flex h-6 w-16 items-center">
+      <span
+        className="door-btn-walker absolute flex flex-col items-center"
+        style={{ left: 2, top: "50%", marginTop: -5, width: 6 }}
+      >
+        <span
+          className="block rounded-full"
+          style={{
+            width: 4,
+            height: 4,
+            marginBottom: 1,
+            background: "#FFFFFF",
+          }}
+        />
+        <span
+          className="block"
+          style={{
+            width: 5,
+            height: 6,
+            borderRadius: "2px 2px 1px 1px",
+            background: "#FFFFFF",
+          }}
+        />
+      </span>
+      <span
+        className="absolute rounded-sm"
+        style={{
+          right: 2,
+          top: 1,
+          width: 12,
+          height: 22,
+          border: "2px solid #FFFFFF",
+        }}
+      />
+      <span
+        className="door-btn-panel absolute rounded-sm"
+        style={{
+          right: 2,
+          top: 1,
+          width: 12,
+          height: 22,
+          background: "#FFFFFF",
+        }}
+      />
+    </span>
+  );
+};
+
 const FormPanel = ({
   mode,
   onSwitch,
@@ -386,6 +471,7 @@ const FormPanel = ({
   showPassword,
   loading,
   message,
+  showDoorTransition,
   onSignUpChange,
   onSignInChange,
   onDepartmentChange,
@@ -555,13 +641,19 @@ const FormPanel = ({
               (e.currentTarget.style.background = palette.button)
             }
           >
-            {loading
-              ? isSignUp
-                ? "Creating account..."
-                : "Signing in..."
-              : isSignUp
-                ? "Create account"
-                : "Sign in"}
+            {showDoorTransition ? (
+              <ButtonDoorScene />
+            ) : loading ? (
+              isSignUp ? (
+                "Creating account..."
+              ) : (
+                "Signing in..."
+              )
+            ) : isSignUp ? (
+              "Create account"
+            ) : (
+              "Sign in"
+            )}
           </button>
         </form>
 
