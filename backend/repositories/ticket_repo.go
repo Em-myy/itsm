@@ -51,7 +51,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 	query := `
 		SELECT id, reference, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
-		ORDER BY created_at DESC
+		ORDER BY created_at DESC;
 		`
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
@@ -90,7 +90,7 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 		SELECT id, reference, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
 		WHERE requester_id = $1
-		ORDER BY created_at DESC
+		ORDER BY created_at DESC;
 		`
 	rows, err := pool.Query(ctx, query, requesterID)
 	if err != nil {
