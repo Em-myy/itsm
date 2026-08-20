@@ -85,6 +85,10 @@ func (h *TicketHandler) GetTickets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if tickets == nil {
+		tickets = []models.Ticket{}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tickets)
 }
@@ -101,6 +105,10 @@ func (h *TicketHandler) GetMyTickets(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error fetching tickets:", err)
 		http.Error(w, "Could not fetch tickets", http.StatusInternalServerError)
 		return
+	}
+
+	if tickets == nil {
+		tickets = []models.Ticket{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
