@@ -12,7 +12,7 @@ interface RoleType {
 
 const Navbar = () => {
   const [role, setRole] = useState<RoleType | null>(null);
-  const { avatar, initials } = useAuth();
+  const { avatar, initials, displayName } = useAuth();
 
   useEffect(() => {
     const fetchRoles = async (): Promise<void> => {
@@ -31,7 +31,13 @@ const Navbar = () => {
         <div>Search Tickets</div>
         <div className="flex gap-1">
           <h2>{role?.name}</h2>
-          <div>{avatar ? <div>{avatar}</div> : <div>{initials}</div>}</div>
+          <div>
+            {avatar ? (
+              <img src={avatar} alt={displayName} />
+            ) : (
+              <div>{initials}</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
