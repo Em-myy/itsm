@@ -17,6 +17,7 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 	userHandler := handlers.NewUserHandler(db)
 	roleHandler := handlers.NewRoleHandler(db)
 	bookingHandler := handlers.NewBookingHandler(db)
+	venueHandler := handlers.NewVenueHandler(db)
 
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	authMiddleware, err := middleware.SupabaseAuth(supabaseURL)
@@ -28,7 +29,7 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 		w.Write([]byte("ITSM backend is working"))
 	})
 
-	mux.Handle("POST /tickets", authMiddleware(http.HandlerFunc(ticketHandler.CreateTicket)))
+	mux.Handle("POST /ticket", authMiddleware(http.HandlerFunc(ticketHandler.CreateTicket)))
 	mux.Handle("GET /tickets", authMiddleware(http.HandlerFunc(ticketHandler.GetTickets)))
 	mux.Handle("GET /tickets/mine", authMiddleware(http.HandlerFunc(ticketHandler.GetMyTickets)))
 
@@ -36,9 +37,12 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 
 	mux.Handle("GET /role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
 
-	mux.Handle("POST /bookings", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
+	mux.Handle("POST /booking", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
 	mux.Handle("GET /bookings", authMiddleware(http.HandlerFunc(bookingHandler.GetBookings)))
 	mux.Handle("GET /bookings/mine", authMiddleware(http.HandlerFunc(bookingHandler.GetMyBooking)))
+
+	mux.Handle("POST /venue", authMiddleware(http.HandlerFunc(venueHandler.CreateVenue)))
+	mux.Handle("GET /venues", authMiddleware(http.HandlerFunc(venueHandler.GetVenues)))
 
 	return mux
 }
