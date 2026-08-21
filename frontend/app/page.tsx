@@ -38,8 +38,8 @@ interface FormPanelProps {
   onSignInChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onDepartmentChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onTogglePassword: () => void;
-  onSignUp: (e: React.ChangeEvent<HTMLFormElement>) => void;
-  onSignIn: (e: React.ChangeEvent<HTMLFormElement>) => void;
+  onSignUp: (e: React.SubmitEvent<HTMLFormElement>) => void;
+  onSignIn: (e: React.SubmitEvent<HTMLFormElement>) => void;
 }
 
 type Mode = "signin" | "signup";
@@ -170,7 +170,7 @@ export default function Home() {
   };
 
   const handleSignUp = async (
-    event: React.ChangeEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
     setMessage(null);
@@ -206,7 +206,7 @@ export default function Home() {
   };
 
   const handleSignIn = async (
-    event: React.ChangeEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
     setMessage(null);
