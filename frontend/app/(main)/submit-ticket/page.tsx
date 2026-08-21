@@ -72,7 +72,7 @@ const SubmitTicketPage = () => {
   };
 
   const handleSubmit = async (
-    event: React.ChangeEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
 
@@ -87,7 +87,7 @@ const SubmitTicketPage = () => {
     };
 
     try {
-      const response = await api.post("/tickets", ticketPayload);
+      const response = await api.post("/ticket", ticketPayload);
       console.log(response.data);
     } catch (error) {
       console.log(error);
@@ -200,22 +200,25 @@ const SubmitTicketPage = () => {
                 Related Asset <span>(optional)</span>
               </label>
 
-              {tickets?.map((ticket) => (
-                <div key={ticket.reference}>
-                  <select
-                    name="relatedAsset"
-                    value={selectElements.relatedAsset}
-                    onChange={handleSelectChange}
-                  >
-                    <option value="None - not tied to a registered asset">
-                      None - not tied to a registered asset
-                    </option>
-                    <option value={`${ticket.reference}`}>
+              <div>
+                <select
+                  name="relatedAsset"
+                  value={selectElements.relatedAsset}
+                  onChange={handleSelectChange}
+                >
+                  <option value="None - not tied to a registered asset">
+                    None - not tied to a registered asset
+                  </option>
+                  {tickets?.map((ticket) => (
+                    <option
+                      value={`${ticket.reference}`}
+                      key={ticket.reference}
+                    >
                       {ticket.reference + " - " + ticket.title}
                     </option>
-                  </select>
-                </div>
-              ))}
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
