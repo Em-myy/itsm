@@ -30,7 +30,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		UserId          string    `json:"user_id"`
 		Purpose         string    `json:"purpose"`
-		Venue           string    `json:"Venue"`
+		VenueID         int       `json:"venue_id"`
 		StartTime       time.Time `json:"start_time"`
 		EndTime         time.Time `json:"end_time"`
 		EquipmentNeeded []string  `json:"equipment_needed"`
@@ -45,7 +45,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	booking := models.Booking{
 		UserId:          userID,
 		Purpose:         input.Purpose,
-		Venue:           input.Venue,
+		VenueID:         input.VenueID,
 		StartTime:       input.StartTime,
 		EndTime:         input.EndTime,
 		EquipmentNeeded: input.EquipmentNeeded,
