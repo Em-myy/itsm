@@ -10,7 +10,7 @@ import (
 
 func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booking) (int, error) {
 	query := `
-		INSERT INTO bookings (user_id, purpose, venue, start_time, end_time, equipment_needed, status)
+		INSERT INTO bookings (user_id, purpose, venue_id, start_time, end_time, equipment_needed, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id;
 	`
@@ -21,7 +21,7 @@ func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booki
 		query,
 		booking.UserId,
 		booking.Purpose,
-		booking.Venue,
+		booking.VenueID,
 		booking.StartTime,
 		booking.EndTime,
 		booking.EquipmentNeeded,
@@ -35,9 +35,10 @@ func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booki
 
 func GetBookings(ctx context.Context, pool *pgxpool.Pool) ([]models.Booking, error) {
 	query := `
-		SELECT id, user_id, purpose, venue, start_time, end_time, equipment_needed, status, created_at, updated_at
-		FROM bookings
-		ORDER BY start_time ASC;
+		SELECT b.id, b.user_id, b.purpose, b.venue_id, v.name as venue_name, b.start_time, b.end_time, b.equipment_needed, b.status, b.created_at, b.updated_at
+		FROM bookings b
+		JOIN venues v ON b.venue_id = v.id
+		ORDER BY b.start_time ASC;
 	`
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
@@ -52,7 +53,8 @@ func GetBookings(ctx context.Context, pool *pgxpool.Pool) ([]models.Booking, err
 			&b.ID,
 			&b.UserId,
 			&b.Purpose,
-			&b.Venue,
+			&b.VenueID,
+			&b.VenueName,
 			&b.StartTime,
 			&b.EndTime,
 			&b.EquipmentNeeded,
@@ -70,10 +72,11 @@ func GetBookings(ctx context.Context, pool *pgxpool.Pool) ([]models.Booking, err
 
 func GetBookingByRequester(ctx context.Context, pool *pgxpool.Pool, userId string) ([]models.Booking, error) {
 	query := `
-		SELECT id, user_id, purpose, venue, start_time, end_time, equipment_needed, status, created_at, updated_at
-		FROM bookings
-		WHERE user_id = $1
-		ORDER BY start_time ASC;
+		SELECT b.id, b.user_id, b.purpose, b.venue_id, v.name as venue_name, b.start_time, b.end_time, b.equipment_needed, b.status, b.created_at, b.updated_at
+		FROM bookings b
+		JOIN venues v ON b.venue_id = v.id
+		WHERE b.user_id = $1
+		ORDER BY b.start_time ASC;
 	`
 	rows, err := pool.Query(ctx, query, userId)
 	if err != nil {
@@ -88,7 +91,8 @@ func GetBookingByRequester(ctx context.Context, pool *pgxpool.Pool, userId strin
 			&b.ID,
 			&b.UserId,
 			&b.Purpose,
-			&b.Venue,
+			&b.VenueID,
+			&b.VenueName,
 			&b.StartTime,
 			&b.EndTime,
 			&b.EquipmentNeeded,
