@@ -34,7 +34,6 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		StartTime       time.Time `json:"start_time"`
 		EndTime         time.Time `json:"end_time"`
 		EquipmentNeeded []string  `json:"equipment_needed"`
-		Status          string    `json:"status"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -49,7 +48,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		StartTime:       input.StartTime,
 		EndTime:         input.EndTime,
 		EquipmentNeeded: input.EquipmentNeeded,
-		Status:          input.Status,
+		Status:          "Pending",
 	}
 
 	id, err := repositories.CreateBooking(r.Context(), h.DB, booking)
