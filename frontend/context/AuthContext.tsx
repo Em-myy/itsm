@@ -10,6 +10,7 @@ interface authContextType {
   loading: boolean;
   avatar: any;
   initials: string;
+  displayName: string;
   handleSignout: () => void;
 }
 
@@ -54,13 +55,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const avatar =
-    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
 
   const displayName =
-    user?.user_metadata?.username ||
-    user?.user_metadata?.display_name ||
-    user?.user_metadata?.full_name ||
-    user?.email ||
+    user?.user_metadata?.username ??
+    user?.user_metadata?.display_name ??
+    user?.user_metadata?.full_name ??
+    user?.user_metadata?.name ??
+    user?.email ??
     "Unknown User";
 
   const initials =
@@ -68,7 +70,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, avatar, initials, handleSignout }}
+      value={{ user, loading, avatar, initials, displayName, handleSignout }}
     >
       {children}
     </AuthContext.Provider>
