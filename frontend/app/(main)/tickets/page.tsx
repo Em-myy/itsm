@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface TicketType {
+  id: Number;
   reference: string;
   title: string;
   category: string;
@@ -41,36 +42,36 @@ const TicketsPage = () => {
               <Link href="submit-ticket">Report an issue</Link>
             </h2>
           ) : (
-            tickets?.map((ticket) => (
-              <table key={ticket.reference}>
-                <thead>
-                  <tr>
-                    <td>REFERENCE</td>
-                    <td>ISSUE</td>
-                    <td>CATEGORY</td>
-                    <td>PRIORITY</td>
-                    <td>STATUS</td>
-                    <td>FILED</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
+            <table>
+              <thead>
+                <tr>
+                  <td>REFERENCE</td>
+                  <td>ISSUE</td>
+                  <td>CATEGORY</td>
+                  <td>PRIORITY</td>
+                  <td>STATUS</td>
+                  <td>FILED</td>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets?.map((ticket) => (
+                  <tr key={String(ticket.id)}>
                     <td>{ticket.reference}</td>
                     <td>{ticket.title}</td>
                     <td>{ticket.category}</td>
                     <td>{ticket.priority}</td>
                     <td>""</td>
                     <td>
-                      {new Date(ticket.created_at).toLocaleDateString("en-NG", {
+                      {new Date(ticket.created_at).toLocaleDateString("en-US", {
                         day: "numeric",
                         month: "short",
                         year: "numeric",
                       })}
                     </td>
                   </tr>
-                </tbody>
-              </table>
-            ))
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
