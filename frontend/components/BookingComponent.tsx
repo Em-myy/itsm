@@ -2,7 +2,8 @@
 
 import { VenueType } from "@/app/(main)/calendar/page";
 import api from "@/src/lib/axios";
-import { useState } from "react";
+import { format } from "date-fns";
+import { useEffect, useState } from "react";
 
 interface FromType {
   purpose: string;
@@ -10,7 +11,20 @@ interface FromType {
   startTime: string;
   endTime: string;
 }
-const BookingComponent = ({ venues }: { venues: VenueType[] }) => {
+
+interface BookingComponentType {
+  venues: VenueType[];
+  preSelectedDate?: Date | null;
+}
+
+const BookingComponent = ({
+  venues,
+  preSelectedDate,
+}: BookingComponentType) => {
+  const initialDateString = preSelectedDate
+    ? format(preSelectedDate, "yyyy-MM-dd")
+    : "";
+
   const [formData, setFormData] = useState<FromType>({
     purpose: "",
     date: "",
@@ -19,6 +33,7 @@ const BookingComponent = ({ venues }: { venues: VenueType[] }) => {
   });
   const [selectedVenue, setSelectedVenue] = useState<string>("");
   const [equipmentNeeded, setEquipmentNeeded] = useState<string[]>([]);
+  const [bookingDate, setBookingDate] = useState<string>(initialDateString);
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -49,9 +64,11 @@ const BookingComponent = ({ venues }: { venues: VenueType[] }) => {
     event.preventDefault();
 
     const finalStartDate = new Date(
-      `${formData.date}T${formData.startTime}:00`,
+      `${formData.date ? formData.date : bookingDate}T${formData.startTime}:00`,
     );
-    const finalEndDate = new Date(`${formData.date}T${formData.endTime}:00`);
+    const finalEndDate = new Date(
+      `${formData.date ? formData.date : bookingDate}T${formData.endTime}:00`,
+    );
 
     const bookingPayload = {
       purpose: formData.purpose,
@@ -64,10 +81,22 @@ const BookingComponent = ({ venues }: { venues: VenueType[] }) => {
     try {
       const response = await api.post("/booking", bookingPayload);
       console.log(response.data);
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      if (error.response && error.response.status === 409) {
+        console.log("This venue has been booked");
+      } else {
+        console.log("An unexpected error happened");
+      }
     }
   };
+
+  useEffect(() => {
+    if (preSelectedDate) {
+      setBookingDate(format(preSelectedDate, "yyyy-MM-dd"));
+    } else {
+      setBookingDate("");
+    }
+  }, [preSelectedDate]);
 
   return (
     <div>
@@ -86,7 +115,9 @@ const BookingComponent = ({ venues }: { venues: VenueType[] }) => {
         <div>
           <label>Venue</label>
           <select required value={selectedVenue} onChange={handleVenueChange}>
-            <option value="">Select a venue</option>
+            <option value="" disabled>
+              Select a venue
+            </option>
             {venues?.map((venue) => (
               <option key={venue.id} value={venue.id}>
                 {venue.name} --- seats - {venue.capacity}
@@ -101,7 +132,7 @@ const BookingComponent = ({ venues }: { venues: VenueType[] }) => {
             name="date"
             type="date"
             required
-            value={formData.date}
+            value={bookingDate ? bookingDate : formData.date}
             onChange={handleFormChange}
           />
         </div>
