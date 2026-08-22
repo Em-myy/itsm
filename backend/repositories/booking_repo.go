@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"itsm/models"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -106,4 +107,24 @@ func GetBookingByRequester(ctx context.Context, pool *pgxpool.Pool, userId strin
 		bookings = append(bookings, b)
 	}
 	return bookings, nil
+}
+
+func CheckVenueAvailability(ctx context.Context, pool *pgxpool.Pool, venueID int, startTime time.Time, endTime time.Time) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM bookings
+			WHERE venueID = $1
+			AND status != "Cancelled"
+			AND startTime < $3
+			AND endTime > $2
+		);
+	`
+	var hasConflict bool
+
+	err := pool.QueryRow(ctx, query, venueID, startTime, endTime).Scan(&hasConflict)
+	if err != nil {
+		return false, fmt.Errorf("Failed to check availability: %w", err)
+	}
+
+	return !hasConflict, nil
 }
