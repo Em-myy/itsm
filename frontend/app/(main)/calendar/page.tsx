@@ -58,6 +58,7 @@ const CalendarPage = () => {
   const [selectedBooking, setSelectedBooking] = useState<BookingType | null>(
     null,
   );
+  const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
 
   useEffect(() => {
     const fetchBookings = async (): Promise<void> => {
@@ -91,19 +92,35 @@ const CalendarPage = () => {
     resource: booking,
   }));
 
-  const handleSelectEvent = (event: any) => {
+  const handleSelectEvent = (event: any): void => {
     setSelectedBooking(event.resource);
+  };
+
+  const handleSelectSlot = (slotInfo: {
+    start: Date;
+    action: string;
+  }): void => {
+    setSelectedSlotDate(slotInfo.start);
+    setOpenBooking(true);
   };
 
   return (
     <div className="relative">
       <div>
-        <button type="button" onClick={() => setOpenBooking((b) => !b)}>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedSlotDate(null);
+            setOpenBooking((b) => !b);
+          }}
+        >
           + Book a hall
         </button>
       </div>
 
-      {openBooking && <BookingComponent venues={venues} />}
+      {openBooking && (
+        <BookingComponent venues={venues} preSelectedDate={selectedSlotDate} />
+      )}
 
       {selectedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -213,6 +230,8 @@ const CalendarPage = () => {
             onView={(newView) => setCurrentView(newView)}
             components={{ event: CustomEvent }}
             onSelectEvent={handleSelectEvent}
+            selectable={true}
+            onSelectSlot={handleSelectSlot}
           />
         </div>
       </div>
