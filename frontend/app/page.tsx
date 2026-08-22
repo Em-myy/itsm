@@ -571,7 +571,7 @@ const FormPanel = ({
           {isSignUp && (
             <Field label="Department">
               <select
-                className={inputClass}
+                className={`${inputClass} cursor-pointer`}
                 style={inputStyle}
                 value={department}
                 onChange={onDepartmentChange}
