@@ -41,6 +41,24 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isAvailable, err := repositories.CheckVenueAvailability(
+		r.Context(),
+		h.DB,
+		input.VenueID,
+		input.StartTime,
+		input.EndTime,
+	)
+	if err != nil {
+		log.Println("Error checking availability:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if !isAvailable {
+		http.Error(w, "This venue is already booked for the selected time.", http.StatusConflict)
+		return
+	}
+
 	booking := models.Booking{
 		UserId:          userID,
 		Purpose:         input.Purpose,
