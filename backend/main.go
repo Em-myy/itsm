@@ -10,6 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 )
+just today
 
 func main() {
 	err := godotenv.Load()
