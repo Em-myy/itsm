@@ -16,6 +16,12 @@ type BookingHandler struct {
 	DB *pgxpool.Pool
 }
 
+type AvailabilityRequest struct {
+	VenueID   int       `json:"venue_id"`
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+}
+
 func NewBookingHandler(db *pgxpool.Pool) *BookingHandler {
 	return &BookingHandler{DB: db}
 }
@@ -28,7 +34,6 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		UserId          string    `json:"user_id"`
 		Purpose         string    `json:"purpose"`
 		VenueID         int       `json:"venue_id"`
 		StartTime       time.Time `json:"start_time"`
@@ -38,6 +43,16 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.Purpose == "" || input.VenueID == 0 {
+		http.Error(w, "Purpose and venue are required", http.StatusBadRequest)
+		return
+	}
+
+	if !input.StartTime.Before(input.EndTime) {
+		http.Error(w, "End time must be after start time", http.StatusBadRequest)
 		return
 	}
 
@@ -85,9 +100,9 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BookingHandler) GetBookings(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
-	if !ok || userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can view all bookings", http.StatusForbidden)
 		return
 	}
 
@@ -126,4 +141,26 @@ func (h *BookingHandler) GetMyBooking(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bookings)
+}
+
+func (h *BookingHandler) CheckAvailabilityHandler(pool *pgxpool.Pool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req AvailabilityRequest
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+
+		isAvailable, err := repositories.CheckVenueAvailability(r.Context(), pool, req.VenueID, req.StartTime, req.EndTime)
+		if err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{
+			"available": isAvailable,
+		})
+	}
 }
