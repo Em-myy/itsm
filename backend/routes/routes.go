@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
+func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux := http.NewServeMux()
 
 	ticketHandler := handlers.NewTicketHandler(db)
@@ -20,7 +20,7 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 	venueHandler := handlers.NewVenueHandler(db)
 
 	supabaseURL := os.Getenv("SUPABASE_URL")
-	authMiddleware, err := middleware.SupabaseAuth(supabaseURL)
+	authMiddleware, err := middleware.SupabaseAuth(supabaseURL, db)
 	if err != nil {
 		log.Fatalf("Failed to initialize auth middleware: %v", err)
 	}
@@ -29,20 +29,23 @@ func SetupRouter(db *pgxpool.Pool) *http.ServeMux {
 		w.Write([]byte("ITSM backend is working"))
 	})
 
-	mux.Handle("POST /ticket", authMiddleware(http.HandlerFunc(ticketHandler.CreateTicket)))
-	mux.Handle("GET /tickets", authMiddleware(http.HandlerFunc(ticketHandler.GetTickets)))
-	mux.Handle("GET /tickets/mine", authMiddleware(http.HandlerFunc(ticketHandler.GetMyTickets)))
+	mux.Handle("POST /api/tickets", authMiddleware(http.HandlerFunc(ticketHandler.CreateTicket)))
+	mux.Handle("GET /api/tickets", authMiddleware(http.HandlerFunc(ticketHandler.GetTickets)))
+	mux.Handle("GET /api/tickets/mine", authMiddleware(http.HandlerFunc(ticketHandler.GetMyTickets)))
 
-	mux.Handle("POST /users/sync", authMiddleware(http.HandlerFunc(userHandler.SyncProfile)))
+	mux.Handle("PATCH /api/users/profile", authMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
+	mux.Handle("GET /api/role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
 
-	mux.Handle("GET /role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
+	mux.Handle("POST /api/bookings", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
+	mux.Handle("GET /api/bookings", authMiddleware(http.HandlerFunc(bookingHandler.GetBookings)))
+	mux.Handle("GET /api/bookings/mine", authMiddleware(http.HandlerFunc(bookingHandler.GetMyBooking)))
 
-	mux.Handle("POST /booking", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
-	mux.Handle("GET /bookings", authMiddleware(http.HandlerFunc(bookingHandler.GetBookings)))
-	mux.Handle("GET /bookings/mine", authMiddleware(http.HandlerFunc(bookingHandler.GetMyBooking)))
+	mux.Handle("POST /api/bookings/check-availability", authMiddleware(http.HandlerFunc(bookingHandler.CheckAvailabilityHandler(db))))
 
-	mux.Handle("POST /venue", authMiddleware(http.HandlerFunc(venueHandler.CreateVenue)))
-	mux.Handle("GET /venues", authMiddleware(http.HandlerFunc(venueHandler.GetVenues)))
+	mux.Handle("POST /api/venues", authMiddleware(http.HandlerFunc(venueHandler.CreateVenue)))
+	mux.Handle("GET /api/venues", authMiddleware(http.HandlerFunc(venueHandler.GetVenues)))
 
-	return mux
+	mux.Handle("PATCH /api/venues/status", authMiddleware(http.HandlerFunc(venueHandler.UpdateVenueStatusHandler(db))))
+
+	return middleware.CorsMiddleware(mux)
 }
