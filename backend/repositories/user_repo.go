@@ -8,24 +8,26 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SyncUserProfile(ctx context.Context, pool *pgxpool.Pool, user models.User) error {
+func UpdateUserProfile(ctx context.Context, pool *pgxpool.Pool, user models.User) error {
 	query := `
-		INSERT INTO users (id, username, email, department, role_id)
-		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (id) DO UPDATE
-		SET department = EXCLUDED.department,
-			username = EXCLUDED.username,
+		UPDATE users 
+		SET department = $1,
+			username = $2,
 			updated_at = CURRENT_TIMESTAMP
+		WHERE id = $3
 		`
-	_, err := pool.Exec(ctx,
+	commandTag, err := pool.Exec(
+		ctx,
 		query,
-		user.ID,
-		user.Username,
-		user.Email,
 		user.Department,
-		user.RoleId)
+		user.Username,
+		user.ID)
 	if err != nil {
-		return fmt.Errorf("Failed to sync user profile: %w", err)
+		return fmt.Errorf("Failed to update user profile: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No user found with ID: %s", user.ID)
 	}
 	return nil
 }
