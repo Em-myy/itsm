@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/src/lib/axios";
+import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
 interface TicketType {
@@ -38,6 +39,9 @@ const SubmitTicketPage = () => {
     relatedAsset: "",
   });
   const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const supabase = createClient();
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -75,22 +79,46 @@ const SubmitTicketPage = () => {
     event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
-
-    const ticketPayload = {
-      title: inputElements.title,
-      category: selectElements.category,
-      department: selectElements.department,
-      priority: inputElements.priority,
-      related_asset: selectElements.relatedAsset,
-      description: description,
-      picture: file,
-    };
+    setIsSubmitting(true);
 
     try {
+      let pictureUrl: string[] = [];
+
+      if (file) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("ticket-attachments")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          throw new Error(`Upload Failed: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("ticket-attachments").getPublicUrl(fileName);
+
+        pictureUrl.push(publicUrl);
+      }
+
+      const ticketPayload = {
+        title: inputElements.title,
+        category: selectElements.category,
+        department: selectElements.department,
+        priority: inputElements.priority,
+        related_asset: selectElements.relatedAsset,
+        description: description,
+        picture: pictureUrl,
+      };
+
       const response = await api.post("/ticket", ticketPayload);
       console.log(response.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
