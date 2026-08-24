@@ -3,19 +3,23 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"itsm/repositories"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/MicahParks/keyfunc/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type contextKey string
 
 const UserIDKey contextKey = "userId"
+const UserRoleKey contextKey = "userRole"
 
-func SupabaseAuth(supabaseURL string) (func(http.Handler) http.Handler, error) {
+func SupabaseAuth(supabaseURL string, db *pgxpool.Pool) (func(http.Handler) http.Handler, error) {
 	jwksURL := fmt.Sprintf("%s/auth/v1/.well-known/jwks.json", supabaseURL)
 
 	options := keyfunc.Options{
@@ -64,7 +68,15 @@ func SupabaseAuth(supabaseURL string) (func(http.Handler) http.Handler, error) {
 				return
 			}
 
+			userRole := "Unknown"
+			roleRecord, err := repositories.GetRole(r.Context(), db, userID)
+			if err == nil && roleRecord.Name != "" {
+				userRole = roleRecord.Name
+			}
+
 			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+			ctx = context.WithValue(ctx, UserRoleKey, userRole)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}, nil
@@ -72,9 +84,16 @@ func SupabaseAuth(supabaseURL string) (func(http.Handler) http.Handler, error) {
 
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		allowedOrigin := os.Getenv("FRONTEND_URL")
+		if allowedOrigin == "" {
+			allowedOrigin = "http://localhost:3000"
+		}
+
+		w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
