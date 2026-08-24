@@ -70,11 +70,11 @@ func UpdateVenueStatus(ctx context.Context, pool *pgxpool.Pool, venueID int, new
 	`
 	commandTag, err := pool.Exec(ctx, query, newStatus, venueID)
 	if err != nil {
-		return fmt.Errorf("Failed to update venue %w", err)
+		return fmt.Errorf("Failed to update venue status: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
-		return fmt.Errorf("No venue found with ID %s", venueID)
+		return fmt.Errorf("No venue found with ID: %d", venueID)
 	}
 
 	return nil
