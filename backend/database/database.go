@@ -10,14 +10,10 @@ import (
 )
 
 func Connect() (*pgxpool.Pool, error) {
-	connString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
+	connString := os.Getenv("DATABASE_URL")
+	if connString == "" {
+		return nil, fmt.Errorf("DATABASE_URL environment variable is not set")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
