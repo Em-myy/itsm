@@ -9,13 +9,20 @@ import (
 )
 
 func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket) (int, string, error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return 0, "", fmt.Errorf("Failed to start transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
 	insertQuery := `
 		INSERT INTO tickets (title, category, department, priority, related_asset, description, requester_id, picture)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
 		`
 	var newID int
-	err := pool.QueryRow(
+
+	err = tx.QueryRow(
 		ctx,
 		insertQuery,
 		ticket.Title,
@@ -38,10 +45,14 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 		RETURNING reference;
 	`
 	var newRef string
-	err = pool.QueryRow(ctx, updateQuery, &newID).Scan(&newRef)
 
+	err = tx.QueryRow(ctx, updateQuery, newID).Scan(&newRef)
 	if err != nil {
 		return 0, "", fmt.Errorf("Failed to update ticket reference: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return 0, "", fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	return newID, newRef, nil
