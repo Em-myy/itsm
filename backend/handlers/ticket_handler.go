@@ -33,13 +33,16 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		Priority     string   `json:"priority"`
 		RelatedAsset string   `json:"related_asset"`
 		Description  string   `json:"description"`
-		RequesterId  string   `json:"requester_id"`
-		AssigneeId   *string  `json:"assignee_id"`
 		Picture      []string `json:"picture"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.Title == "" || input.Description == "" || input.Category == "" {
+		http.Error(w, "Title, Category and Description are required", http.StatusBadRequest)
 		return
 	}
 
@@ -51,7 +54,7 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		RelatedAsset: input.RelatedAsset,
 		Description:  input.Description,
 		RequesterId:  userID,
-		AssigneeId:   input.AssigneeId,
+		AssigneeId:   nil,
 		Picture:      input.Picture,
 	}
 
@@ -72,9 +75,9 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TicketHandler) GetTickets(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
-	if !ok || userID == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can view all tickets", http.StatusForbidden)
 		return
 	}
 
