@@ -113,10 +113,10 @@ func CheckVenueAvailability(ctx context.Context, pool *pgxpool.Pool, venueID int
 	query := `
 		SELECT EXISTS (
 			SELECT 1 FROM bookings
-			WHERE venueID = $1
-			AND status != "Cancelled"
-			AND startTime < $3
-			AND endTime > $2
+			WHERE venue_iD = $1
+			AND status != 'Cancelled'
+			AND start_time < $3
+			AND end_time > $2
 		);
 	`
 	var hasConflict bool
