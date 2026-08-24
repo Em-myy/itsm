@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"itsm/middleware"
 	"itsm/repositories"
+	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -26,6 +27,7 @@ func (h *RoleHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 
 	role, err := repositories.GetRole(r.Context(), h.DB, userID)
 	if err != nil {
+		log.Printf("Error fetching role for user %s: %v", userID, err)
 		http.Error(w, "Role not found for user", http.StatusNotFound)
 		return
 	}
