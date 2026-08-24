@@ -61,3 +61,21 @@ func GetVenues(ctx context.Context, pool *pgxpool.Pool) ([]models.Venue, error) 
 	}
 	return venues, nil
 }
+
+func UpdateVenueStatus(ctx context.Context, pool *pgxpool.Pool, venueID int, newStatus string) error {
+	query := `
+		UPDATE venues
+		SET status = $1
+		WHERE id = $2
+	`
+	commandTag, err := pool.Exec(ctx, query, newStatus, venueID)
+	if err != nil {
+		return fmt.Errorf("Failed to update venue %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No venue found with ID %s", venueID)
+	}
+
+	return nil
+}
