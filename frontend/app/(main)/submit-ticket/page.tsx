@@ -113,7 +113,7 @@ const SubmitTicketPage = () => {
         picture: pictureUrl,
       };
 
-      const response = await api.post("/ticket", ticketPayload);
+      const response = await api.post("/tickets", ticketPayload);
       console.log(response.data);
     } catch (error) {
       console.log(error);
