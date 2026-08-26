@@ -1,9 +1,16 @@
 "use client";
 
+import api from "@/src/lib/axios";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
+
+interface RoleType {
+  id: number;
+  name: string;
+  description: string;
+}
 
 interface authContextType {
   user: User | null;
@@ -11,6 +18,7 @@ interface authContextType {
   avatar: any;
   initials: string;
   displayName: string;
+  role: RoleType;
   handleSignout: () => void;
 }
 
@@ -19,9 +27,29 @@ const AuthContext = createContext<authContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [role, setRole] = useState<RoleType>({
+    id: 1,
+    name: "",
+    description: "",
+  });
 
   const supabase = createClient();
   const router = useRouter();
+
+  useEffect(() => {
+    const getRole = async () => {
+      if (!user) {
+        return;
+      }
+      try {
+        const response = await api.get("/role");
+        setRole(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getRole();
+  }, [user]);
 
   useEffect(() => {
     const getUser = async (): Promise<void> => {
@@ -70,7 +98,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, avatar, initials, displayName, handleSignout }}
+      value={{
+        user,
+        loading,
+        avatar,
+        initials,
+        displayName,
+        role,
+        handleSignout,
+      }}
     >
       {children}
     </AuthContext.Provider>
