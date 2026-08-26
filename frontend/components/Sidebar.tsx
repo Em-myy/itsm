@@ -12,10 +12,10 @@ interface NavType {
 
 const Sidebar = () => {
   const Nav: NavType[] = [
-    { icon: <HomeIcon />, name: "Dashboard", path: "home" },
-    { icon: <Edit2 />, name: "Submit a ticket", path: "submit-ticket" },
-    { icon: <Menu />, name: "My tickets", path: "tickets" },
-    { icon: <Calendar />, name: "Venue calendar", path: "calendar" },
+    { icon: <HomeIcon />, name: "Dashboard", path: "/staff/home" },
+    { icon: <Edit2 />, name: "Submit a ticket", path: "/staff/submit-ticket" },
+    { icon: <Menu />, name: "My tickets", path: "/staff/tickets" },
+    { icon: <Calendar />, name: "Venue calendar", path: "/staff/calendar" },
   ];
   const { handleSignout } = useAuth();
   return (
@@ -25,7 +25,7 @@ const Sidebar = () => {
       </div>
       <div>
         {Nav.map((items, index) => (
-          <Link href={`/${items.path}`} key={index}>
+          <Link href={items.path} key={index}>
             <div>{items.icon}</div>
             <p>{items.name}</p>
           </Link>
