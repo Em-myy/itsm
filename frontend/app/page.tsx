@@ -1,6 +1,8 @@
 "use client";
 
 import GoogleButton from "@/components/GoogleButton";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/src/lib/axios";
 import { createClient } from "@/utils/supabase/client";
 import {
   AlertCircle,
@@ -145,6 +147,7 @@ export default function Home() {
 
   const supabase = createClient();
   const router = useRouter();
+  const { role } = useAuth();
 
   const handleSwitch = (m: Mode): void => {
     setMode(m);
@@ -185,7 +188,6 @@ export default function Home() {
       email: signUpForm.email,
       password: signUpForm.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/home`,
         data: {
           username: signUpForm.username,
           department: department,
@@ -203,6 +205,12 @@ export default function Home() {
       type: "success",
       text: "Check your email to confirm your account",
     });
+    setSignUpForm({
+      username: "",
+      email: "",
+      password: "",
+    });
+    setDepartment("");
   };
 
   const handleSignIn = async (
@@ -233,12 +241,13 @@ export default function Home() {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const timer = setTimeout(
-      () => router.push("/home"),
+      () =>
+        router.push(`${role.name === "Staff" ? "/staff/home" : "/admin/home"}`),
       prefersReducedMotion ? 150 : 1100,
     );
 
     return () => clearTimeout(timer);
-  }, [showDoorTransition, router]);
+  }, [showDoorTransition, router, role.name]);
 
   const formPanelProps: FormPanelProps = {
     mode,
