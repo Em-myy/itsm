@@ -1,6 +1,6 @@
 "use client";
 
-import { VenueType } from "@/app/(main)/calendar/page";
+import { VenueType } from "@/app/staff/calendar/page";
 import api from "@/src/lib/axios";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
@@ -79,7 +79,7 @@ const BookingComponent = ({
     };
 
     try {
-      const response = await api.post("/booking", bookingPayload);
+      const response = await api.post("/bookings", bookingPayload);
       console.log(response.data);
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
