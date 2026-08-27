@@ -115,6 +115,17 @@ const SubmitTicketPage = () => {
 
       const response = await api.post("/tickets", ticketPayload);
       console.log(response.data);
+
+      setInputElements({
+        title: "",
+        priority: "",
+      });
+      setDescription("");
+      setSelectElements({
+        category: "",
+        department: "",
+        relatedAsset: "",
+      });
     } catch (error) {
       console.log(error);
     } finally {
