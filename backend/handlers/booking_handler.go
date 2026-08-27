@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"itsm/middleware"
 	"itsm/models"
 	"itsm/repositories"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -84,7 +86,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 		Status:          "Pending",
 	}
 
-	id, err := repositories.CreateBooking(r.Context(), h.DB, booking)
+	id, ref, err := repositories.CreateBooking(r.Context(), h.DB, booking)
 	if err != nil {
 		log.Println("Error creating booking:", err)
 		http.Error(w, "Could not create booking", http.StatusInternalServerError)
@@ -96,6 +98,7 @@ func (h *BookingHandler) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":    "Booking created successfully",
 		"booking_id": id,
+		"reference":  ref,
 	})
 }
 
@@ -141,6 +144,30 @@ func (h *BookingHandler) GetMyBooking(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bookings)
+}
+
+func (h *BookingHandler) GetNextBooking(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	booking, err := repositories.GetNextBooking(r.Context(), h.DB, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(nil)
+			return
+		}
+
+		log.Println("Error getting next booking:", err)
+		http.Error(w, "Could not fetch booking", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(booking)
 }
 
 func (h *BookingHandler) CheckAvailabilityHandler(pool *pgxpool.Pool) http.HandlerFunc {
