@@ -30,20 +30,5 @@ export const createClient = async (request: NextRequest) => {
       },
     },
   });
-
-  const {data: {user}} = await supabase.auth.getUser();
-
-  const {pathname} = request.nextUrl;
-
-  const isPublicPath = pathname === "/" || pathname === "/auth/callback" || pathname === "/auth/confirm" || pathname === "/auth/auth-code-error";
-  
-  if (!user && !isPublicPath) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
-
-  
-
   return supabaseResponse;
 };
