@@ -23,7 +23,7 @@ const ResetPage = () => {
   };
 
   const handleSubmit = async (
-    event: React.ChangeEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
 
@@ -53,7 +53,7 @@ const ResetPage = () => {
             <div>
               <label>New Password: </label>
               <input
-                type="text"
+                type="password"
                 name="newPassword"
                 value={newPassword}
                 required
@@ -63,7 +63,7 @@ const ResetPage = () => {
             <div>
               <label>Confirm Password: </label>
               <input
-                type="text"
+                type="password"
                 name="confirmPassword"
                 value={confirmPassword}
                 required
