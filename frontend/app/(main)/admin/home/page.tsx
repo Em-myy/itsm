@@ -32,7 +32,7 @@ const AdminHomePage = () => {
 
     getTickets();
     getBookings();
-  }, [bookings, tickets]);
+  }, []);
 
   const departmentCounts = useMemo(() => {
     return DEPARTMENTS.map((department) => ({
