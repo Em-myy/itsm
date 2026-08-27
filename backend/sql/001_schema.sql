@@ -238,3 +238,9 @@ USING (
 
 
 ALTER TABLE public.tickets  ADD COLUMN reference VARCHAR(255) UNIQUE; 
+
+ALTER TABLE tickets
+ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending'
+CHECK (status IN ('Pending', 'In Progress', 'Resolved', 'Closed'))
+
+ALTER TABLE public.bookings  ADD COLUMN reference VARCHAR(255) UNIQUE; 
