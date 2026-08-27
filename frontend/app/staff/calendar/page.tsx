@@ -7,17 +7,7 @@ import { enUS } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-
-interface BookingType {
-  id: number;
-  purpose: string;
-  venue_id: number;
-  venue_name: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  equipment_needed: string[];
-}
+import { BookingType } from "../home/page";
 
 export interface VenueType {
   id: number;
@@ -135,6 +125,9 @@ const CalendarPage = () => {
             <h2 className="text-2xl font-bold mb-1">
               {selectedBooking.purpose}
             </h2>
+            <h3 className="text-xl font-bold mb-1">
+              {selectedBooking.reference}
+            </h3>
             <p className="text-gray-500 mb-6 text-sm">
               {selectedBooking.venue_name}
             </p>
