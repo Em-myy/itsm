@@ -33,6 +33,7 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux.Handle("GET /api/tickets", authMiddleware(http.HandlerFunc(ticketHandler.GetTickets)))
 	mux.Handle("GET /api/tickets/mine", authMiddleware(http.HandlerFunc(ticketHandler.GetMyTickets)))
 	mux.Handle("GET /api/tickets/recent", authMiddleware(http.HandlerFunc(ticketHandler.GetRecentTickets)))
+	mux.Handle("PATCH /api/tickets/claim", authMiddleware(http.HandlerFunc(ticketHandler.ClaimTicket)))
 
 	mux.Handle("PATCH /api/users/profile", authMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
 	mux.Handle("GET /api/role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
