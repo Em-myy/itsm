@@ -2,7 +2,7 @@
 
 import GoogleButton from "@/components/GoogleButton";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/src/lib/axios";
+import { DEPARTMENTS } from "@/src/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import {
   AlertCircle,
@@ -72,15 +72,6 @@ const inputStyle = {
 
 const inputClass =
   "w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
-
-const DEPARTMENTS = [
-  "Admin/HR",
-  "Environment",
-  "Education",
-  "Tourism",
-  "Finance",
-  "ICT",
-];
 
 const TEXT = {
   signin: {
