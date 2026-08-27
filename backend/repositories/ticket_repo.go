@@ -16,8 +16,8 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 	defer tx.Rollback(ctx)
 
 	insertQuery := `
-		INSERT INTO tickets (title, category, department, priority, related_asset, description, requester_id, picture)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO tickets (title, category, department, priority, status, related_asset, description, requester_id, picture)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id
 		`
 	var newID int
@@ -29,6 +29,7 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 		ticket.Category,
 		ticket.Department,
 		ticket.Priority,
+		ticket.Status,
 		ticket.RelatedAsset,
 		ticket.Description,
 		ticket.RequesterId,
@@ -40,7 +41,7 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 
 	updateQuery := `
 		UPDATE tickets
-		SET reference = 'TKT.' || TO_CHAR(created_at, 'YYYY') || '.' || TO_CHAR(id, 'FM000')
+		SET reference = 'TKT · ' || TO_CHAR(created_at, 'YYYY') || ' · ' || TO_CHAR(id, 'FM000')
 		WHERE id = $1
 		RETURNING reference;
 	`
@@ -60,7 +61,7 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 
 func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error) {
 	query := `
-		SELECT id, reference, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
 		ORDER BY created_at DESC;
 		`
@@ -80,6 +81,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 			&t.Category,
 			&t.Department,
 			&t.Priority,
+			&t.Status,
 			&t.RelatedAsset,
 			&t.Description,
 			&t.RequesterId,
@@ -98,7 +100,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 
 func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID string) ([]models.Ticket, error) {
 	query := `
-		SELECT id, reference, title, category, department, priority, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
 		FROM tickets
 		WHERE requester_id = $1
 		ORDER BY created_at DESC;
@@ -119,6 +121,48 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 			&t.Category,
 			&t.Department,
 			&t.Priority,
+			&t.Status,
+			&t.RelatedAsset,
+			&t.Description,
+			&t.RequesterId,
+			&t.AssigneeId,
+			&t.Picture,
+			&t.CreatedAt,
+			&t.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to scan ticket row, %w", err)
+		}
+		tickets = append(tickets, t)
+	}
+	return tickets, nil
+}
+
+func GetRecentTickets(ctx context.Context, pool *pgxpool.Pool, requesterID string) ([]models.Ticket, error) {
+	query := `
+		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		FROM tickets
+		WHERE requester_id = $1
+		ORDER BY created_at DESC
+		LIMIT 3;
+		`
+	rows, err := pool.Query(ctx, query, requesterID)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to query user recent tickets: %w", err)
+	}
+	defer rows.Close()
+
+	var tickets []models.Ticket
+	for rows.Next() {
+		var t models.Ticket
+		err := rows.Scan(
+			&t.ID,
+			&t.Reference,
+			&t.Title,
+			&t.Category,
+			&t.Department,
+			&t.Priority,
+			&t.Status,
 			&t.RelatedAsset,
 			&t.Description,
 			&t.RequesterId,
