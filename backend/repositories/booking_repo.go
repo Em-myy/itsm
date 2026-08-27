@@ -23,7 +23,7 @@ func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booki
 	`
 	var newID int
 
-	err = pool.QueryRow(
+	err = tx.QueryRow(
 		ctx,
 		insertQuery,
 		booking.UserId,
