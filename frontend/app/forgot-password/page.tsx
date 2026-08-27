@@ -12,13 +12,18 @@ const ForgotPage = () => {
   };
 
   const handleSubmit = async (
-    event: React.ChangeEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
 
-    (await supabase).auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
+
+    if (error) {
+      console.log(error);
+      return;
+    }
   };
   return (
     <div>
