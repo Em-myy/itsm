@@ -14,32 +14,59 @@ interface cardType {
   link: string;
 }
 
-interface TicketType {
+export interface TicketType {
+  id: number;
   reference: string;
   title: string;
   category: string;
   department: string;
   priority: string;
+  status: string;
   related_asset: string;
   description: string;
   created_at: string;
 }
 
+export interface BookingType {
+  id: number;
+  reference: string;
+  purpose: string;
+  venue_id: number;
+  venue_name: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  equipment_needed: string[];
+}
+
 const HomePage = () => {
-  const [tickets, setTickets] = useState<TicketType[] | null>(null);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [booking, setBooking] = useState<BookingType | null>(null);
 
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchTickets = async (): Promise<void> => {
       try {
-        const response = await api.get("/tickets/mine");
+        const response = await api.get("/tickets/recent");
         setTickets(response.data);
       } catch (error) {
         console.log(error);
       }
     };
+
+    const fetchBookings = async (): Promise<void> => {
+      try {
+        const response = await api.get("/bookings/next");
+        console.log(response.data);
+        setBooking(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     fetchTickets();
+    fetchBookings();
   }, []);
 
   const hour = new Date().getHours();
@@ -109,11 +136,62 @@ const HomePage = () => {
                   <div>{ticket.department}</div>
                   <div>{ticket.category}</div>
                   <div>{ticket.priority}</div>
+                  <div>{ticket.status}</div>
                 </div>
                 <div>{ticket.reference}</div>
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      <div>
+        <h3>Upcoming Bookings</h3>
+
+        <div>
+          {booking ? (
+            <div>
+              <h2>{booking?.purpose}</h2>
+              <div>
+                <h4>{booking?.venue_name}</h4>
+                <span>
+                  {new Date(booking?.start_time).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </span>
+
+                <div>
+                  <span>
+                    {new Date(booking.start_time).toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                    {" - "}
+                    {new Date(booking.end_time).toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+              <h3>{booking?.reference}</h3>
+              <div>
+                {booking?.equipment_needed.map((eq) => (
+                  <ul key={eq}>
+                    <li>{eq}</li>
+                  </ul>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p>No recent booking</p>
+          )}
+        </div>
+
+        <div>
+          <Link href="/staff/calendar">View calendar</Link>
         </div>
       </div>
     </div>
