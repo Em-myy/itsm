@@ -9,6 +9,7 @@ type Ticket struct {
 	Category     string    `json:"category"`
 	Department   string    `json:"department"`
 	Priority     string    `json:"priority"`
+	Status       string    `json:"status"`
 	RelatedAsset string    `json:"related_asset"`
 	Description  string    `json:"description"`
 	RequesterId  string    `json:"requester_id"`
