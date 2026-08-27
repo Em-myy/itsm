@@ -51,6 +51,7 @@ func (h *TicketHandler) CreateTicket(w http.ResponseWriter, r *http.Request) {
 		Category:     input.Category,
 		Department:   input.Department,
 		Priority:     input.Priority,
+		Status:       "Pending",
 		RelatedAsset: input.RelatedAsset,
 		Description:  input.Description,
 		RequesterId:  userID,
@@ -107,6 +108,28 @@ func (h *TicketHandler) GetMyTickets(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Error fetching tickets:", err)
 		http.Error(w, "Could not fetch tickets", http.StatusInternalServerError)
+		return
+	}
+
+	if tickets == nil {
+		tickets = []models.Ticket{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tickets)
+}
+
+func (h *TicketHandler) GetRecentTickets(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tickets, err := repositories.GetRecentTickets(r.Context(), h.DB, userID)
+	if err != nil {
+		log.Println("Error fetching recent tickets:", err)
+		http.Error(w, "Could not fetch recent tickets", http.StatusInternalServerError)
 		return
 	}
 
