@@ -23,6 +23,7 @@ const Sidebar = () => {
       <div>
         <h2>Ojo ITSM</h2>
       </div>
+      <h3>Staff Portal</h3>
       <div>
         {Nav.map((items, index) => (
           <Link href={items.path} key={index}>
