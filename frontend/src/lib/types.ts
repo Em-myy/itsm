@@ -7,7 +7,7 @@ export interface cardType {
 }
 
 export interface TicketType {
-  id?: number;
+  id: number;
   reference: string;
   title: string;
   category: string;
@@ -16,6 +16,8 @@ export interface TicketType {
   status: string;
   related_asset: string;
   description: string;
+  assignee_id?: string;
+  assignee_name?: string;
   created_at: string;
 }
 
