@@ -61,9 +61,10 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 
 func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error) {
 	query := `
-		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
-		FROM tickets
-		ORDER BY created_at DESC;
+		SELECT t.id, t.reference, t.title, t.category, t.department, t.priority, t.status, t.related_asset, t.description, t.requester_id, t.assignee_id, COALESCE(u.username, 'Unassigned') as assignee_name, t.picture, t.created_at, t.updated_at
+		FROM tickets t
+		LEFT JOIN users u ON t.assignee_id = u.id
+		ORDER BY t.created_at DESC;
 		`
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
@@ -86,6 +87,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 			&t.Description,
 			&t.RequesterId,
 			&t.AssigneeId,
+			&t.AssigneeName,
 			&t.Picture,
 			&t.CreatedAt,
 			&t.UpdatedAt,
@@ -100,7 +102,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 
 func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID string) ([]models.Ticket, error) {
 	query := `
-		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, picture, created_at, updated_at
 		FROM tickets
 		WHERE requester_id = $1
 		ORDER BY created_at DESC;
@@ -125,7 +127,6 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 			&t.RelatedAsset,
 			&t.Description,
 			&t.RequesterId,
-			&t.AssigneeId,
 			&t.Picture,
 			&t.CreatedAt,
 			&t.UpdatedAt,
@@ -140,7 +141,7 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 
 func GetRecentTickets(ctx context.Context, pool *pgxpool.Pool, requesterID string) ([]models.Ticket, error) {
 	query := `
-		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, assignee_id, picture, created_at, updated_at
+		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, picture, created_at, updated_at
 		FROM tickets
 		WHERE requester_id = $1
 		ORDER BY created_at DESC
@@ -166,7 +167,6 @@ func GetRecentTickets(ctx context.Context, pool *pgxpool.Pool, requesterID strin
 			&t.RelatedAsset,
 			&t.Description,
 			&t.RequesterId,
-			&t.AssigneeId,
 			&t.Picture,
 			&t.CreatedAt,
 			&t.UpdatedAt,
@@ -177,4 +177,24 @@ func GetRecentTickets(ctx context.Context, pool *pgxpool.Pool, requesterID strin
 		tickets = append(tickets, t)
 	}
 	return tickets, nil
+}
+
+func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID string) error {
+	query := `
+		UPDATE tickets
+		SET assignee_id = $1,
+			updated_at = CURRENT_TIMESTAMP,
+			status = 'In Progress'
+		WHERE id = $2;
+	`
+	commandTag, err := pool.Exec(ctx, query, userID, ticketID)
+	if err != nil {
+		return fmt.Errorf("Failed to claim ticket: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No ticket found with ID: %d", ticketID)
+	}
+
+	return nil
 }
