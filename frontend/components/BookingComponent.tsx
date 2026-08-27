@@ -81,6 +81,16 @@ const BookingComponent = ({
     try {
       const response = await api.post("/bookings", bookingPayload);
       console.log(response.data);
+
+      setFormData({
+        purpose: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+      });
+      setSelectedVenue("");
+      setEquipmentNeeded([]);
+      setBookingDate("");
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
         console.log("This venue has been booked");
