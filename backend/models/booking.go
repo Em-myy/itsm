@@ -4,6 +4,7 @@ import "time"
 
 type Booking struct {
 	ID              int       `json:"id"`
+	Reference       string    `json:"reference"`
 	UserId          string    `json:"user_id"`
 	Purpose         string    `json:"purpose"`
 	VenueID         int       `json:"venue_id"`
