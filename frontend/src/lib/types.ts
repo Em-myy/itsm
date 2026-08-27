@@ -1,0 +1,49 @@
+export interface cardType {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  path: string;
+  link: string;
+}
+
+export interface TicketType {
+  id?: number;
+  reference: string;
+  title: string;
+  category: string;
+  department: string;
+  priority: string;
+  status: string;
+  related_asset: string;
+  description: string;
+  created_at: string;
+}
+
+export interface BookingType {
+  id: number;
+  reference: string;
+  purpose: string;
+  venue_id: number;
+  venue_name: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  equipment_needed: string[];
+}
+
+export interface VenueType {
+  id: number;
+  name: string;
+  capacity: number;
+  status: string;
+  equipments: string[];
+}
+
+export const DEPARTMENTS = [
+  "Admin/HR",
+  "Environment",
+  "Education",
+  "Tourism",
+  "Finance",
+  "ICT",
+];
