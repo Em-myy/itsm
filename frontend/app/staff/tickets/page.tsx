@@ -3,18 +3,7 @@
 import api from "@/src/lib/axios";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-interface TicketType {
-  id: Number;
-  reference: string;
-  title: string;
-  category: string;
-  department: string;
-  priority: string;
-  related_asset: string;
-  description: string;
-  created_at: string;
-}
+import { TicketType } from "../home/page";
 
 const TicketsPage = () => {
   const [tickets, setTickets] = useState<TicketType[] | null>(null);
@@ -23,6 +12,7 @@ const TicketsPage = () => {
     const fetchTickets = async (): Promise<void> => {
       try {
         const response = await api.get("/tickets/mine");
+        console.log(response.data);
         setTickets(response.data);
       } catch (error) {
         console.log(error);
@@ -45,22 +35,22 @@ const TicketsPage = () => {
             <table>
               <thead>
                 <tr>
-                  <td>REFERENCE</td>
-                  <td>ISSUE</td>
-                  <td>CATEGORY</td>
-                  <td>PRIORITY</td>
-                  <td>STATUS</td>
-                  <td>FILED</td>
+                  <th>REFERENCE</th>
+                  <th>ISSUE</th>
+                  <th>CATEGORY</th>
+                  <th>PRIORITY</th>
+                  <th>STATUS</th>
+                  <th>FILED</th>
                 </tr>
               </thead>
               <tbody>
                 {tickets?.map((ticket) => (
-                  <tr key={String(ticket.id)}>
+                  <tr key={ticket.id}>
                     <td>{ticket.reference}</td>
                     <td>{ticket.title}</td>
                     <td>{ticket.category}</td>
                     <td>{ticket.priority}</td>
-                    <td>""</td>
+                    <td>{ticket.status}</td>
                     <td>
                       {new Date(ticket.created_at).toLocaleDateString("en-US", {
                         day: "numeric",
