@@ -1,7 +1,7 @@
 "use client";
 
-import { VenueType } from "@/app/staff/calendar/page";
 import api from "@/src/lib/axios";
+import { VenueType } from "@/src/lib/types";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 
