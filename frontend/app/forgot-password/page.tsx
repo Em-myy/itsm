@@ -16,13 +16,19 @@ const ForgotPage = () => {
   ): Promise<void> => {
     event.preventDefault();
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      console.log("Password reset email sent successfully");
+      setEmail("");
 
-    if (error) {
+      if (error) {
+        console.log(error);
+        return;
+      }
+    } catch (error) {
       console.log(error);
-      return;
     }
   };
   return (
