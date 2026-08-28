@@ -198,3 +198,21 @@ func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 
 	return nil
 }
+
+func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int) error {
+	query := `
+		UPDATE tickets
+		SET status = 'Resolved'
+		WHERE id = $1;
+	`
+	commandTag, err := pool.Exec(ctx, query, ticketID)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve ticket: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No ticket found with ID: %d", ticketID)
+	}
+
+	return nil
+}
