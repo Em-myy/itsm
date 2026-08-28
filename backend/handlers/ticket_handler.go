@@ -176,3 +176,39 @@ func (h *TicketHandler) ClaimTicket(w http.ResponseWriter, r *http.Request) {
 		"message": "Ticket claimed successfully",
 	})
 }
+
+func (h *TicketHandler) ResolveTicket(w http.ResponseWriter, r *http.Request) {
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can view all tickets", http.StatusForbidden)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var input struct {
+		TicketID int `json:"ticket_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := repositories.ResolveTickets(r.Context(), h.DB, input.TicketID)
+	if err != nil {
+		log.Println("Error resolving ticket:", err)
+		http.Error(w, "Could not resolve ticket", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Ticket resolved successfully",
+	})
+}
