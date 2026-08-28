@@ -24,7 +24,7 @@ func SupabaseAuth(supabaseURL string, db *pgxpool.Pool) (func(http.Handler) http
 
 	options := keyfunc.Options{
 		RefreshInterval: time.Hour,
-		RefreshTimeout:  time.Second * 10,
+		RefreshTimeout:  time.Second * 30,
 		RefreshErrorHandler: func(err error) {
 			fmt.Printf("Error refreshing Supabase JWKS: %s\n", err.Error())
 		},
@@ -51,7 +51,7 @@ func SupabaseAuth(supabaseURL string, db *pgxpool.Pool) (func(http.Handler) http
 			tokenString := parts[1]
 
 			token, err := jwt.Parse(tokenString, jwks.Keyfunc)
-			if err != nil {
+			if err != nil || token.Valid {
 				http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 				return
 			}
