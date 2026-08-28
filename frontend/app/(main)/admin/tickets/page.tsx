@@ -43,6 +43,26 @@ const AdminTicketPage = () => {
       console.log("Failed to claim ticket", error);
     }
   };
+
+  const handleResolveTicket = async (ticketId: number): Promise<void> => {
+    try {
+      await api.patch("/tickets/resolve", { ticket_id: ticketId });
+
+      setTickets((prevTickets) =>
+        prevTickets.map((ticket) => {
+          if (ticket.id === ticketId) {
+            return {
+              ...ticket,
+              status: "Resolved",
+            };
+          }
+          return ticket;
+        }),
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div>
       <div>
@@ -72,12 +92,13 @@ const AdminTicketPage = () => {
                     <h4>{ticket.reference.slice(9)}</h4>
                     <p>{ticket.department}</p>
                     <p>{ticket.priority}</p>
-                    {ticket.assignee_name === "Unassigned" ? (
+                    {ticket.assignee_name === "Unassigned" &&
+                    ticket.status === "Pending" ? (
                       <button
                         type="button"
                         onClick={() => handleClaimTicket(ticket.id)}
                       >
-                        claim
+                        Claim
                       </button>
                     ) : null}
                   </div>
@@ -106,6 +127,14 @@ const AdminTicketPage = () => {
                     <p>{ticket.department}</p>
                     <p>{ticket.priority}</p>
                     <p>{ticket.assignee_name}</p>
+                    {ticket.status === "In Progress" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleResolveTicket(ticket.id)}
+                      >
+                        Resolve Ticket
+                      </button>
+                    ) : null}
                   </div>
                 ))
             )}
