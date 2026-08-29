@@ -39,30 +39,50 @@ const AssetPage = () => {
       <div>{openAssetComponent && <AssetComponent />}</div>
 
       <div>
-        <table>
-          <thead>
-            <tr>
-              <th>ASSET TAG</th>
-              <th>TYPE</th>
-              <th>DEPARTMENT</th>
-              <th>STATUS</th>
-              <th>LAST SERVICED</th>
-              <th>ASSIGNED TO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assets?.map((asset) => (
-              <tr key={asset.id}>
-                <td>{asset.reference}</td>
-                <td>{asset.type}</td>
-                <td>{asset.department}</td>
-                <td>{asset.status}</td>
-                <td>{asset.last_serviced}</td>
-                <td>{asset.assignee_name}</td>
+        {assets.length < 1 ? (
+          <div>
+            <p>No asset registered, please register an asset</p>
+            <button
+              type="button"
+              onClick={() => setOpenAssetComponent((prev) => !prev)}
+            >
+              + Add asset
+            </button>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ASSET TAG</th>
+                <th>TYPE</th>
+                <th>DEPARTMENT</th>
+                <th>STATUS</th>
+                <th>LAST SERVICED</th>
+                <th>NOTES</th>
+                <th>ASSIGNED TO</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {assets?.map((asset) => (
+                <tr key={asset.id}>
+                  <td>{asset.reference}</td>
+                  <td>{asset.type}</td>
+                  <td>{asset.department}</td>
+                  <td>{asset.status}</td>
+                  <td>
+                    {asset.last_serviced === null
+                      ? "No last service date"
+                      : asset.last_serviced}
+                  </td>
+                  <td>
+                    {asset.notes === null ? "No notes available" : asset.notes}
+                  </td>
+                  <td>{asset.assignee_name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
