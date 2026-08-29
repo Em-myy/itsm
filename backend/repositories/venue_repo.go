@@ -38,7 +38,7 @@ func GetVenues(ctx context.Context, pool *pgxpool.Pool) ([]models.Venue, error) 
 	`
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to query venues: %w", err)
+		return nil, fmt.Errorf("Failed to get venues: %w", err)
 	}
 	defer rows.Close()
 
