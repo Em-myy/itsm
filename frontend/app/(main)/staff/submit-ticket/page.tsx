@@ -103,8 +103,8 @@ const SubmitTicketPage = () => {
         picture: pictureUrl,
       };
 
-      const response = await api.post("/tickets", ticketPayload);
-      console.log(response.data);
+      await api.post("/tickets", ticketPayload);
+      console.log("Ticket created successfully");
 
       setInputElements({
         title: "",
