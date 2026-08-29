@@ -25,9 +25,15 @@ func NewVenueHandler(db *pgxpool.Pool) *VenueHandler {
 }
 
 func (h *VenueHandler) CreateVenue(w http.ResponseWriter, r *http.Request) {
-	role, ok := r.Context().Value(middleware.UserIDKey).(string)
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
 	if !ok || role != "IT Admin" {
-		http.Error(w, "Forbidden. Only admins can create venues", http.StatusForbidden)
+		http.Error(w, "Forbidden. Only admins can view all tickets", http.StatusForbidden)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
