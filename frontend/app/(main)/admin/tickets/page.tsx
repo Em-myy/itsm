@@ -22,7 +22,7 @@ const AdminTicketPage = () => {
     getTickets();
   }, []);
 
-  const handleClaimTicket = async (ticketId: number) => {
+  const handleClaimTicket = async (ticketId: number): Promise<void> => {
     try {
       await api.patch("/tickets/claim", { ticket_id: ticketId });
 
