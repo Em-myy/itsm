@@ -42,7 +42,7 @@ func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booki
 		UPDATE bookings
 		SET reference = 'BKG · ' || TO_CHAR(created_at, 'YYYY') || ' · ' || TO_CHAR(id, 'FM000')
 		WHERE id = $1
-		RETURNING reference
+		RETURNING reference;
 	`
 	var newRef string
 
@@ -60,9 +60,15 @@ func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booki
 
 func GetBookings(ctx context.Context, pool *pgxpool.Pool) ([]models.Booking, error) {
 	query := `
-		SELECT b.id, b.reference, b.user_id, b.purpose, b.venue_id, v.name as venue_name, b.start_time, b.end_time, b.equipment_needed, b.status, b.created_at, b.updated_at
+		SELECT 
+			b.id, b.reference, b.user_id, 
+			u.username, u.department,
+			b.purpose, b.venue_id, v.name as venue_name, 
+			b.start_time, b.end_time, b.equipment_needed, b.status, 
+			b.created_at, b.updated_at
 		FROM bookings b
 		JOIN venues v ON b.venue_id = v.id
+		LEFT JOIN users u ON b.user_id = u.id 
 		ORDER BY b.start_time ASC;
 	`
 	rows, err := pool.Query(ctx, query)
@@ -78,6 +84,8 @@ func GetBookings(ctx context.Context, pool *pgxpool.Pool) ([]models.Booking, err
 			&b.ID,
 			&b.Reference,
 			&b.UserId,
+			&b.Username,
+			&b.Department,
 			&b.Purpose,
 			&b.VenueID,
 			&b.VenueName,
