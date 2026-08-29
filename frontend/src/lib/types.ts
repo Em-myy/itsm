@@ -41,6 +41,17 @@ export interface VenueType {
   equipments: string[];
 }
 
+export interface AssetType {
+  id: number;
+  reference: string;
+  type: string;
+  department: string;
+  status: string;
+  assignee_name: string;
+  last_serviced?: string;
+  notes?: string;
+}
+
 export const DEPARTMENTS = [
   "Admin/HR",
   "Environment",
