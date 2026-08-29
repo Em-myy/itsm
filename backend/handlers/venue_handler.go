@@ -27,7 +27,7 @@ func NewVenueHandler(db *pgxpool.Pool) *VenueHandler {
 func (h *VenueHandler) CreateVenue(w http.ResponseWriter, r *http.Request) {
 	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
 	if !ok || role != "IT Admin" {
-		http.Error(w, "Forbidden. Only admins can view all tickets", http.StatusForbidden)
+		http.Error(w, "Forbidden. Only admins can view all venues", http.StatusForbidden)
 		return
 	}
 
@@ -54,6 +54,10 @@ func (h *VenueHandler) CreateVenue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if input.Status == "" {
+		input.Status = "Active"
+	}
+
 	venue := models.Venue{
 		Name:       input.Name,
 		Capacity:   input.Capacity,
@@ -61,7 +65,7 @@ func (h *VenueHandler) CreateVenue(w http.ResponseWriter, r *http.Request) {
 		Equipments: input.Equipments,
 	}
 
-	id, err := repositories.CreateVenue(r.Context(), h.DB, venue)
+	id, ref, err := repositories.CreateVenue(r.Context(), h.DB, venue)
 	if err != nil {
 		log.Println("Error creating venue:", err)
 		http.Error(w, "Could not create venue", http.StatusInternalServerError)
@@ -71,8 +75,9 @@ func (h *VenueHandler) CreateVenue(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message":  "Venue created successfully",
-		"venue_id": id,
+		"message":   "Venue created successfully",
+		"venue_id":  id,
+		"reference": ref,
 	})
 }
 
