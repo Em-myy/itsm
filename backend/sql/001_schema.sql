@@ -47,7 +47,6 @@ CREATE TABLE bookings (
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
     equipment_needed TEXT[],
-    status VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -83,7 +82,7 @@ USING (
     EXISTS (
         SELECT 1 FROM public.users
         INNER JOIN public.roles ON users.role_id = roles.id
-        WHERE users.id = auth.uid() and roles.name = 'Admin'
+        WHERE users.id = auth.uid() and roles.name = 'IT Admin'
     )
 );
 
@@ -95,7 +94,7 @@ USING (
     EXISTS (
         SELECT 1 FROM public.users
         INNER JOIN public.roles ON users.role_id = roles.id
-        WHERE users.id = auth.uid() and roles.name = 'Admin'
+        WHERE users.id = auth.uid() and roles.name = 'IT Admin'
     )
 );
 
@@ -189,7 +188,7 @@ BEGIN
     SELECT EXISTS (
         SELECT 1 FROM public.users as u 
         INNER JOIN public.roles AS r ON u.role_id = r.id 
-        WHERE u.id = auth.uid() AND r.name = 'Admin'
+        WHERE u.id = auth.uid() AND r.name = 'IT Admin'
     ) INTO admin_status ;
 
     RETURN admin_status;
@@ -251,7 +250,7 @@ CHECK (status IN ('Pending', 'Approved', 'Rejected'));
 
 CREATE TABLE assets (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    reference VARCHAR(50) UNIQUE NOT NULL,
+    reference VARCHAR(50) UNIQUE,
     type VARCHAR(100) NOT NULL,
     department VARCHAR(100) NOT NULL,
     last_serviced TIMESTAMP,
@@ -282,3 +281,9 @@ ON public.assets
 FOR UPDATE 
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
+
+ALTER TABLE public.venues  ADD COLUMN reference VARCHAR(50) UNIQUE; 
+
+ALTER TABLE venues
+ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Active'
+CHECK (status IN ('Active', 'In Repair', 'Retired'));
