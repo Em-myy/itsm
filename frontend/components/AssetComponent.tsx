@@ -49,7 +49,7 @@ const AssetComponent = () => {
     };
 
     try {
-      const response = await api.post("/assets", assetPayload);
+      await api.post("/assets", assetPayload);
       console.log("Asset created successfully");
       setInputType({
         type: "",
