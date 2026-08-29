@@ -21,10 +21,6 @@ const BookingComponent = ({
   venues,
   preSelectedDate,
 }: BookingComponentType) => {
-  const initialDateString = preSelectedDate
-    ? format(preSelectedDate, "yyyy-MM-dd")
-    : "";
-
   const [formData, setFormData] = useState<FromType>({
     purpose: "",
     date: "",
@@ -33,7 +29,15 @@ const BookingComponent = ({
   });
   const [selectedVenue, setSelectedVenue] = useState<string>("");
   const [equipmentNeeded, setEquipmentNeeded] = useState<string[]>([]);
-  const [bookingDate, setBookingDate] = useState<string>(initialDateString);
+
+  useEffect(() => {
+    if (preSelectedDate) {
+      setFormData((prev) => ({
+        ...prev,
+        date: format(preSelectedDate, "yyyy-MM-dd"),
+      }));
+    }
+  }, [preSelectedDate]);
 
   const handleFormChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -64,11 +68,9 @@ const BookingComponent = ({
     event.preventDefault();
 
     const finalStartDate = new Date(
-      `${formData.date ? formData.date : bookingDate}T${formData.startTime}:00`,
+      `${formData.date}T${formData.startTime}:00`,
     );
-    const finalEndDate = new Date(
-      `${formData.date ? formData.date : bookingDate}T${formData.endTime}:00`,
-    );
+    const finalEndDate = new Date(`${formData.date}T${formData.endTime}:00`);
 
     const bookingPayload = {
       purpose: formData.purpose,
@@ -80,7 +82,7 @@ const BookingComponent = ({
 
     try {
       const response = await api.post("/bookings", bookingPayload);
-      console.log(response.data);
+      console.log("Booking created successfully");
 
       setFormData({
         purpose: "",
@@ -90,23 +92,14 @@ const BookingComponent = ({
       });
       setSelectedVenue("");
       setEquipmentNeeded([]);
-      setBookingDate("");
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
         console.log("This venue has been booked");
       } else {
-        console.log("An unexpected error happened");
+        console.log(error);
       }
     }
   };
-
-  useEffect(() => {
-    if (preSelectedDate) {
-      setBookingDate(format(preSelectedDate, "yyyy-MM-dd"));
-    } else {
-      setBookingDate("");
-    }
-  }, [preSelectedDate]);
 
   return (
     <div>
@@ -142,7 +135,7 @@ const BookingComponent = ({
             name="date"
             type="date"
             required
-            value={bookingDate ? bookingDate : formData.date}
+            value={formData.date}
             onChange={handleFormChange}
           />
         </div>
