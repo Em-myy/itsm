@@ -24,6 +24,8 @@ export interface TicketType {
 export interface BookingType {
   id: number;
   reference: string;
+  username?: string;
+  department?: string;
   purpose: string;
   venue_id: number;
   venue_name: string;
@@ -35,6 +37,7 @@ export interface BookingType {
 
 export interface VenueType {
   id: number;
+  reference?: string;
   name: string;
   capacity: number;
   status: string;
