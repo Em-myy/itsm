@@ -18,7 +18,7 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 	insertQuery := `
 		INSERT INTO tickets (title, category, department, priority, status, related_asset, description, requester_id, picture)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id
+		RETURNING id;
 		`
 	var newID int
 
@@ -64,7 +64,7 @@ func GetTickets(ctx context.Context, pool *pgxpool.Pool) ([]models.Ticket, error
 		SELECT t.id, t.reference, t.title, t.category, t.department, t.priority, t.status, t.related_asset, t.description, t.requester_id, t.assignee_id, COALESCE(u.username, 'Unassigned') as assignee_name, t.picture, t.created_at, t.updated_at
 		FROM tickets t
 		LEFT JOIN users u ON t.assignee_id = u.id
-		ORDER BY t.created_at DESC;
+		ORDER BY t.created_at ASC;
 		`
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
@@ -105,7 +105,7 @@ func GetTicketsByRequester(ctx context.Context, pool *pgxpool.Pool, requesterID 
 		SELECT id, reference, title, category, department, priority, status, related_asset, description, requester_id, picture, created_at, updated_at
 		FROM tickets
 		WHERE requester_id = $1
-		ORDER BY created_at DESC;
+		ORDER BY created_at ASC;
 		`
 	rows, err := pool.Query(ctx, query, requesterID)
 	if err != nil {
