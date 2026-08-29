@@ -2,7 +2,13 @@
 
 import { useAuth } from "@/context/AuthContext";
 import api from "@/src/lib/axios";
-import { BookingType, DEPARTMENTS, TicketType } from "@/src/lib/types";
+import {
+  AssetType,
+  BookingType,
+  DEPARTMENTS,
+  TicketType,
+  VenueType,
+} from "@/src/lib/types";
 import { useEffect, useMemo, useState } from "react";
 
 const AdminHomePage = () => {
@@ -10,6 +16,8 @@ const AdminHomePage = () => {
 
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [bookings, setBookings] = useState<BookingType[]>([]);
+  const [assets, setAssets] = useState<AssetType[]>([]);
+  const [venues, setVenues] = useState<VenueType[]>([]);
 
   useEffect(() => {
     const getTickets = async (): Promise<void> => {
@@ -30,8 +38,28 @@ const AdminHomePage = () => {
       }
     };
 
+    const getAssets = async (): Promise<void> => {
+      try {
+        const response = await api.get("/assets");
+        setAssets(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const getVenues = async (): Promise<void> => {
+      try {
+        const response = await api.get("/venues");
+        setVenues(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     getTickets();
     getBookings();
+    getAssets();
+    getVenues();
   }, []);
 
   const departmentCounts = useMemo(() => {
@@ -70,6 +98,18 @@ const AdminHomePage = () => {
             {tickets.filter((ticket) => ticket.status !== "Resolved").length}
           </h1>
           <p>Open tickets</p>
+        </div>
+
+        <div>
+          <h1>
+            {assets.filter((asset) => asset.status === "Maintenance").length}
+          </h1>
+          <p>Assets under maintenance</p>
+        </div>
+
+        <div>
+          <h1>{venues.filter((venue) => venue.status === "Active").length}</h1>
+          <p>Active venues</p>
         </div>
 
         <div>
