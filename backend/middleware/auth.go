@@ -51,7 +51,7 @@ func SupabaseAuth(supabaseURL string, db *pgxpool.Pool) (func(http.Handler) http
 			tokenString := parts[1]
 
 			token, err := jwt.Parse(tokenString, jwks.Keyfunc)
-			if err != nil || token.Valid {
+			if err != nil {
 				http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 				return
 			}
