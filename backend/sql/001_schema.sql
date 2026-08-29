@@ -248,3 +248,37 @@ ALTER TABLE public.bookings  ADD COLUMN reference VARCHAR(255) UNIQUE;
 ALTER TABLE bookings
 ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending'
 CHECK (status IN ('Pending', 'Approved', 'Rejected'));
+
+CREATE TABLE assets (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    reference VARCHAR(50) UNIQUE NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    last_serviced TIMESTAMP,
+    notes TEXT,
+    assignee_name VARCHAR(150),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE assets
+ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Active'
+CHECK (status IN ('Active', 'Maintenance', 'Retired'));
+
+CREATE POLICY "Assets are viewable by authenticated users"
+ON public.assets
+FOR SELECT 
+USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Admins can insert assets"
+ON public.assets
+FOR INSERT 
+WITH CHECK (public.is_admin());
+
+CREATE POLICY "Admins can update assets"
+ON public.assets
+FOR UPDATE 
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
