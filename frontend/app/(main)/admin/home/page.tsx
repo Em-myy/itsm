@@ -20,46 +20,25 @@ const AdminHomePage = () => {
   const [venues, setVenues] = useState<VenueType[]>([]);
 
   useEffect(() => {
-    const getTickets = async (): Promise<void> => {
+    const fetchData = async (): Promise<void> => {
       try {
-        const response = await api.get("/tickets");
-        setTickets(response.data);
+        const [ticketRes, assetRes, venueRes, bookingRes] = await Promise.all([
+          api.get("/tickets"),
+          api.get("/assets"),
+          api.get("/venues"),
+          api.get("/bookings"),
+        ]);
+
+        setTickets(ticketRes.data || []);
+        setAssets(assetRes.data || []);
+        setVenues(venueRes.data || []);
+        setBookings(bookingRes.data || []);
       } catch (error) {
         console.log(error);
       }
     };
 
-    const getBookings = async (): Promise<void> => {
-      try {
-        const response = await api.get("/bookings");
-        setBookings(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    const getAssets = async (): Promise<void> => {
-      try {
-        const response = await api.get("/assets");
-        setAssets(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    const getVenues = async (): Promise<void> => {
-      try {
-        const response = await api.get("/venues");
-        setVenues(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    getTickets();
-    getBookings();
-    getAssets();
-    getVenues();
+    fetchData();
   }, []);
 
   const departmentCounts = useMemo(() => {
