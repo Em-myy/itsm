@@ -6,14 +6,14 @@ import { useEffect, useState } from "react";
 
 interface InputType {
   name: string;
-  capacity: number;
+  capacity: number | "";
 }
 
 const VenueComponent = () => {
   const [assets, setAssets] = useState<AssetType[]>([]);
   const [inputType, setInputType] = useState<InputType>({
     name: "",
-    capacity: 0,
+    capacity: "",
   });
   const [status, setStatus] = useState<string>("");
   const [equipments, setEquipments] = useState<string[]>([]);
@@ -100,6 +100,7 @@ const VenueComponent = () => {
               name="capacity"
               value={inputType.capacity}
               required
+              min={1}
               onChange={handleInputChange}
             />
           </div>
@@ -120,17 +121,20 @@ const VenueComponent = () => {
             {assets.length < 1 ? (
               <p>No asset, please add an asset</p>
             ) : (
-              assets.map((asset) => (
-                <label key={asset.id}>
-                  <input
-                    type="checkbox"
-                    value={asset.type}
-                    checked={equipments.includes(asset.type)}
-                    onChange={handleEquipment}
-                  />
-                  {asset.type}
-                </label>
-              ))
+              assets.map((asset) => {
+                const assetLabel = `${asset.reference} - ${asset.type}`;
+                return (
+                  <label key={asset.id}>
+                    <input
+                      type="checkbox"
+                      value={assetLabel}
+                      checked={equipments.includes(assetLabel)}
+                      onChange={handleEquipment}
+                    />
+                    {assetLabel}
+                  </label>
+                );
+              })
             )}
           </div>
           <button>Add Venue</button>
