@@ -5,7 +5,7 @@ import { VenueType } from "@/src/lib/types";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 
-interface FromType {
+interface FormType {
   purpose: string;
   date: string;
   startTime: string;
@@ -21,7 +21,7 @@ const BookingComponent = ({
   venues,
   preSelectedDate,
 }: BookingComponentType) => {
-  const [formData, setFormData] = useState<FromType>({
+  const [formData, setFormData] = useState<FormType>({
     purpose: "",
     date: "",
     startTime: "",
@@ -96,10 +96,12 @@ const BookingComponent = ({
       if (error.response && error.response.status === 409) {
         console.log("This venue has been booked");
       } else {
-        console.log(error);
+        console.log(error.response.data);
       }
     }
   };
+
+  const selectedVenueData = venues.find((v) => String(v.id) === selectedVenue);
 
   return (
     <div>
@@ -162,26 +164,24 @@ const BookingComponent = ({
           />
         </div>
 
-        <div>
-          <label>Equipment Needed</label>
+        {selectedVenueData && selectedVenueData.equipments.length > 0 && (
           <div>
-            {venues?.map(
-              (venue) =>
-                String(venue.id) === selectedVenue &&
-                venue.equipments.map((eq) => (
-                  <label key={eq}>
-                    <input
-                      type="checkbox"
-                      value={eq}
-                      checked={equipmentNeeded.includes(eq)}
-                      onChange={handleEquipmentChange}
-                    />
-                    {eq}
-                  </label>
-                )),
-            )}
+            <label>Equipment Needed</label>
+            <div>
+              {selectedVenueData.equipments.map((eq) => (
+                <label key={eq}>
+                  <input
+                    type="checkbox"
+                    value={eq}
+                    checked={equipmentNeeded.includes(eq)}
+                    onChange={handleEquipmentChange}
+                  />
+                  <span>{eq}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <button>Book Hall</button>
       </form>
     </div>
