@@ -1,7 +1,7 @@
 "use client";
 
-import api from "@/src/lib/axios";
-import { TicketType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { TicketType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 
