@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/src/lib/axios";
+import api from "@/lib/axios";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
