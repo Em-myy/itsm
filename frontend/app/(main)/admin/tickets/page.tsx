@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import api from "@/src/lib/axios";
-import { TicketType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { TicketType } from "@/lib/types";
 import { useEffect, useState } from "react";
 
 const AdminTicketPage = () => {
