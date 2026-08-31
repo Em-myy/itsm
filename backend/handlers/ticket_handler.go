@@ -144,7 +144,7 @@ func (h *TicketHandler) GetRecentTickets(w http.ResponseWriter, r *http.Request)
 func (h *TicketHandler) ClaimTicket(w http.ResponseWriter, r *http.Request) {
 	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
 	if !ok || role != "IT Admin" {
-		http.Error(w, "Forbidden. Only admins can view all tickets", http.StatusForbidden)
+		http.Error(w, "Forbidden. Only admins can claim tickets", http.StatusForbidden)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *TicketHandler) ClaimTicket(w http.ResponseWriter, r *http.Request) {
 func (h *TicketHandler) ResolveTicket(w http.ResponseWriter, r *http.Request) {
 	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
 	if !ok || role != "IT Admin" {
-		http.Error(w, "Forbidden. Only admins can view all tickets", http.StatusForbidden)
+		http.Error(w, "Forbidden. Only admins can view resolve tickets", http.StatusForbidden)
 		return
 	}
 
