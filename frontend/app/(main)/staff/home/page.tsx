@@ -128,6 +128,7 @@ const HomePage = () => {
           {booking ? (
             <div>
               <h2>{booking?.purpose}</h2>
+              <h3>{booking?.status}</h3>
               <div>
                 <h4>{booking?.venue_name}</h4>
                 <span>
