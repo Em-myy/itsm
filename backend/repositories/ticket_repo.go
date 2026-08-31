@@ -9,22 +9,17 @@ import (
 )
 
 func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket) (int, string, error) {
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to start transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	insertQuery := `
+	query := `
 		INSERT INTO tickets (title, category, department, priority, status, related_asset, description, requester_id, picture)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING id;
+		RETURNING id, reference;
 		`
 	var newID int
+	var newRef string
 
-	err = tx.QueryRow(
+	err := pool.QueryRow(
 		ctx,
-		insertQuery,
+		query,
 		ticket.Title,
 		ticket.Category,
 		ticket.Department,
@@ -34,26 +29,9 @@ func CreateTicket(ctx context.Context, pool *pgxpool.Pool, ticket models.Ticket)
 		ticket.Description,
 		ticket.RequesterId,
 		ticket.Picture,
-	).Scan(&newID)
+	).Scan(&newID, &newRef)
 	if err != nil {
 		return 0, "", fmt.Errorf("Failed to create ticket: %w", err)
-	}
-
-	updateQuery := `
-		UPDATE tickets
-		SET reference = 'TKT · ' || TO_CHAR(created_at, 'YYYY') || ' · ' || TO_CHAR(id, 'FM000')
-		WHERE id = $1
-		RETURNING reference;
-	`
-	var newRef string
-
-	err = tx.QueryRow(ctx, updateQuery, newID).Scan(&newRef)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to update ticket reference: %w", err)
-	}
-
-	if err = tx.Commit(ctx); err != nil {
-		return 0, "", fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	return newID, newRef, nil
