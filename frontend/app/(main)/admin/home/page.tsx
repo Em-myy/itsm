@@ -1,14 +1,14 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import api from "@/src/lib/axios";
+import api from "@/lib/axios";
 import {
   AssetType,
   BookingType,
   DEPARTMENTS,
   TicketType,
   VenueType,
-} from "@/src/lib/types";
+} from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 
 const AdminHomePage = () => {
