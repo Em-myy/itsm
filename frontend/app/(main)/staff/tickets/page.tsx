@@ -1,7 +1,7 @@
 "use client";
 
-import api from "@/src/lib/axios";
-import { TicketType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { TicketType } from "@/lib/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
