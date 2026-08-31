@@ -10,22 +10,17 @@ import (
 )
 
 func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booking) (int, string, error) {
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to start transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	insertQuery := `
+	query := `
 		INSERT INTO bookings (user_id, purpose, venue_id, start_time, end_time, equipment_needed, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id;
+		RETURNING id, reference;
 	`
 	var newID int
+	var newRef string
 
-	err = tx.QueryRow(
+	err := pool.QueryRow(
 		ctx,
-		insertQuery,
+		query,
 		booking.UserId,
 		booking.Purpose,
 		booking.VenueID,
@@ -33,26 +28,9 @@ func CreateBooking(ctx context.Context, pool *pgxpool.Pool, booking models.Booki
 		booking.EndTime,
 		booking.EquipmentNeeded,
 		booking.Status,
-	).Scan(&newID)
+	).Scan(&newID, &newRef)
 	if err != nil {
 		return 0, "", fmt.Errorf("Failed to create new booking: %w", err)
-	}
-
-	updateQuery := `
-		UPDATE bookings
-		SET reference = 'BKG · ' || TO_CHAR(created_at, 'YYYY') || ' · ' || TO_CHAR(id, 'FM000')
-		WHERE id = $1
-		RETURNING reference;
-	`
-	var newRef string
-
-	err = tx.QueryRow(ctx, updateQuery, newID).Scan(&newRef)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to update booking reference: %w", err)
-	}
-
-	if err = tx.Commit(ctx); err != nil {
-		return 0, "", fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	return newID, newRef, nil
