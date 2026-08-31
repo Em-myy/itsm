@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import api from "@/src/lib/axios";
-import { BookingType, cardType, TicketType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { BookingType, cardType, TicketType } from "@/lib/types";
 import { Calendar, Edit2, Menu, MoveRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
