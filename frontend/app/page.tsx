@@ -2,7 +2,7 @@
 
 import GoogleButton from "@/components/GoogleButton";
 import { useAuth } from "@/context/AuthContext";
-import { DEPARTMENTS } from "@/src/lib/types";
+import { DEPARTMENTS } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import {
   AlertCircle,
@@ -227,6 +227,8 @@ export default function Home() {
 
   useEffect(() => {
     if (!showDoorTransition) return;
+
+    if (role.name === "") return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
