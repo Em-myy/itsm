@@ -1,7 +1,7 @@
 "use client";
 
-import api from "@/src/lib/axios";
-import { DEPARTMENTS } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { DEPARTMENTS } from "@/lib/types";
 import { useState } from "react";
 
 interface InputType {
