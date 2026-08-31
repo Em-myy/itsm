@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"itsm/handlers"
 	"itsm/middleware"
 	"log"
@@ -27,7 +28,11 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	}
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ITSM backend is working"))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "ITSM backend is working",
+		})
 	})
 
 	mux.Handle("POST /api/tickets", authMiddleware(http.HandlerFunc(ticketHandler.CreateTicket)))
