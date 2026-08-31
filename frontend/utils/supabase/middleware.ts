@@ -30,5 +30,38 @@ export const createClient = async (request: NextRequest) => {
       },
     },
   });
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  const isProtectedRoute =
+    pathname.startsWith("/admin") || pathname.startsWith("/staff");
+
+  if (isProtectedRoute && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname.startsWith("/admin") && user) {
+    const { data: isAdmin, error } = await supabase.rpc("is_admin");
+
+    if (error || !isAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/staff/home";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (pathname === "/" && user) {
+    const { data: isAdmin } = await supabase.rpc("is_admin");
+    const url = request.nextUrl.clone();
+    url.pathname = isAdmin ? "/admin/home" : "/staff/home";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 };
