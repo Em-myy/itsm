@@ -195,3 +195,39 @@ func CheckVenueAvailability(ctx context.Context, pool *pgxpool.Pool, venueID int
 
 	return !hasConflict, nil
 }
+
+func ApproveBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int) error {
+	query := `
+		UPDATE bookings
+		SET status = 'Approved'
+		WHERE id = $1;
+	`
+	commandTag, err := pool.Exec(ctx, query, bookingID)
+	if err != nil {
+		return fmt.Errorf("Failed to approve bookings: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No booking found with ID: %d", bookingID)
+	}
+
+	return nil
+}
+
+func RejectBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int) error {
+	query := `
+		UPDATE bookings
+		SET status = 'Rejected'
+		WHERE id = $1;
+	`
+	commandTag, err := pool.Exec(ctx, query, bookingID)
+	if err != nil {
+		return fmt.Errorf("Failed to reject booking: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No booking found with id: %d", bookingID)
+	}
+
+	return nil
+}
