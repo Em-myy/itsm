@@ -287,3 +287,29 @@ ALTER TABLE public.venues  ADD COLUMN reference VARCHAR(50) UNIQUE;
 ALTER TABLE venues
 ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Active'
 CHECK (status IN ('Active', 'In Repair', 'Retired'));
+
+CREATE OR REPLACE FUNCTION set_ticket_reference()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.reference := 'TKT · ' || TO_CHAR(NEW.created_at, 'YYYY') || ' · ' || TO_CHAR(NEW.id, 'FM000');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_ticket_reference
+BEFORE INSERT ON tickets
+FOR EACH ROW
+EXECUTE FUNCTION set_ticket_reference();
+
+CREATE OR REPLACE FUNCTION set_booking_reference()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.reference := 'BKG · ' || TO_CHAR(NEW.created_at, 'YYYY') || ' · ' || TO_CHAR(NEW.id, 'FM000');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_booking_reference
+BEFORE INSERT ON bookings
+FOR EACH ROW 
+EXECUTE FUNCTION set_booking_reference();
