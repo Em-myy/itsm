@@ -191,3 +191,76 @@ func (h *BookingHandler) CheckAvailabilityHandler(pool *pgxpool.Pool) http.Handl
 		})
 	}
 }
+
+func (h *BookingHandler) ApproveBooking(w http.ResponseWriter, r *http.Request) {
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can approve bookings", http.StatusForbidden)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var input struct {
+		BookingID int `json:"booking_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := repositories.ApproveBooking(r.Context(), h.DB, input.BookingID)
+	if err != nil {
+		log.Println("Error approving booking:", err)
+		http.Error(w, "Could not approve booking", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Booking approved successfully",
+	})
+}
+
+func (h *BookingHandler) RejectBooking(w http.ResponseWriter, r *http.Request) {
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can reject bookings", http.StatusForbidden)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var input struct {
+		BookingID int `json:"booking_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		log.Printf("JSON Parse Error: %v\n", err)
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := repositories.RejectBooking(r.Context(), h.DB, input.BookingID)
+	if err != nil {
+		log.Println("Error reject booking:", err)
+		http.Error(w, "Could not reject booking", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Booking rejected successfully",
+	})
+}
