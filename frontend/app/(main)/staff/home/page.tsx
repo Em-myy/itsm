@@ -1,41 +1,24 @@
-"use client";
-
-import { useAuth } from "@/context/AuthContext";
-import api from "@/lib/axios";
+import RealTimeBookings from "@/components/RealTimeBookings";
+import RealTimeTickets from "@/components/RealTimeTickets";
+import { fetchFromGo } from "@/lib/api-server";
 import { BookingType, cardType, TicketType } from "@/lib/types";
+import { createClient } from "@/utils/supabase/server";
 import { Calendar, Edit2, Menu, MoveRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-const HomePage = () => {
-  const [tickets, setTickets] = useState<TicketType[]>([]);
-  const [booking, setBooking] = useState<BookingType | null>(null);
+const HomePage = async () => {
+  const supabase = await createClient();
 
-  const { user } = useAuth();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    const fetchTickets = async (): Promise<void> => {
-      try {
-        const response = await api.get("/tickets/recent");
-        setTickets(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    const fetchBookings = async (): Promise<void> => {
-      try {
-        const response = await api.get("/bookings/next");
-        console.log(response.data);
-        setBooking(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchTickets();
-    fetchBookings();
-  }, []);
+  const [tickets, bookings] = await Promise.all([
+    fetchFromGo("/tickets/recent") as Promise<TicketType | TicketType[] | null>,
+    fetchFromGo("/bookings/next") as Promise<
+      BookingType | BookingType[] | null
+    >,
+  ]);
 
   const hour = new Date().getHours();
 
@@ -99,72 +82,20 @@ const HomePage = () => {
       <div>
         <h3>Recent Requests</h3>
         <div>
-          {tickets === null ? (
-            <h2>
-              No tickets filed yet......{" "}
-              <Link href="submit-ticket">Report an issue</Link>
-            </h2>
-          ) : (
-            tickets?.map((ticket) => (
-              <div key={ticket.reference}>
-                <div>{ticket.title}</div>
-                <div>
-                  <div>{ticket.department}</div>
-                  <div>{ticket.category}</div>
-                  <div>{ticket.priority}</div>
-                  <div>{ticket.status}</div>
-                </div>
-                <div>{ticket.reference}</div>
-              </div>
-            ))
-          )}
+          {!tickets || (Array.isArray(tickets) && tickets.length === 0) ? (
+            <Link href="/staff/submit-tickets">Submit a ticket</Link>
+          ) : null}
+          <RealTimeTickets initialTickets={tickets} />
         </div>
       </div>
 
       <div>
         <h3>Upcoming Bookings</h3>
-
         <div>
-          {booking ? (
-            <div>
-              <h2>{booking?.purpose}</h2>
-              <h3>{booking?.status}</h3>
-              <div>
-                <h4>{booking?.venue_name}</h4>
-                <span>
-                  {new Date(booking?.start_time).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-
-                <div>
-                  <span>
-                    {new Date(booking.start_time).toLocaleTimeString("en-US", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                    {" - "}
-                    {new Date(booking.end_time).toLocaleTimeString("en-US", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              </div>
-              <h3>{booking?.reference}</h3>
-              <div>
-                {booking?.equipment_needed.map((eq) => (
-                  <ul key={eq}>
-                    <li>{eq}</li>
-                  </ul>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p>No recent booking</p>
-          )}
+          {!bookings || (Array.isArray(bookings) && bookings.length === 0) ? (
+            <Link href="/staff/calendar">Reserve a booking</Link>
+          ) : null}
+          <RealTimeBookings initialBookings={bookings} />
         </div>
 
         <div>
