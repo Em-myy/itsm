@@ -1,8 +1,8 @@
 "use client";
 
 import VenueComponent from "@/components/VenueComponent";
-import api from "@/src/lib/axios";
-import { AssetType, BookingType, VenueType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { AssetType, BookingType, VenueType } from "@/lib/types";
 import { useEffect, useState } from "react";
 
 const BookingsPage = () => {
