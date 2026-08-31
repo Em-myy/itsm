@@ -1,8 +1,8 @@
 "use client";
 
 import BookingComponent from "@/components/BookingComponent";
-import api from "@/src/lib/axios";
-import { BookingType, VenueType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { BookingType, VenueType } from "@/lib/types";
 import { format, getDay, parse, startOfWeek } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { useEffect, useState } from "react";
