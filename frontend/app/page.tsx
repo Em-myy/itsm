@@ -302,27 +302,19 @@ export default function Home() {
       <div className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
         <div
           className="relative z-0 flex-1 transition-colors duration-300"
-          style={{ background: isSignUp ? palette.surface : palette.ink }}
+          style={{ background: palette.ink }}
         >
-          <div key={`start-${mode}`} className="panel-fade h-full">
-            {isSignUp ? (
-              <FormPanel {...formPanelProps} />
-            ) : (
-              <TextPanel mode={mode} />
-            )}
+          <div key={`text-${mode}`} className="panel-fade h-full">
+            <TextPanel mode={mode} />
           </div>
         </div>
 
         <div
           className="diagonal-end relative z-10 flex-1 transition-colors duration-300"
-          style={{ background: isSignUp ? palette.ink : palette.surface }}
+          style={{ background: palette.surface }}
         >
-          <div key={`end-${mode}`} className="panel-fade h-full">
-            {isSignUp ? (
-              <TextPanel mode={mode} />
-            ) : (
-              <FormPanel {...formPanelProps} />
-            )}
+          <div key={`form-${mode}`} className="panel-fade h-full">
+            <FormPanel {...formPanelProps} />
           </div>
         </div>
       </div>
