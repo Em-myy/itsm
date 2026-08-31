@@ -1,8 +1,8 @@
 "use client";
 
 import AssetComponent from "@/components/AssetComponent";
-import api from "@/src/lib/axios";
-import { AssetType } from "@/src/lib/types";
+import api from "@/lib/axios";
+import { AssetType } from "@/lib/types";
 import { useEffect, useState } from "react";
 
 const AssetPage = () => {
