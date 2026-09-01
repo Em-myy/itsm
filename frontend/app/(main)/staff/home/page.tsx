@@ -82,20 +82,30 @@ const HomePage = async () => {
       <div>
         <h3>Recent Requests</h3>
         <div>
-          {!tickets || (Array.isArray(tickets) && tickets.length === 0) ? (
-            <Link href="/staff/submit-tickets">Submit a ticket</Link>
-          ) : null}
-          <RealTimeTickets initialTickets={tickets} />
+          <RealTimeTickets
+            initialTickets={tickets}
+            emptyFallback={
+              <div>
+                <p>No tickets filed yet.</p>
+                <Link href="/staff/submit-ticket">Report an issue</Link>
+              </div>
+            }
+          />
         </div>
       </div>
 
       <div>
         <h3>Upcoming Bookings</h3>
         <div>
-          {!bookings || (Array.isArray(bookings) && bookings.length === 0) ? (
-            <Link href="/staff/calendar">Reserve a booking</Link>
-          ) : null}
-          <RealTimeBookings initialBookings={bookings} />
+          <RealTimeBookings
+            initialBookings={bookings}
+            emptyFallback={
+              <div>
+                <p>No tickets filed yet.</p>
+                <Link href="/staff/calendar">Reserve a booking</Link>
+              </div>
+            }
+          />
         </div>
 
         <div>
