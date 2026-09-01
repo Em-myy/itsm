@@ -3,6 +3,7 @@
 import api from "@/lib/axios";
 import { VenueType } from "@/lib/types";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface FormType {
@@ -13,14 +14,18 @@ interface FormType {
 }
 
 interface BookingComponentType {
-  venues: VenueType[];
+  venues: VenueType[] | null;
   preSelectedDate?: Date | null;
+  onSuccess?: () => void;
 }
 
 const BookingComponent = ({
   venues,
   preSelectedDate,
+  onSuccess,
 }: BookingComponentType) => {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormType>({
     purpose: "",
     date: "",
@@ -29,6 +34,7 @@ const BookingComponent = ({
   });
   const [selectedVenue, setSelectedVenue] = useState<string>("");
   const [equipmentNeeded, setEquipmentNeeded] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (preSelectedDate) {
@@ -81,27 +87,23 @@ const BookingComponent = ({
     };
 
     try {
-      const response = await api.post("/bookings", bookingPayload);
-      console.log("Booking created successfully");
+      await api.post("/bookings", bookingPayload);
+      router.refresh();
 
-      setFormData({
-        purpose: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-      });
-      setSelectedVenue("");
-      setEquipmentNeeded([]);
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
         console.log("This venue has been booked");
       } else {
         console.log(error.response.data);
       }
+      setIsSubmitting(false);
     }
   };
 
-  const selectedVenueData = venues.find((v) => String(v.id) === selectedVenue);
+  const selectedVenueData = venues?.find((v) => String(v.id) === selectedVenue);
 
   return (
     <div>
