@@ -9,49 +9,26 @@ import (
 )
 
 func CreateAsset(ctx context.Context, pool *pgxpool.Pool, asset models.Asset) (int, string, error) {
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to start transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	insertQuery := `
+	query := `
 		INSERT INTO assets (type, department, status, last_serviced, notes, assignee_name)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id;
+		RETURNING id, reference;
 	`
 	var newID int
+	var newRef string
 
-	err = tx.QueryRow(
+	err := pool.QueryRow(
 		ctx,
-		insertQuery,
+		query,
 		asset.Type,
 		asset.Department,
 		asset.Status,
 		asset.LastServiced,
 		asset.Notes,
 		asset.AssigneeName,
-	).Scan(&newID)
+	).Scan(&newID, &newRef)
 	if err != nil {
 		return 0, "", fmt.Errorf("Failed to create new asset: %w", err)
-	}
-
-	updateQuery := `
-		UPDATE assets
-		SET reference = 'AST · ' || TO_CHAR(created_at, 'YYYY') || ' · ' || TO_CHAR(id, 'FM000')
-		WHERE id = $1
-		RETURNING reference;
-	`
-	var newRef string
-
-	err = tx.QueryRow(ctx, updateQuery, newID).Scan(&newRef)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to update asset reference: %w", err)
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	return newID, newRef, nil
