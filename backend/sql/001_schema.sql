@@ -313,3 +313,29 @@ CREATE TRIGGER trigger_set_booking_reference
 BEFORE INSERT ON bookings
 FOR EACH ROW 
 EXECUTE FUNCTION set_booking_reference();
+
+CREATE OR REPLACE FUNCTION set_asset_reference()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.reference := 'AST · ' || TO_CHAR(NEW.created_at, 'YYYY') || ' · ' || TO_CHAR(NEW.id, 'FM000');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_asset_reference
+BEFORE INSERT ON assets
+FOR EACH ROW 
+EXECUTE FUNCTION set_asset_reference();
+
+CREATE OR REPLACE FUNCTION set_venue_reference()
+RETURNS TRIGGER AS $$
+BEGIN 
+    NEW.reference := 'VEN · ' || TO_CHAR(NEW.created_at, 'YYYY') || ' · ' || TO_CHAR(NEW.id, 'FM000');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_venue_reference
+BEFORE INSERT ON venues
+FOR EACH ROW 
+EXECUTE FUNCTION set_venue_reference();
