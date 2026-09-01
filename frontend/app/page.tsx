@@ -64,14 +64,8 @@ const palette = {
   muted: "#8D8879",
 };
 
-const inputStyle = {
-  borderColor: palette.border,
-  background: palette.inputBg,
-  color: palette.headingDark,
-};
-
 const inputClass =
-  "w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
+  "w-full rounded-xl border border-line bg-input-bg px-4 py-3 text-sm text-heading placeholder:text-muted outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
 
 const TEXT = {
   signin: {
@@ -261,61 +255,26 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full" style={{ background: palette.ink }}>
-      <style>
-        {`
-        @keyframes panelFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .panel-fade { animation: panelFadeIn 260ms ease-out; }
-        .diagonal-end {
-          clip-path: polygon(6% 0%, 100% 0%, 100% 100%, 0% 100%);
-          margin-left: -6%;
-        }
-        @media (max-width: 767px) {
-          .diagonal-end { clip-path: none; margin-left: 0; }
-        }
-        @keyframes btnDoorSwing {
-          from { transform: rotateY(0deg); }
-          to { transform: rotateY(-100deg); }
-        }
-        @keyframes btnWalkerEnter {
-          0% { transform: translateX(0); opacity: 1; }
-          70% { transform: translateX(32px); opacity: 1; }
-          100% { transform: translateX(38px); opacity: 0; }
-        }
-        .door-btn-scene { perspective: 200px; }
-        .door-btn-panel {
-          transform-origin: left center;
-          animation: btnDoorSwing 450ms 150ms ease-in-out both;
-        }
-        .door-btn-walker { animation: btnWalkerEnter 900ms 150ms ease-in both; }
-        @media (prefers-reduced-motion: reduce) {
-          .door-btn-panel, .door-btn-walker { animation: none !important; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .panel-fade { animation: none; }
-          .transition-colors { transition: none !important; }
-        }
-        `}
-      </style>
-
+    <div className="min-h-screen w-full bg-ink">
       <div className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
         <div
-          className="relative z-0 flex-1 transition-colors duration-300"
-          style={{ background: palette.ink }}
+          className={`relative z-0 flex-1 transition-colors duration-300 motion-reduce:transition-none ${
+            isSignUp ? "bg-white" : "bg-ink"
+          }`}
         >
-          <div key={`text-${mode}`} className="panel-fade h-full">
+          <div
+            key={`text-${mode}`}
+            className="h-full animate-panel-fade motion-reduce:animate-none"
+          >
             <TextPanel mode={mode} />
           </div>
         </div>
 
-        <div
-          className="diagonal-end relative z-10 flex-1 transition-colors duration-300"
-          style={{ background: palette.surface }}
-        >
-          <div key={`form-${mode}`} className="panel-fade h-full">
+        <div className="relative z-10 flex-1 transition-colors duration-300 motion-reduce:transition-none md:ml-[-6%] md:[clip-path:polygon(6%_0%,100%_0%,100%_100%,0%_100%)] bg-white">
+          <div
+            key={`form-${mode}`}
+            className="h-full animate-panel-fade motion-reduce:animate-none"
+          >
             <FormPanel {...formPanelProps} />
           </div>
         </div>
@@ -328,36 +287,18 @@ const TextPanel = ({ mode }: { mode: Mode }): React.ReactElement => {
   const data = TEXT[mode];
 
   return (
-    <div
-      className="relative flex h-full flex-col justify-between overflow-hidden px-10 py-12 md:px-16 md:py-16"
-      style={{ color: palette.cream }}
-    >
-      <div
-        className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full"
-        style={{ border: `1px solid ${palette.inkBorder}` }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-8 -right-8 h-48 w-48 rounded-full"
-        style={{ border: `1px solid ${palette.inkBorder}` }}
-      />
+    <div className="relative flex h-full flex-col justify-between overflow-hidden px-10 py-12 text-cream md:px-16 md:py-16">
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full border border-ink-border" />
+      <div className="pointer-events-none absolute -bottom-8 -right-8 h-48 w-48 rounded-full border border-ink-border" />
 
       <div className="relative">
-        <div
-          className="mb-10 flex h-11 w-11 items-center justify-center rounded-xl text-lg font-semibold"
-          style={{ border: `1px solid ${palette.inkBorder}` }}
-        >
+        <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-xl border border-ink-border text-lg font-semibold">
           O
         </div>
-        <p
-          className="font-mono text-xs uppercase"
-          style={{ color: palette.sage, letterSpacing: "0.2em" }}
-        >
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-sage">
           Ojo Local Government Secretariat &middot; IT &amp; Computer Unit
         </p>
-        <h1
-          className="mt-6 max-w-md font-serif text-4xl leading-tight md:text-5xl"
-          style={{ color: palette.cream }}
-        >
+        <h1 className="mt-6 max-w-md font-serif text-4xl leading-tight text-cream md:text-5xl">
           {data.heading}
         </h1>
       </div>
@@ -366,18 +307,11 @@ const TextPanel = ({ mode }: { mode: Mode }): React.ReactElement => {
         {data.bullets.map(({ Icon, lead, rest }, index) => (
           <li
             key={index}
-            className="flex gap-4 text-sm leading-relaxed"
-            style={{ color: palette.bullet }}
+            className="flex gap-4 text-sm leading-relaxed text-bullet"
           >
-            <Icon
-              className="mt-0.5 h-4 w-4 shrink-0"
-              style={{ color: palette.sage }}
-            />
+            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-sage" />
             <span>
-              <span className="font-medium" style={{ color: palette.cream }}>
-                {lead}
-              </span>{" "}
-              {rest}
+              <span className="font-medium text-cream">{lead}</span> {rest}
             </span>
           </li>
         ))}
@@ -398,7 +332,7 @@ const Field = ({
   return (
     <label className="block">
       <span className="mb-2 flex items-center justify-between text-sm font-medium">
-        <span style={{ color: palette.headingDark }}> {label}</span>
+        <span className="text-heading"> {label}</span>
         {right}
       </span>
       {children}
@@ -408,50 +342,13 @@ const Field = ({
 
 const ButtonDoorScene = (): React.ReactElement => {
   return (
-    <span className="door-btn-scene relative inline-flex h-6 w-16 items-center">
-      <span
-        className="door-btn-walker absolute flex flex-col items-center"
-        style={{ left: 2, top: "50%", marginTop: -5, width: 6 }}
-      >
-        <span
-          className="block rounded-full"
-          style={{
-            width: 4,
-            height: 4,
-            marginBottom: 1,
-            background: "#FFFFFF",
-          }}
-        />
-        <span
-          className="block"
-          style={{
-            width: 5,
-            height: 6,
-            borderRadius: "2px 2px 1px 1px",
-            background: "#FFFFFF",
-          }}
-        />
+    <span className="relative inline-flex h-6 w-16 items-center perspective-[200px]">
+      <span className="absolute left-0.5 top-1/2 -mt-1.25 flex w-1.5 flex-col items-center animate-walker-enter motion-reduce:animate-none [animation-delay:150ms]">
+        <span className="mb-px block h-1 w-1 rounded-full bg-white" />
+        <span className="block h-1.5 w-1.25 rounded-t-xs rounded-b-[1px] bg-white" />
       </span>
-      <span
-        className="absolute rounded-sm"
-        style={{
-          right: 2,
-          top: 1,
-          width: 12,
-          height: 22,
-          border: "2px solid #FFFFFF",
-        }}
-      />
-      <span
-        className="door-btn-panel absolute rounded-sm"
-        style={{
-          right: 2,
-          top: 1,
-          width: 12,
-          height: 22,
-          background: "#FFFFFF",
-        }}
-      />
+      <span className="absolute right-0.5 top-px h-5.5 w-3 rounded-sm border-2 border-white" />
+      <span className="absolute right-0.5 top-px h-5.5 w-3 origin-left rounded-sm bg-white animate-door-swing motion-reduce:animate-none [animation-delay:150ms]" />
     </span>
   );
 };
@@ -479,34 +376,27 @@ const FormPanel = ({
   return (
     <div className="relative flex h-full flex-col justify-center px-10 py-14 md:px-16">
       <div className="mx-auto w-full max-w-sm">
-        <div
-          className="mb-8 inline-flex rounded-full p-1"
-          style={{ background: palette.inputBg }}
-        >
+        <div className="mb-8 inline-flex rounded-full bg-input-bg p-1">
           {modes.map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => onSwitch(m)}
-              className="rounded-full px-4 py-2 font-mono text-xs uppercase transition focus-visible:ring-2 focus-visible:ring-emerald-600 cursor-pointer"
-              style={{
-                letterSpacing: "0.12em",
-                background: mode === m ? palette.button : "transparent",
-                color: mode === m ? "#FFFFFF" : palette.muted,
-              }}
+              className={`rounded-full px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] transition focus-visible:ring-2 focus-visible:ring-emerald-600 ${
+                mode === m
+                  ? "bg-button text-white"
+                  : "bg-transparent text-muted"
+              }`}
             >
               {m === "signin" ? "Sign In" : "Sign Up"}
             </button>
           ))}
         </div>
 
-        <h2
-          className="font-serif text-3xl"
-          style={{ color: palette.headingDark }}
-        >
+        <h2 className="font-serif text-3xl text-heading">
           {isSignUp ? "Create your account" : "Welcome back"}
         </h2>
-        <p className="mt-2 text-sm" style={{ color: palette.body }}>
+        <p className="mt-2 text-sm text-body">
           {isSignUp
             ? "Set up secretariat access with your email."
             : "Sign in to continue to your dashboard."}
@@ -538,7 +428,6 @@ const FormPanel = ({
             <Field label="Username">
               <input
                 className={inputClass}
-                style={inputStyle}
                 type="text"
                 value={signUpForm.username}
                 name="username"
@@ -552,7 +441,6 @@ const FormPanel = ({
           <Field label="E-Mail">
             <input
               className={inputClass}
-              style={inputStyle}
               type="email"
               value={isSignUp ? signUpForm.email : signInForm.email}
               name="email"
@@ -566,7 +454,6 @@ const FormPanel = ({
             <Field label="Department">
               <select
                 className={`${inputClass} cursor-pointer`}
-                style={inputStyle}
                 value={department}
                 onChange={onDepartmentChange}
                 required
@@ -589,8 +476,7 @@ const FormPanel = ({
               !isSignUp && (
                 <Link
                   href="/forgot-password"
-                  className="text-xs font-medium transition hover:underline"
-                  style={{ color: palette.button }}
+                  className="text-xs font-medium text-button transition hover:underline"
                 >
                   Forgot Password?
                 </Link>
@@ -600,7 +486,6 @@ const FormPanel = ({
             <div className="relative">
               <input
                 className={`${inputClass} pr-11`}
-                style={inputStyle}
                 placeholder="••••••••"
                 type={showPassword ? "text" : "password"}
                 value={isSignUp ? signUpForm.password : signInForm.password}
@@ -626,14 +511,9 @@ const FormPanel = ({
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full rounded-xl py-3.5 text-sm font-semibold cursor-pointer text-white transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-            style={{ background: palette.button }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = palette.buttonHover)
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = palette.button)
-            }
+            className={`mt-2 flex w-full items-center justify-center rounded-xl bg-button py-3.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed ${
+              loading && !showDoorTransition ? "opacity-70" : ""
+            }`}
           >
             {showDoorTransition ? (
               <ButtonDoorScene />
@@ -651,40 +531,26 @@ const FormPanel = ({
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm" style={{ color: palette.body }}>
+        <p className="mt-6 text-center text-sm text-body">
           {isSignUp
             ? "Already have an account?"
             : "New to the secretariat portal?"}{" "}
           <button
             type="button"
             onClick={() => onSwitch(isSignUp ? "signin" : "signup")}
-            className="font-medium underline underline-offset-2 cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-600"
-            style={{ color: palette.button }}
+            className="font-medium text-button underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-emerald-600"
           >
             {isSignUp ? "Sign in" : "Create one"}
           </button>
         </p>
 
-        <div
-          className="my-7 flex items-center gap-3"
-          style={{ color: palette.muted }}
-        >
-          <span
-            className="h-px flex-1"
-            style={{ background: palette.border }}
-          />
-          <span
-            className="text-xs font-medium uppercase"
-            style={{ letterSpacing: "0.1em" }}
-          >
+        <div className="my-7 flex items-center gap-3 text-muted">
+          <span className="h-px flex-1 bg-line" />
+          <span className="text-xs font-medium uppercase tracking-widest">
             Or continue with
           </span>
-          <span
-            className="h-px flex-1"
-            style={{ background: palette.border }}
-          />
+          <span className="h-px flex-1 bg-line" />
         </div>
-
         <GoogleButton />
       </div>
     </div>
