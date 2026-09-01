@@ -7,8 +7,10 @@ import { useEffect } from "react";
 
 const RealTimeTickets = ({
   initialTickets,
+  emptyFallback,
 }: {
   initialTickets: TicketType | TicketType[] | null;
+  emptyFallback: React.ReactNode;
 }) => {
   const supabase = createClient();
   const router = useRouter();
@@ -18,7 +20,7 @@ const RealTimeTickets = ({
       .channel("realtime_tickets")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "bookings" },
+        { event: "*", schema: "public", table: "tickets" },
         () => {
           router.refresh();
         },
@@ -34,7 +36,7 @@ const RealTimeTickets = ({
     !initialTickets ||
     (Array.isArray(initialTickets) && initialTickets.length === 0)
   ) {
-    return <h2>No tickets filed yet......</h2>;
+    return <>{emptyFallback}</>;
   }
 
   const ticketsArray = Array.isArray(initialTickets)
