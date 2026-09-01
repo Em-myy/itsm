@@ -9,47 +9,24 @@ import (
 )
 
 func CreateVenue(ctx context.Context, pool *pgxpool.Pool, venue models.Venue) (int, string, error) {
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to start transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	insertQuery := `
+	query := `
 		INSERT INTO venues (name, capacity, status, equipments)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id;
 	`
 	var newId int
+	var newRef string
 
-	err = tx.QueryRow(
+	err := pool.QueryRow(
 		ctx,
-		insertQuery,
+		query,
 		venue.Name,
 		venue.Capacity,
 		venue.Status,
 		venue.Equipments,
-	).Scan(&newId)
+	).Scan(&newId, &newRef)
 	if err != nil {
 		return 0, "", fmt.Errorf("Failed to create new venue: %w", err)
-	}
-
-	updateQuery := `
-		UPDATE venues
-		SET reference = 'VEN · ' || TO_CHAR(created_at, 'YYYY') || ' · ' || TO_CHAR(id, 'FM000')
-		WHERE id = $1
-		RETURNING reference;
-	`
-	var newRef string
-
-	err = tx.QueryRow(ctx, updateQuery, newId).Scan(&newRef)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to update venue reference: %w", err)
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return 0, "", fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	return newId, newRef, nil
