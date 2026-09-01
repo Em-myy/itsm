@@ -7,8 +7,10 @@ import { useEffect } from "react";
 
 const RealTimeBookings = ({
   initialBookings,
+  emptyFallback,
 }: {
   initialBookings: BookingType | BookingType[] | null;
+  emptyFallback: React.ReactNode;
 }) => {
   const supabase = createClient();
   const router = useRouter();
@@ -34,7 +36,7 @@ const RealTimeBookings = ({
     !initialBookings ||
     (Array.isArray(initialBookings) && initialBookings.length === 0)
   ) {
-    return <h2>No booking submitted yet......</h2>;
+    return <>{emptyFallback}</>;
   }
 
   const bookingsArray = Array.isArray(initialBookings)
