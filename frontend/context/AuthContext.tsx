@@ -12,7 +12,7 @@ interface RoleType {
   description: string;
 }
 
-interface authContextType {
+interface AuthContextValue {
   user: User | null;
   loading: boolean;
   avatar: any;
@@ -22,7 +22,7 @@ interface authContextType {
   handleSignout: () => void;
 }
 
-const AuthContext = createContext<authContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
 
   if (!context) {
