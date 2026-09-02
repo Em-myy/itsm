@@ -36,7 +36,7 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Printf("Server is running on port: %s", port)
+	fmt.Printf("Server is running on port: %s\n", port)
 
 	if err := http.ListenAndServe(":"+port, router); err != nil {
 		log.Fatal(err)
