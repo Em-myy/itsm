@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { useSidebar } from "@/context/SidebarContext";
 import {
   Calendar,
   CircleCheck,
@@ -12,6 +13,7 @@ import {
   Menu,
   Package,
   UsersRound,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -75,25 +77,23 @@ const SignoutScene = (): React.ReactElement => {
   );
 };
 
-const Sidebar = () => {
-  const { role, handleSignout } = useAuth();
-  const pathname = usePathname();
-  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
-
-  const isStaff = role.name === "Staff";
-  const navItems = isStaff ? StaffNav : AdminNav;
-
-  const handleSignOut = (): void => {
-    if (isSigningOut) return;
-
-    setIsSigningOut(true);
-    setTimeout(() => {
-      handleSignout();
-    }, 1100);
-  };
-
+const SidebarContent = ({
+  isStaff,
+  navItems,
+  pathname,
+  isSigningOut,
+  onSignOutClick,
+  onNavigate,
+}: {
+  isStaff: boolean;
+  navItems: NavType[];
+  pathname: string;
+  isSigningOut: boolean;
+  onSignOutClick: () => void;
+  onNavigate?: () => void;
+}): React.ReactElement => {
   return (
-    <div className="flex h-screen w-64 shrink-0 flex-col justify-between bg-ink px-4 py-6">
+    <>
       <div>
         <div className="mb-8 flex items-center gap-3 px-2">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-ink-border text-2xl font-semibold text-cream">
@@ -120,6 +120,7 @@ const Sidebar = () => {
               <Link
                 key={item.path}
                 href={item.path}
+                onClick={onNavigate}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
                   active
                     ? "bg-button text-white"
@@ -141,7 +142,7 @@ const Sidebar = () => {
       <div className="border-t border-ink-border pt-4">
         <button
           type="button"
-          onClick={handleSignOut}
+          onClick={onSignOutClick}
           disabled={isSigningOut}
           aria-label={isSigningOut ? "Signing Out" : undefined}
           className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-bullet transition hover:bg-white/5 disabled:pointer-events-none disabled:cursor-not-allowed text-[16px] cursor-pointer"
@@ -155,7 +156,67 @@ const Sidebar = () => {
           )}
         </button>
       </div>
-    </div>
+    </>
+  );
+};
+
+const Sidebar = () => {
+  const { role, handleSignout } = useAuth();
+  const { mobileOpen, closeMobile } = useSidebar();
+  const pathname = usePathname();
+  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
+
+  const isStaff = role.name === "Staff";
+  const navItems = isStaff ? StaffNav : AdminNav;
+
+  const handleSignOut = (): void => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    setTimeout(() => {
+      handleSignout();
+    }, 1100);
+  };
+
+  return (
+    <>
+      <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between bg-ink px-4 py-6 md:flex">
+        <SidebarContent
+          isStaff={isStaff}
+          navItems={navItems}
+          pathname={pathname}
+          isSigningOut={isSigningOut}
+          onSignOutClick={handleSignOut}
+        />
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 animate-fade-in bg-black/40 motion-reduce:animate-none"
+            onClick={closeMobile}
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] animate-drawer-in flex-col justify-between bg-ink px-4 py-6 shadow-xl motion-reduce:animate-none">
+            <button
+              type="button"
+              onClick={closeMobile}
+              aria-label="Close menu"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-sage hover:bg-white/5"
+            >
+              <X size={26} />
+            </button>
+            <SidebarContent
+              isStaff={isStaff}
+              navItems={navItems}
+              pathname={pathname}
+              isSigningOut={isSigningOut}
+              onSignOutClick={handleSignOut}
+              onNavigate={closeMobile}
+            />
+          </aside>
+        </div>
+      )}
+    </>
   );
 };
 
