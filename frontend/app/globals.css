@@ -33,6 +33,9 @@
   --animate-walker-enter: walker-enter 700ms ease-in both;
   --animate-walker-exit: walker-exit 750ms ease-out both;
   --animate-badge-pulse: badge-pulse 1.4s ease-in-out infinite;
+
+  --animate-drawer-in: drawer-in 250ms ease-out both;
+  --animate-fade-in: fade-in 200ms ease-out both;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -116,5 +119,23 @@ body {
   50% {
     opacity: 0.55;
     transform: scale(0.92);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
