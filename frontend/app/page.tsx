@@ -257,11 +257,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-ink">
       <div className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
-        <div
-          className={`relative z-0 flex-1 transition-colors duration-300 motion-reduce:transition-none ${
-            isSignUp ? "bg-white" : "bg-ink"
-          }`}
-        >
+        <div className="relative z-0 flex-1 bg-ink transition-colors duration-300 motion-reduce:transition-none">
           <div
             key={`text-${mode}`}
             className="h-full animate-panel-fade motion-reduce:animate-none"
@@ -375,7 +371,7 @@ const FormPanel = ({
 
   return (
     <div className="relative flex h-full flex-col justify-center px-10 py-14 md:px-16">
-      <div className="mx-auto w-full max-w-sm">
+      <div className="mx-auto w-full max-w-sm flex-1 flex-col justify-center">
         <div className="mb-8 inline-flex rounded-full bg-input-bg p-1">
           {modes.map((m) => (
             <button
