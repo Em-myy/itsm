@@ -1,16 +1,20 @@
 "use client";
 
 import { BookingType } from "@/lib/types";
+import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const RealTimeBookings = ({
   initialBookings,
   emptyFallback,
+  hasError,
 }: {
   initialBookings: BookingType | BookingType[] | null;
   emptyFallback: React.ReactNode;
+  hasError?: boolean;
 }) => {
   const supabase = createClient();
   const router = useRouter();
@@ -32,6 +36,18 @@ const RealTimeBookings = ({
     };
   }, [supabase, router]);
 
+  if (hasError) {
+    return (
+      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-line px-4 py-8 text-center">
+        <AlertCircle className="h-5 w-5 text-muted" />
+        <p className="text-sm text-body">
+          Couldn&apos;t load bookings right now.
+        </p>
+        <p className="text-xs text-muted">Try refreshing the page.</p>
+      </div>
+    );
+  }
+
   if (
     !initialBookings ||
     (Array.isArray(initialBookings) && initialBookings.length === 0)
@@ -43,44 +59,62 @@ const RealTimeBookings = ({
     ? initialBookings
     : [initialBookings];
   return (
-    <div>
-      {bookingsArray.map((booking) => (
-        <div key={booking.reference}>
-          <h2>{booking.purpose}</h2>
-          <h3>{booking.status}</h3>
-          <div>
-            <h4>{booking.venue_name}</h4>
-            <span>
-              {new Date(booking.start_time).toLocaleDateString("en-US", {
+    <div className="space-y-6">
+      {bookingsArray.map((booking) => {
+        const style = getStatusStyle(booking.status);
+        const start = new Date(booking.start_time);
+        const end = new Date(booking.end_time);
+        const timeOpts: Intl.DateTimeFormatOptions = {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        };
+
+        return (
+          <div key={booking.reference} className="space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="font-serif text-lg text-heading">
+                {booking.purpose}
+              </h4>
+              <span
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${style.pill}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+                {booking.status}
+              </span>
+            </div>
+
+            <p className="text-sm text-body">
+              {booking.venue_name} &middot;{" "}
+              {start.toLocaleDateString("en-GB", {
                 weekday: "long",
                 day: "numeric",
                 month: "short",
-              })}
+              })}{" "}
+              &middot; {start.toLocaleTimeString("en-GB", timeOpts)}–
+              {end.toLocaleTimeString("en-GB", timeOpts)}
+            </p>
+
+            <span className="inline-block rounded-full bg-input-bg px-2.5 py-1 font-mono text-xs text-muted">
+              {booking.reference}
             </span>
-            <div>
-              <span>
-                {new Date(booking.start_time).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                {" - "}
-                {new Date(booking.end_time).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
+
+            {booking.equipment_needed &&
+              booking.equipment_needed.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {booking.equipment_needed.map((eq) => (
+                    <span
+                      key={eq}
+                      className="rounded-full border border-line px-2.5 py-1 text-xs text-body"
+                    >
+                      {eq}
+                    </span>
+                  ))}
+                </div>
+              )}
           </div>
-          <h3>{booking.reference}</h3>
-          <div>
-            {booking.equipment_needed?.map((eq) => (
-              <ul key={eq}>
-                <li>{eq}</li>
-              </ul>
-            ))}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
