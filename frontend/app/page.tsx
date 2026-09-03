@@ -378,7 +378,7 @@ const FormPanel = ({
               key={m}
               type="button"
               onClick={() => onSwitch(m)}
-              className={`rounded-full px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] transition focus-visible:ring-2 focus-visible:ring-emerald-600 ${
+              className={`rounded-full cursor-pointer px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] transition focus-visible:ring-2 focus-visible:ring-emerald-600 ${
                 mode === m
                   ? "bg-button text-white"
                   : "bg-transparent text-muted"
