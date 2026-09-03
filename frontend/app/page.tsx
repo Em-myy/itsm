@@ -284,11 +284,11 @@ const TextPanel = ({ mode }: { mode: Mode }): React.ReactElement => {
 
   return (
     <div className="relative flex h-full flex-col justify-between overflow-hidden px-10 py-12 text-cream md:px-16 md:py-16">
-      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full border border-ink-border" />
-      <div className="pointer-events-none absolute -bottom-8 -right-8 h-48 w-48 rounded-full border border-ink-border" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full border border-ink-border animate-badge-pulse" />
+      <div className="pointer-events-none absolute -bottom-8 -right-8 h-48 w-48 rounded-full border border-ink-border animate-badge-pulse" />
 
       <div className="relative">
-        <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-xl border border-ink-border text-lg font-semibold">
+        <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-xl border border-ink-border text-lg font-semibold animate-badge-pulse">
           O
         </div>
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-sage">
@@ -305,7 +305,7 @@ const TextPanel = ({ mode }: { mode: Mode }): React.ReactElement => {
             key={index}
             className="flex gap-4 text-sm leading-relaxed text-bullet"
           >
-            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-sage" />
+            <Icon className="mt-0.5 h-5 w-5 shrink-0 text-sage" />
             <span>
               <span className="font-medium text-cream">{lead}</span> {rest}
             </span>
