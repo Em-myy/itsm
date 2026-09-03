@@ -55,6 +55,12 @@ export interface AssetType {
   notes?: string;
 }
 
+export interface StatusStyle {
+  pill: string;
+  dot: string;
+  accent: string;
+}
+
 export const DEPARTMENTS = [
   "Admin/HR",
   "Environment",
