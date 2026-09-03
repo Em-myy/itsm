@@ -26,39 +26,39 @@ interface NavType {
 }
 
 const StaffNav: NavType[] = [
-  { icon: <HomeIcon size={26} />, name: "Dashboard", path: "/staff/home" },
+  { icon: <HomeIcon size={18} />, name: "Dashboard", path: "/staff/home" },
   {
-    icon: <Edit2 size={26} />,
+    icon: <Edit2 size={18} />,
     name: "Submit a ticket",
     path: "/staff/submit-ticket",
   },
-  { icon: <Menu size={26} />, name: "My tickets", path: "/staff/tickets" },
+  { icon: <Menu size={18} />, name: "My tickets", path: "/staff/tickets" },
   {
-    icon: <Calendar size={26} />,
+    icon: <Calendar size={18} />,
     name: "Venue calendar",
     path: "/staff/calendar",
   },
 ];
 
 const AdminNav: NavType[] = [
-  { icon: <House size={26} />, name: "Dashboard", path: "/admin/home" },
+  { icon: <House size={18} />, name: "Dashboard", path: "/admin/home" },
   {
-    icon: <Columns3 size={26} />,
+    icon: <Columns3 size={18} />,
     name: "Helpdesk board",
     path: "/admin/tickets",
   },
   {
-    icon: <Package size={26} />,
+    icon: <Package size={18} />,
     name: "Master inventory",
     path: "/admin/assets",
   },
   {
-    icon: <CircleCheck size={26} />,
+    icon: <CircleCheck size={18} />,
     name: "Booking approvals",
     path: "/admin/bookings",
   },
   {
-    icon: <UsersRound size={26} />,
+    icon: <UsersRound size={18} />,
     name: "User management",
     path: "/admin/users",
   },
@@ -96,11 +96,11 @@ const SidebarContent = ({
     <>
       <div>
         <div className="mb-8 flex items-center gap-3 px-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-ink-border text-2xl font-semibold text-cream">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-ink-border text-2xl font-semibold text-cream animate-badge-pulse">
             O
           </div>
           <div>
-            <p className="text-[16px] font-semibold text-cream">Ojo ITSM</p>
+            <p className="text-[15px] font-semibold text-cream">Ojo ITSM</p>
             <p className="font-mono text-xs uppercase tracking-[0.15em] text-sage">
               IT &amp; Computer Unit
             </p>
@@ -151,7 +151,7 @@ const SidebarContent = ({
             <SignoutScene />
           ) : (
             <>
-              <LogOut size={26} /> Sign Out
+              <LogOut size={18} /> Sign Out
             </>
           )}
         </button>
