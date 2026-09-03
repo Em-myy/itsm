@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: "A Web-App for the IT Department",
 };
 
-export default function MainLayout({ children }: LayoutProps<"/">) {
+export default function MainLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="min-h-full flex">
       <div>{children}</div>
