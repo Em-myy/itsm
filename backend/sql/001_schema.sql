@@ -339,3 +339,7 @@ CREATE TRIGGER trigger_set_venue_reference
 BEFORE INSERT ON venues
 FOR EACH ROW 
 EXECUTE FUNCTION set_venue_reference();
+
+ALTER TABLE tickets
+ADD COLUMN priority VARCHAR(50) NOT NULL DEFAULT 'Low'
+CHECK (priority IN ('Low', 'Normal', 'Urgent'));
