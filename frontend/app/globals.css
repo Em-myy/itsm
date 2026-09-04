@@ -1,13 +1,6 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -36,6 +29,8 @@
 
   --animate-drawer-in: drawer-in 250ms ease-out both;
   --animate-fade-in: fade-in 200ms ease-out both;
+
+  --animate-timeline-ball: timeline-ball 5s ease-in-out infinite;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,7 +42,7 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--color-heading);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -64,7 +59,7 @@ body {
 
 @keyframes door-swing {
   from {
-     transform: rotateY(0deg);
+    transform: rotateY(0deg);
   }
   to {
     transform: rotateY(-100deg);
@@ -96,7 +91,7 @@ body {
 }
 
 @keyframes walker-exit {
-   0% {
+  0% {
     transform: translateX(0) scale(0.6);
     opacity: 0;
   }
@@ -137,5 +132,40 @@ body {
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes timeline-ball {
+  0%,
+  10% {
+    top: var(--timeline-1);
+  }
+
+  25% {
+    top: var(--timeline-2);
+  }
+
+  35% {
+    top: var(--timeline-2);
+  }
+
+  50% {
+    top: var(--timeline-3);
+  }
+
+  60% {
+    top: var(--timeline-3);
+  }
+
+  75% {
+    top: var(--timeline-4);
+  }
+
+  90% {
+    top: var(--timeline-4);
+  }
+
+  100% {
+    top: var(--timeline-1);
   }
 }
