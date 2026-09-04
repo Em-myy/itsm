@@ -95,7 +95,7 @@ const RealTimeBookings = ({
               {end.toLocaleTimeString("en-GB", timeOpts)}
             </p>
 
-            <span className="inline-block rounded-full bg-input-bg px-2.5 py-1 font-mono text-xs text-muted">
+            <span className="inline-block -skew-y-2 rounded-[7px] bg-input-bg px-2.5 py-1 font-mono text-xs text-muted">
               {booking.reference}
             </span>
 
@@ -105,7 +105,7 @@ const RealTimeBookings = ({
                   {booking.equipment_needed.map((eq) => (
                     <span
                       key={eq}
-                      className="rounded-full border border-line px-2.5 py-1 text-xs text-body"
+                      className="-skew-y-2 rounded-[7px] border border-line px-2.5 py-1 text-xs text-body"
                     >
                       {eq}
                     </span>
