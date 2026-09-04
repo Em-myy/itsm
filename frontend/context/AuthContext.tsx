@@ -1,16 +1,11 @@
 "use client";
 
 import api from "@/lib/axios";
+import { RoleType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
-
-interface RoleType {
-  id: number;
-  name: string;
-  description: string;
-}
 
 interface AuthContextValue {
   user: User | null;
