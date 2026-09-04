@@ -1,6 +1,7 @@
 "use client";
 
 import { TicketType } from "@/lib/types";
+import { getPriorityColors } from "@/utils/priority-styles";
 import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
 import { AlertCircle } from "lucide-react";
@@ -76,7 +77,9 @@ const RealTimeTickets = ({
                 </p>
                 <p className="mt-0.5 text-xs text-muted">
                   {ticket.department} &middot; {ticket.category} &middot;{" "}
-                  <span className="font-semibold text-heading">
+                  <span
+                    className={`font-semibold ${getPriorityColors(ticket.priority)}`}
+                  >
                     {ticket.priority}
                   </span>
                 </p>
@@ -89,8 +92,10 @@ const RealTimeTickets = ({
                   <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
                   {ticket.status}
                 </span>
-                <span className="rounded-full bg-input-bg px-2.5 py-1 font-mono text-xs text-muted">
-                  {ticket.reference}
+                <span className="inline-block -skew-y-2 rounded-[7px] bg-input-bg px-2.5 py-1">
+                  <span className="inline-block font-mono text-xs text-muted">
+                    {ticket.reference}
+                  </span>
                 </span>
               </div>
             </div>
