@@ -1,10 +1,12 @@
 "use client";
 
 import api from "@/lib/axios";
-import { TicketType } from "@/lib/types";
+import { DEPARTMENTS, TicketType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
+import { fi } from "date-fns/locale";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface InputType {
   title: string;
@@ -17,26 +19,111 @@ interface SelectType {
   relatedAsset: string;
 }
 
+const inputClass =
+  "w-full rounded-xl border border-line bg-input-bg px-4 py-3 text-sm text-heading placeholder:text-muted outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
+
+const PRIORITIES = ["Low", "Normal", "Urgent"];
+
+const NEXT_STEPS = [
+  {
+    title: "Submitted",
+    description: "You'll get a reference number immediately.",
+  },
+  {
+    title: "Reviewed",
+    description: "An IT officer triggers it and sets a priority.",
+  },
+  {
+    title: "In progress",
+    description: "You'll see who's assigned and can add notes.",
+  },
+  {
+    title: "Resolved",
+    description: "You'll get a reference number immediately.",
+  },
+];
+
 const SubmitTicketClient = ({
   initialTickets,
 }: {
   initialTickets: TicketType[] | null;
 }) => {
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const holeRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [positions, setPositions] = useState<number[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [inputElements, setInputElements] = useState<InputType>({
     title: "",
     priority: "",
   });
   const [description, setDescription] = useState<string>("");
   const [selectElements, setSelectElements] = useState<SelectType>({
-    category: "",
-    department: "",
-    relatedAsset: "",
+    category: "Hardware",
+    department: "Admin/HR",
+    relatedAsset: "None - not tied to a registered asset",
   });
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
+
+  useEffect(() => {
+    const timeline = timelineRef.current;
+
+    if (!timeline) return;
+
+    const updatePositions = () => {
+      const timelineTop = timeline.getBoundingClientRect().top;
+
+      const newPositions = holeRefs.current.map((hole) => {
+        if (!hole) return 0;
+
+        return hole.getBoundingClientRect().top - timelineTop;
+      });
+
+      setPositions(newPositions);
+    };
+
+    updatePositions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updatePositions();
+    });
+
+    resizeObserver.observe(timeline);
+
+    holeRefs.current.forEach((hole) => {
+      if (hole) {
+        resizeObserver.observe(hole.parentElement!);
+      }
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  const animationStyle =
+    positions.length === NEXT_STEPS.length
+      ? ({
+          "--timeline-1": `${positions[0]}px`,
+          "--timeline-2": `${positions[1]}px`,
+          "--timeline-3": `${positions[2]}px`,
+          "--timeline-4": `${positions[3]}px`,
+        } as React.CSSProperties)
+      : undefined;
+
+  const handleClearFile = () => {
+    setFile(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -74,6 +161,7 @@ const SubmitTicketClient = ({
     event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
+    setError(null);
     setIsSubmitting(true);
 
     try {
@@ -114,22 +202,32 @@ const SubmitTicketClient = ({
       router.push("/staff/tickets");
     } catch (error) {
       console.log(error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong submitting your ticket. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <div>
-        <h1>Report an issue</h1>
-        <p>The IT unit reviews new tickets within one business day</p>
+        <h1 className="font-serif text-3xl text-heading">Report an issue</h1>
+        <p className="mt-1 text-sm text-body">
+          The IT unit reviews new tickets within one business day
+        </p>
       </div>
-      <div>
-        <div>
-          <form onSubmit={handleSubmit}>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-2xl border border-line bg-white p-6 lg:col-span-2">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label>What's wrong?</label>
+              <label className="mb-2 block text-sm font-medium text-heading">
+                What&apos;s wrong?
+              </label>
               <input
                 type="text"
                 required
@@ -137,16 +235,20 @@ const SubmitTicketClient = ({
                 name="title"
                 value={inputElements.title}
                 onChange={handleInputChange}
+                className={inputClass}
               />
             </div>
 
-            <div>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label>Category</label>
+                <label className="mb-2 block text-sm font-medium text-heading">
+                  Category
+                </label>
                 <select
                   name="category"
                   value={selectElements.category}
                   onChange={handleSelectChange}
+                  className={inputClass}
                 >
                   <option value="Hardware">Hardware</option>
                   <option value="Network">Network</option>
@@ -156,78 +258,18 @@ const SubmitTicketClient = ({
                 </select>
               </div>
               <div>
-                <label>Department</label>
+                <label className="mb-2 block text-sm font-medium text-heading">
+                  Department
+                </label>
                 <select
                   name="department"
                   value={selectElements.department}
                   onChange={handleSelectChange}
+                  className={inputClass}
                 >
-                  <option value="Admin/HR">Admin/HR</option>
-                  <option value="Environment">Environment</option>
-                  <option value="Education">Education</option>
-                  <option value="Tourism">Tourism</option>
-                  <option value="Finance">Finance</option>
-                  <option value="ICT">ICT</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <h4>Priority</h4>
-              <div>
-                <div>
-                  <label>Low</label>
-                  <input
-                    type="radio"
-                    name="priority"
-                    value="Low"
-                    checked={inputElements.priority === "Low"}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label>Normal</label>
-                  <input
-                    type="radio"
-                    name="priority"
-                    value="Normal"
-                    checked={inputElements.priority === "Normal"}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div>
-                  <label>Urgent</label>
-                  <input
-                    type="radio"
-                    name="priority"
-                    value="Urgent"
-                    checked={inputElements.priority === "Urgent"}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label>
-                Related Asset <span>(optional)</span>
-              </label>
-
-              <div>
-                <select
-                  name="relatedAsset"
-                  value={selectElements.relatedAsset}
-                  onChange={handleSelectChange}
-                >
-                  <option value="None - not tied to a registered asset">
-                    None - not tied to a registered asset
-                  </option>
-                  {initialTickets?.map((ticket) => (
-                    <option
-                      value={`${ticket.reference}`}
-                      key={ticket.reference}
-                    >
-                      {ticket.reference + " - " + ticket.title}
+                  {DEPARTMENTS.map((dept) => (
+                    <option value={dept} key={dept}>
+                      {dept}
                     </option>
                   ))}
                 </select>
@@ -235,48 +277,149 @@ const SubmitTicketClient = ({
             </div>
 
             <div>
-              <label>Describe what's happening</label>
+              <h4 className="mb-2 text-sm font-medium text-heading">
+                Priority
+              </h4>
+              <div className="flex overflow-hidden rounded-lg border border-line">
+                {PRIORITIES.map((level) => (
+                  <label
+                    key={level}
+                    className="flex-1 cursor-pointer bg-input-bg py-3 text-center text-sm font-semibold text-body transition has-checked:bg-button has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-emerald-600 has-focus-visible:ring-offset-2 has-not-checked:hover:bg-surface-hover"
+                  >
+                    <input
+                      type="radio"
+                      name="priority"
+                      value={level}
+                      checked={inputElements.priority === level}
+                      onChange={handleInputChange}
+                      className="sr-only"
+                    />
+                    {level}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-heading">
+                Related Asset <span className="text-muted">(optional)</span>
+              </label>
+
+              <select
+                name="relatedAsset"
+                value={selectElements.relatedAsset}
+                onChange={handleSelectChange}
+                className={inputClass}
+              >
+                <option value="None - not tied to a registered asset">
+                  None - not tied to a registered asset
+                </option>
+                {initialTickets?.map((ticket) => (
+                  <option value={`${ticket.reference}`} key={ticket.reference}>
+                    {ticket.reference + " - " + ticket.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-heading">
+                Describe what&apos;s happening
+              </label>
               <textarea
                 placeholder="What did you expect to happen, and what happened instead?"
                 name="description"
                 value={description}
                 onChange={handleDescriptionChange}
+                rows={5}
+                className={`${inputClass} resize-y`}
               />
             </div>
 
             <div>
-              <label>
-                Attach a picture <span>(optional)</span>
+              <label className="mb-2 block text-sm font-medium text-heading">
+                Attach a picture <span className="text-muted">(optional)</span>
               </label>
-              <input type="file" accept="image/*" onChange={handleFileChange} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className={`${inputClass} text-muted file:mr-4 file:cursor-pointer file:rounded-md file:border file:border-line file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-heading file:transition hover:file:bg-surface-hover`}
+                ref={fileInputRef}
+              />
+              {file && (
+                <div className="mt-2 flex items-center justify-between rounded-lg bg-input-bg px-3 py-2">
+                  <span className="truncate text-sm text-body">
+                    {file.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearFile}
+                    className="ml-3 text-sm font-medium text-red-500 hover:text-red-700 cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div>
-              <p>KEEP THIS REFERENCE FOR YOUR RECORDS</p>
-              <p>DRAFT</p>
+            {error && (
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between border-t border-dashed border-line pt-4">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted">
+                Keep this reference for your records
+              </p>
+              <span className="rounded-md bg-input-bg px-2.5 py-1 font-mono text-xs text-muted">
+                DRAFT
+              </span>
             </div>
-            <button>Submit ticket</button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-button py-3.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+            >
+              {isSubmitting ? "Submitting..." : "Submit ticket"}
+            </button>
           </form>
         </div>
-        <div>
-          <h3>What happens next</h3>
-          <div>
-            <div>
-              <h4>Submitted</h4>
-              <p>You'll get a reference number immediately</p>
-            </div>
-            <div>
-              <h4>Reviewed</h4>
-              <p>An IT staff triggers it and sets a priority</p>
-            </div>
-            <div>
-              <h4>In progress</h4>
-              <p>You'll see it as pending</p>
-            </div>
-            <div>
-              <h4>Resolved</h4>
-              <p>Marked closed once the fix is complete</p>
-            </div>
+
+        <div className="rounded-2xl border border-line bg-white p-6 h-fit">
+          <h3 className="font-serif text-xl text-heading">What happens next</h3>
+          <div
+            ref={timelineRef}
+            style={animationStyle}
+            className="relative mt-4"
+          >
+            {positions.length === NEXT_STEPS.length && (
+              <span className="animate-timeline-ball absolute left-0 z-10 h-3 w-3 rounded-full bg-button" />
+            )}
+
+            {NEXT_STEPS.map((step, index) => (
+              <div key={step.title} className="relative pb-6 pl-6 last:pb-0">
+                {index !== NEXT_STEPS.length - 1 && (
+                  <span className="absolute left-1.25 top-3 h-full w-px bg-line" />
+                )}
+                <span
+                  ref={(element) => {
+                    holeRefs.current[index] = element;
+                  }}
+                  className="absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 border-line bg-white"
+                />
+                <h4 className="text-sm font-semibold text-heading">
+                  {step.title}
+                </h4>
+                <p className="mt-0.5 text-xs text-body">{step.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
