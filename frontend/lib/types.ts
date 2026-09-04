@@ -1,9 +1,17 @@
+import { LucideIcon } from "lucide-react";
+
 export interface cardType {
   icon: React.ReactNode;
   title: string;
   text: string;
   path: string;
   link: string;
+}
+
+export interface RoleType {
+  id: number;
+  name: string;
+  description: string;
 }
 
 export interface TicketType {
@@ -59,6 +67,12 @@ export interface StatusStyle {
   pill: string;
   dot: string;
   accent: string;
+}
+
+export interface SearchCategory {
+  id: string;
+  label: string;
+  icon: LucideIcon;
 }
 
 export const DEPARTMENTS = [
