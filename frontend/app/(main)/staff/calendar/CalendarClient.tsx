@@ -4,13 +4,45 @@ import BookingComponent from "@/components/BookingComponent";
 import RealTimeBookings from "@/components/RealTimeBookings";
 import RealTimeVenues from "@/components/RealTimeVenues";
 import { BookingType, VenueType } from "@/lib/types";
-import { format, getDay, parse, startOfWeek } from "date-fns";
-import { enUS } from "date-fns/locale";
+import {
+  format,
+  getDay,
+  isBefore,
+  isSameDay,
+  parse,
+  startOfDay,
+  startOfWeek,
+} from "date-fns";
+import { enGB } from "date-fns/locale";
 import { useState } from "react";
-import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
+import {
+  Calendar,
+  dateFnsLocalizer,
+  EventProps,
+  View,
+} from "react-big-calendar";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { getStatusStyle } from "@/utils/status-styles";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./calendar-overrides.css";
+import BookingDetails from "@/components/BookingDetails";
 
-const locales = { "en-US": enUS };
+interface ToolbarProps {
+  date: Date;
+  view: View;
+  onNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
+  onView: (view: View) => void;
+}
+
+type CalendarEvent = {
+  title: string;
+  venue: string;
+  start: Date;
+  end: Date;
+  resource: BookingType;
+};
+
+const locales = { "en-GB": enGB };
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -19,14 +51,84 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const CustomEvent = ({ event }: any): React.ReactElement => {
+const VIEW_OPTIONS: { key: View; label: string }[] = [
+  { key: "month", label: "Month" },
+  { key: "week", label: "Week" },
+  { key: "day", label: "Day" },
+];
+
+const CustomToolbar = ({ date, view, onNavigate, onView }: ToolbarProps) => {
   return (
-    <div className="p-1">
-      <div className="font-semibold text-sm leading-tight">{event.title}</div>
-      {event.venue && (
-        <div className="text-xs text-gray-200 mt-1 flex items-center gap-1">
-          {event.venue}
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h2 className="font-serif text-2xl text-heading">
+        {format(date, "MMMM yyyy")}
+      </h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-1 rounded-full bg-input-bg p-1">
+          {VIEW_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => onView(opt.key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                view === opt.key
+                  ? "bg-white text-heading shadow-sm"
+                  : "text-body hover:text-heading"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => onNavigate("PREV")}
+            aria-label="Previous"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-heading transition hover:bg-input-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate("NEXT")}
+            aria-label="Next"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-heading transition hover:bg-input-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type EventTiming = "past" | "today" | "future";
+
+const EVENT_TIMING_STYLES: Record<EventTiming, string> = {
+  past: "bg-input-bg text-muted",
+  today: "bg-button text-white",
+  future: "bg-blue-50 text-blue-700",
+};
+
+const getEventTiming = (start: Date): EventTiming => {
+  const today = startOfDay(new Date());
+  const eventDay = startOfDay(start);
+  if (isSameDay(eventDay, today)) return "today";
+  return isBefore(eventDay, today) ? "past" : "future";
+};
+
+const CustomEvent = ({
+  event,
+}: EventProps<CalendarEvent>): React.ReactElement => {
+  const timing = getEventTiming(event.start);
+  return (
+    <div
+      className={`h-full w-full rounded-md px-2 py-1 ${EVENT_TIMING_STYLES[timing]}`}
+    >
+      <div className="truncate text-xs font-semibold">{event.title}</div>
+      {event.venue && (
+        <div className="truncate text-[11px] opacity-80">{event.venue}</div>
       )}
     </div>
   );
@@ -47,13 +149,14 @@ const CalendarClient = ({
   );
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
 
-  const calendarEvents = initialBookings?.map((booking) => ({
-    title: booking.purpose,
-    venue: booking.venue_name,
-    start: new Date(booking.start_time),
-    end: new Date(booking.end_time),
-    resource: booking,
-  }));
+  const calendarEvents =
+    initialBookings?.map((booking) => ({
+      title: booking.purpose,
+      venue: booking.venue_name,
+      start: new Date(booking.start_time),
+      end: new Date(booking.end_time),
+      resource: booking,
+    })) ?? [];
 
   const handleSelectEvent = (event: any): void => {
     setSelectedBooking(event.resource);
@@ -68,16 +171,32 @@ const CalendarClient = ({
   };
 
   return (
-    <div className="relative">
-      <div>
+    <div className="relative space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl text-heading">
+            Booking, Venue &amp; Calendar
+          </h1>
+          <p className="mt-1 text-sm text-body">
+            {" "}
+            Equipment availability is checked automatically against the asset
+            register.
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => {
             setSelectedSlotDate(null);
             setOpenBooking((b) => !b);
           }}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-button px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
         >
-          + Book a hall
+          {openBooking ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Plus className="h-5 w-5" />
+          )}
+          {openBooking ? "Close" : "Book a hall"}
         </button>
       </div>
 
@@ -86,135 +205,51 @@ const CalendarClient = ({
           venues={initialVenues}
           preSelectedDate={selectedSlotDate}
           onSuccess={() => setOpenBooking(false)}
+          onClose={() => setOpenBooking(false)}
         />
       )}
 
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
-            <button
-              onClick={() => setSelectedBooking(null)}
-              type="button"
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold"
-            >
-              X
-            </button>
-            <h2 className="text-2xl font-bold mb-1">
-              {selectedBooking.purpose}
-            </h2>
-            <h3 className="text-xl font-bold mb-1">
-              {selectedBooking.reference}
-            </h3>
-            <p className="text-gray-500 mb-6 text-sm">
-              {selectedBooking.venue_name}
-            </p>
-
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-semibold text-gray-600">Start:</span>
-                <span>
-                  {new Date(selectedBooking.start_time).toLocaleDateString(
-                    "en-US",
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    },
-                  )}
-                </span>
-              </div>
-
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-semibold text-gray-600">End:</span>
-                <span>
-                  {new Date(selectedBooking.end_time).toLocaleDateString(
-                    "en-US",
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    },
-                  )}
-                </span>
-              </div>
-
-              <div className="flex justify-between border-b pb-2">
-                <span className="font-semibold text-gray-600">Status:</span>
-                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                  {selectedBooking.status || "Pending"}
-                </span>
-              </div>
-
-              <div className="pt-2">
-                <span className="font-semibold text-gray-600 block mb-1">
-                  Equipment Needed:
-                </span>
-                <p className="text-gray-700">
-                  {selectedBooking.equipment_needed?.length > 0
-                    ? selectedBooking.equipment_needed.join(", ")
-                    : "None requested"}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setSelectedBooking(null)}
-                className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <BookingDetails
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
       )}
 
-      <div>
-        <div>
-          <h1>Venues</h1>
+      <div className="grid gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-1">
+          <h2 className="mb-3 font-mono text-xs uppercase tracking-[0.15em] text-muted">
+            Halls &amp; Rooms
+          </h2>
           <RealTimeVenues
             initialVenues={initialVenues}
             emptyFallback={
-              <div>
-                <p>No venue available</p>
+              <div className="rounded-xl border border-dashed border-line bg-white px-4 py-8 text-center">
+                <p className="text-sm text-body">No venue available</p>
               </div>
             }
           />
         </div>
 
-        <div>
-          <RealTimeBookings
-            initialBookings={initialBookings}
-            emptyFallback={
-              <div>
-                <p>No booking reserved</p>
-              </div>
-            }
-          />
-        </div>
-
-        <div className="h-175 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-          <Calendar
-            localizer={localizer}
-            events={calendarEvents}
-            startAccessor="start"
-            endAccessor="end"
-            views={["month", "week", "day"]}
-            date={currentDate}
-            view={currentView}
-            onNavigate={(newDate) => setCurrentDate(newDate)}
-            onView={(newView) => setCurrentView(newView)}
-            components={{ event: CustomEvent }}
-            onSelectEvent={handleSelectEvent}
-            selectable={true}
-            onSelectSlot={handleSelectSlot}
-          />
+        <div className="lg:col-span-3">
+          <div className="h-175 rounded-2xl border border-line bg-white p-6 shadow-sm">
+            <Calendar
+              localizer={localizer}
+              events={calendarEvents}
+              startAccessor="start"
+              endAccessor="end"
+              views={["month", "week", "day"]}
+              date={currentDate}
+              view={currentView}
+              onNavigate={(newDate) => setCurrentDate(newDate)}
+              onView={(newView) => setCurrentView(newView)}
+              components={{ event: CustomEvent, toolbar: CustomToolbar }}
+              onSelectEvent={handleSelectEvent}
+              selectable
+              onSelectSlot={handleSelectSlot}
+              style={{ height: "100%" }}
+            />
+          </div>
         </div>
       </div>
     </div>
