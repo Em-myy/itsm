@@ -1,6 +1,7 @@
 "use client";
 
 import { VenueType } from "@/lib/types";
+import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -43,15 +44,44 @@ const RealTimeVenues = ({
     ? initialVenues
     : [initialVenues];
   return (
-    <div>
-      {venuesArray.map((venue) => (
-        <div key={venue.id}>
-          <h2>{venue.name}</h2>
-          <h4>Seats {venue.capacity}</h4>
-          <p>{venue.status}</p>
-          <p>{venue.equipments}</p>
-        </div>
-      ))}
+    <div className="space-y-3">
+      {venuesArray.map((venue) => {
+        const style = venue.status ? getStatusStyle(venue.status) : null;
+        return (
+          <div
+            key={venue.id}
+            className="rounded-xl border border-line bg-white p-4"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-sm font-semibold text-heading">
+                {venue.name}
+              </h2>
+              {style && (
+                <span
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ${style.pill}`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+                  {venue.status}
+                </span>
+              )}
+            </div>
+            <h4 className="mt-0.5 text-xs text-body">Seats {venue.capacity}</h4>
+
+            {venue.equipments && venue.equipments.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {venue.equipments.map((eq) => (
+                  <span
+                    key={eq}
+                    className="rounded-full bg-input-bg px-2.5 py-1 text-xs text-body"
+                  >
+                    {eq}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
