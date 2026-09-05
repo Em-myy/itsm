@@ -1,0 +1,84 @@
+.rbc-calendar {
+  font-family: inherit;
+  color: var(--color-heading);
+}
+
+.rbc-month-view {
+  border: none;
+  background: transparent;
+}
+
+.rbc-month-header {
+  margin-bottom: 8px;
+}
+
+.rbc-header {
+  border: none !important;
+  padding: 8px 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+  text-align: left;
+}
+
+.rbc-month-row {
+  border: none;
+  overflow: visible;
+}
+
+.rbc-day-bg {
+  border: 1px solid var(--color-line) !important;
+  border-radius: 10px;
+  margin: 2px;
+  background: #fff;
+}
+
+.rbc-off-range-bg {
+  background: var(--color-input-bg) !important;
+}
+
+.rbc-off-range {
+  color: var(--color-muted);
+}
+
+.rbc-today {
+  background: var(--color-surface-hover) !important;
+}
+
+.rbc-date-cell {
+  padding: 6px 8px 0;
+  text-align: left;
+  font-size: 0.8125rem;
+  color: var(--color-body);
+}
+
+.rbc-row-segment {
+  padding: 0 4px 4px;
+}
+
+.rbc-event {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.rbc-event:focus,
+.rbc-event.rbc-selected {
+  outline: 2px solid var(--color-button);
+  outline-offset: 1px;
+  background: transparent;
+}
+
+.rbc-show-more {
+  background: transparent;
+  color: var(--color-button);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.rbc-selected-cell {
+  background: var(--color-surface-hover) !important;
+}
