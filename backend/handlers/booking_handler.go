@@ -264,3 +264,100 @@ func (h *BookingHandler) RejectBooking(w http.ResponseWriter, r *http.Request) {
 		"message": "Booking rejected successfully",
 	})
 }
+
+func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var input struct {
+		BookingID       int       `json:"booking_id"`
+		Purpose         string    `json:"purpose"`
+		VenueID         int       `json:"venue_id"`
+		StartTime       time.Time `json:"start_time"`
+		EndTime         time.Time `json:"end_time"`
+		EquipmentNeeded []string  `json:"equipment_needed"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.BookingID == 0 {
+		http.Error(w, "Booking id is required", http.StatusBadRequest)
+		return
+	}
+
+	if input.Purpose == "" || input.VenueID == 0 {
+		http.Error(w, "Purpose and venue are required", http.StatusBadRequest)
+		return
+	}
+
+	if !input.StartTime.Before(input.EndTime) {
+		http.Error(w, "End time must be after start time", http.StatusBadRequest)
+		return
+	}
+
+	updateData := models.Booking{
+		Purpose:         input.Purpose,
+		VenueID:         input.VenueID,
+		StartTime:       input.StartTime,
+		EndTime:         input.EndTime,
+		EquipmentNeeded: input.EquipmentNeeded,
+	}
+
+	err := repositories.UpdateBooking(r.Context(), h.DB, input.BookingID, updateData)
+	if err != nil {
+		log.Println("Error updating booking:", err)
+		http.Error(w, "Could not update booking", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Booking updated successfully",
+	})
+}
+
+func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
+	role, _ := r.Context().Value(middleware.UserRoleKey).(string)
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	isAdmin := (role == "IT Admin")
+
+	var input struct {
+		BookingID int `json:"booking_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.BookingID == 0 {
+		http.Error(w, "Booking ID is required", http.StatusBadRequest)
+		return
+	}
+
+	err := repositories.CancelBooking(r.Context(), h.DB, input.BookingID, userID, isAdmin)
+	if err != nil {
+		log.Println("Error cancelling booking:", err)
+		http.Error(w, "Booking not found or not authorized to cancel", http.StatusForbidden)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Booking cancelled successfully",
+	})
+}
