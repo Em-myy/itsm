@@ -35,7 +35,7 @@ const StaffNav: NavType[] = [
   { icon: <Menu size={18} />, name: "My tickets", path: "/staff/tickets" },
   {
     icon: <Calendar size={18} />,
-    name: "Venue calendar",
+    name: "Bookings",
     path: "/staff/calendar",
   },
 ];
