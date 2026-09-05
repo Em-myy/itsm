@@ -209,3 +209,72 @@ func RejectBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int) error
 
 	return nil
 }
+
+func UpdateBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int, updateData models.Booking) error {
+	query := `
+		UPDATE bookings
+		SET 
+			purpose = $1,
+			venue_id = $2,
+			start_time = $3,
+			end_time = $4,
+			equipment_needed = $5,
+			updated_at = Now()
+		WHERE id = $6;
+	`
+	commandTag, err := pool.Exec(
+		ctx,
+		query,
+		updateData.Purpose,
+		updateData.VenueID,
+		updateData.StartTime,
+		updateData.EndTime,
+		updateData.EquipmentNeeded,
+		bookingID,
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to update booking: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No booking found with ID: %d", bookingID)
+	}
+
+	return nil
+}
+
+func CancelBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int, userID string, isAdmin bool) error {
+	var query string
+	var args []any
+
+	if isAdmin {
+		query = `
+			UPDATE bookings
+			SET
+				status = 'Cancelled',
+				updated_At = NOW()
+			WHERE id = $1;
+		`
+		args = []any{bookingID}
+	} else {
+		query = `
+			UPDATE bookings
+			SET
+				status = 'Cancelled',
+				updated_At = NOW()
+			WHERE id = $1 AND user_id = $2;
+		`
+		args = []any{bookingID, userID}
+	}
+
+	commandTag, err := pool.Exec(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("Failed to cancel booking: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No booking found with ID: %d", bookingID)
+	}
+
+	return nil
+}
