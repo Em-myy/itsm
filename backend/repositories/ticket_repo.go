@@ -194,3 +194,76 @@ func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int) error
 
 	return nil
 }
+
+func UpdateTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, updateData models.Ticket) error {
+	query := `
+		UPDATE tickets
+		SET 
+			title = $1,
+			category = $2,
+			department = $3,
+			priority = $4,
+			related_asset = $5,
+			description = $6,
+			picture = $7,
+			updated_at = NOW()
+		WHERE id = $8;
+	`
+	commandTag, err := pool.Exec(
+		ctx,
+		query,
+		updateData.Title,
+		updateData.Category,
+		updateData.Department,
+		updateData.Priority,
+		updateData.RelatedAsset,
+		updateData.Description,
+		updateData.Picture,
+		ticketID,
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to update tickets: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No ticket found with ID: %d", ticketID)
+	}
+
+	return nil
+}
+
+func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID string, isAdmin bool) error {
+	var query string
+	var args []any
+
+	if isAdmin {
+		query = `
+			UPDATE tickets
+			SET
+				status = 'Cancelled',
+				updated_At = NOW()
+			WHERE id = $1;
+		`
+		args = []any{ticketID}
+	} else {
+		query = `
+			UPDATE tickets
+			SET
+				status = 'Cancelled',
+				updated_At = NOW()
+			WHERE id = $1 AND user_id = $2;
+		`
+		args = []any{ticketID, userID}
+	}
+
+	commandTag, err := pool.Exec(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("Failed to cancel ticket: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No booking found with ID: %d", ticketID)
+	}
+
+	return nil
+}
