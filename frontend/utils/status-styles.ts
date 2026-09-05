@@ -46,6 +46,21 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
     dot: "bg-red-500",
     accent: "bg-red-400",
   },
+  active: {
+    pill: "bg-emerald-50 text-emerald-700",
+    dot: "bg-emerald-500",
+    accent: "bg-emerald-400",
+  },
+  "in repair": {
+    pill: "bg-amber-50 text-amber-700",
+    dot: "bg-amber-500",
+    accent: "bg-amber-400",
+  },
+  retired: {
+    pill: "bg-input-bg text-muted",
+    dot: "bg-muted",
+    accent: "bg-line",
+  },
 };
 
 const DEFAULT_STATUS_STYLE: StatusStyle = {
