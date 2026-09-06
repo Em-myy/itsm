@@ -273,12 +273,12 @@ func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		BookingID       int       `json:"booking_id"`
-		Purpose         string    `json:"purpose"`
-		VenueID         int       `json:"venue_id"`
-		StartTime       time.Time `json:"start_time"`
-		EndTime         time.Time `json:"end_time"`
-		EquipmentNeeded []string  `json:"equipment_needed"`
+		BookingID       int        `json:"booking_id"`
+		Purpose         *string    `json:"purpose"`
+		VenueID         *int       `json:"venue_id"`
+		StartTime       *time.Time `json:"start_time"`
+		EndTime         *time.Time `json:"end_time"`
+		EquipmentNeeded *[]string  `json:"equipment_needed"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -291,25 +291,38 @@ func (h *BookingHandler) UpdateBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.Purpose == "" || input.VenueID == 0 {
-		http.Error(w, "Purpose and venue are required", http.StatusBadRequest)
+	if input.Purpose == nil &&
+		input.VenueID == nil &&
+		input.StartTime == nil &&
+		input.EndTime == nil &&
+		input.EquipmentNeeded == nil {
+		http.Error(w, "No fields provided for update", http.StatusBadRequest)
 		return
 	}
 
-	if !input.StartTime.Before(input.EndTime) {
-		http.Error(w, "End time must be after start time", http.StatusBadRequest)
+	if input.Purpose != nil && *input.Purpose == "" {
+		http.Error(w, "Purpose cannot be empty", http.StatusBadRequest)
 		return
 	}
 
-	updateData := models.Booking{
-		Purpose:         input.Purpose,
-		VenueID:         input.VenueID,
-		StartTime:       input.StartTime,
-		EndTime:         input.EndTime,
-		EquipmentNeeded: input.EquipmentNeeded,
+	if input.StartTime != nil && input.EndTime != nil {
+		if !input.StartTime.Before(*input.EndTime) {
+			http.Error(w, "End time must be after start time", http.StatusBadRequest)
+			return
+		}
 	}
 
-	err := repositories.UpdateBooking(r.Context(), h.DB, input.BookingID, updateData)
+	err := repositories.UpdateBooking(
+		r.Context(),
+		h.DB,
+		input.BookingID,
+		input.Purpose,
+		input.VenueID,
+		input.StartTime,
+		input.EndTime,
+		input.EquipmentNeeded,
+	)
+
 	if err != nil {
 		log.Println("Error updating booking:", err)
 		http.Error(w, "Could not update booking", http.StatusInternalServerError)
