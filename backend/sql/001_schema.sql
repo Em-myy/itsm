@@ -246,7 +246,7 @@ ALTER TABLE public.bookings  ADD COLUMN reference VARCHAR(255) UNIQUE;
 
 ALTER TABLE bookings
 ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending'
-CHECK (status IN ('Pending', 'Approved', 'Rejected'));
+CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Cancelled'));
 
 CREATE TABLE assets (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
