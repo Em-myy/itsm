@@ -195,34 +195,47 @@ func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int) error
 	return nil
 }
 
-func UpdateTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, updateData models.Ticket) error {
+func UpdateTicket(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	ticketID int,
+	title *string,
+	category *string,
+	department *string,
+	priority *string,
+	relatedAsset *string,
+	description *string,
+	picture *[]string,
+) error {
 	query := `
 		UPDATE tickets
-		SET 
-			title = $1,
-			category = $2,
-			department = $3,
-			priority = $4,
-			related_asset = $5,
-			description = $6,
-			picture = $7,
-			updated_at = NOW()
+		SET
+			title = COALESCE($1, title),
+            category = COALESCE($2, category),
+            department = COALESCE($3, department),
+            priority = COALESCE($4, priority),
+			related_asset = COALESCE($5, related_asset),
+			description = COALESCE($6, description),
+            picture = COALESCE($7, picture),
+            updated_at = NOW()
 		WHERE id = $8;
 	`
+
 	commandTag, err := pool.Exec(
 		ctx,
 		query,
-		updateData.Title,
-		updateData.Category,
-		updateData.Department,
-		updateData.Priority,
-		updateData.RelatedAsset,
-		updateData.Description,
-		updateData.Picture,
+		title,
+		category,
+		department,
+		priority,
+		relatedAsset,
+		description,
+		picture,
 		ticketID,
 	)
+
 	if err != nil {
-		return fmt.Errorf("Failed to update tickets: %w", err)
+		return fmt.Errorf("Failed to update ticket: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
@@ -251,7 +264,7 @@ func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 			SET
 				status = 'Cancelled',
 				updated_At = NOW()
-			WHERE id = $1 AND user_id = $2;
+			WHERE id = $1 AND requester_id = $2;
 		`
 		args = []any{ticketID, userID}
 	}
@@ -262,7 +275,7 @@ func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 	}
 
 	if commandTag.RowsAffected() == 0 {
-		return fmt.Errorf("No booking found with ID: %d", ticketID)
+		return fmt.Errorf("No ticket found with ID: %d", ticketID)
 	}
 
 	return nil
