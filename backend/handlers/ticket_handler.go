@@ -221,14 +221,14 @@ func (h *TicketHandler) UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		TicketId     int      `json:"ticket_id"`
-		Title        string   `json:"title"`
-		Category     string   `json:"category"`
-		Department   string   `json:"department"`
-		Priority     string   `json:"priority"`
-		RelatedAsset string   `json:"related_asset"`
-		Description  string   `json:"description"`
-		Picture      []string `json:"picture"`
+		TicketID     int       `json:"ticket_id"`
+		Title        *string   `json:"title"`
+		Category     *string   `json:"category"`
+		Department   *string   `json:"department"`
+		Priority     *string   `json:"priority"`
+		RelatedAsset *string   `json:"related_asset"`
+		Description  *string   `json:"description"`
+		Picture      *[]string `json:"picture"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -236,27 +236,40 @@ func (h *TicketHandler) UpdateTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.TicketId == 0 {
+	if input.TicketID == 0 {
 		http.Error(w, "Booking id is required", http.StatusBadRequest)
 		return
 	}
 
-	if input.Category == "" || input.Title == "" || input.Department == "" {
-		http.Error(w, "Purpose and venue are required", http.StatusBadRequest)
+	if input.Title == nil &&
+		input.Category == nil &&
+		input.Department == nil &&
+		input.Priority == nil &&
+		input.RelatedAsset == nil &&
+		input.Description == nil &&
+		input.Picture == nil {
+		http.Error(w, "No fields provided for update", http.StatusBadRequest)
 		return
 	}
 
-	updateData := models.Ticket{
-		Title:        input.Title,
-		Category:     input.Category,
-		Department:   input.Department,
-		Priority:     input.Priority,
-		RelatedAsset: input.RelatedAsset,
-		Description:  input.Description,
-		Picture:      input.Picture,
+	if input.Title != nil && *input.Title == "" {
+		http.Error(w, "Title cannot be empty", http.StatusBadRequest)
+		return
 	}
 
-	err := repositories.UpdateTicket(r.Context(), h.DB, input.TicketId, updateData)
+	err := repositories.UpdateTicket(
+		r.Context(),
+		h.DB,
+		input.TicketID,
+		input.Title,
+		input.Category,
+		input.Department,
+		input.Priority,
+		input.RelatedAsset,
+		input.Description,
+		input.Picture,
+	)
+
 	if err != nil {
 		log.Println("Error updating ticket:", err)
 		http.Error(w, "Could not update ticket", http.StatusInternalServerError)
