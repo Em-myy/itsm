@@ -5,6 +5,7 @@ import { getPriorityColors } from "@/utils/priority-styles";
 import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -65,8 +66,9 @@ const RealTimeTickets = ({
         const style = getStatusStyle(ticket.status);
 
         return (
-          <div
+          <Link
             key={ticket.reference}
+            href="/staff/tickets"
             className="flex items-stretch overflow-hidden rounded-xl border border-line bg-white"
           >
             <span className={`w-1 shrink-0 ${style.accent}`} />
@@ -99,7 +101,7 @@ const RealTimeTickets = ({
                 </span>
               </div>
             </div>
-          </div>
+          </Link>
         );
       })}
     </>
