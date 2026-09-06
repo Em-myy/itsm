@@ -210,28 +210,39 @@ func RejectBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int) error
 	return nil
 }
 
-func UpdateBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int, updateData models.Booking) error {
+func UpdateBooking(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	bookingID int,
+	purpose *string,
+	venueID *int,
+	startTime *time.Time,
+	endTime *time.Time,
+	equipmentNeeded *[]string,
+) error {
 	query := `
 		UPDATE bookings
-		SET 
-			purpose = $1,
-			venue_id = $2,
-			start_time = $3,
-			end_time = $4,
-			equipment_needed = $5,
-			updated_at = Now()
+		SET
+			purpose = COALESCE($1, purpose),
+            venue_id = COALESCE($2, venue_id),
+            start_time = COALESCE($3, start_time),
+            end_time = COALESCE($4, end_time),
+            equipment_needed = COALESCE($5, equipment_needed),
+            updated_at = NOW()
 		WHERE id = $6;
 	`
+
 	commandTag, err := pool.Exec(
 		ctx,
 		query,
-		updateData.Purpose,
-		updateData.VenueID,
-		updateData.StartTime,
-		updateData.EndTime,
-		updateData.EquipmentNeeded,
+		purpose,
+		venueID,
+		startTime,
+		endTime,
+		equipmentNeeded,
 		bookingID,
 	)
+
 	if err != nil {
 		return fmt.Errorf("Failed to update booking: %w", err)
 	}
