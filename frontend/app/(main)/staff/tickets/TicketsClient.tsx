@@ -1,5 +1,6 @@
 "use client";
 
+import TicketDetails from "@/components/TicketDetails";
 import api from "@/lib/axios";
 import { TicketType } from "@/lib/types";
 import { getPriorityColors } from "@/utils/priority-styles";
@@ -10,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const FILTERS = ["All", "Pending", "In Progress", "Resolved"];
+const FILTERS = ["All", "Pending", "In Progress", "Resolved", "Cancelled"];
 type Filter = (typeof FILTERS)[number];
 
 const FILTER_STATUS: Record<Filter, string | null> = {
@@ -18,6 +19,7 @@ const FILTER_STATUS: Record<Filter, string | null> = {
   Pending: "pending",
   "In Progress": "in progress",
   Resolved: "resolved",
+  Cancelled: "cancelled",
 };
 
 const TicketsClientPage = ({
@@ -29,6 +31,7 @@ const TicketsClientPage = ({
   const router = useRouter();
 
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
+  const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
 
   useEffect(() => {
     const channel = supabase
@@ -134,10 +137,15 @@ const TicketsClientPage = ({
                 <tbody>
                   {filteredStatus.map((ticket) => {
                     const style = getStatusStyle(ticket.status);
+                    const isCancelled =
+                      ticket.status.toLowerCase() === "cancelled";
                     return (
                       <tr
                         key={ticket.id}
-                        className="border-b border-line transition last:border-0 hover:bg-input-bg/60"
+                        onClick={() => setSelectedTicket(ticket)}
+                        className={`cursor-pointer border-b border-line transition last:border-0 hover:bg-input-bg/60 ${
+                          isCancelled ? "opacity-60" : ""
+                        }`}
                       >
                         <td className="px-4 py-4">
                           <span className="inline-block -skew-y-2 rounded-md bg-input-bg px-2.5 py-1">
@@ -185,6 +193,14 @@ const TicketsClientPage = ({
             </div>
           </div>
         </>
+      )}
+
+      {selectedTicket && (
+        <TicketDetails
+          ticket={selectedTicket}
+          relatedTickets={ticketsArray}
+          onClose={() => setSelectedTicket(null)}
+        />
       )}
     </div>
   );
