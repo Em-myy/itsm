@@ -26,6 +26,7 @@ import { getStatusStyle } from "@/utils/status-styles";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./calendar-overrides.css";
 import BookingDetails from "@/components/BookingDetails";
+import { init } from "next/dist/compiled/webpack/webpack";
 
 interface ToolbarProps {
   date: Date;
@@ -85,7 +86,7 @@ const CustomToolbar = ({ date, view, onNavigate, onView }: ToolbarProps) => {
             type="button"
             onClick={() => onNavigate("PREV")}
             aria-label="Previous"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-heading transition hover:bg-input-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-heading transition hover:bg-input-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -93,7 +94,7 @@ const CustomToolbar = ({ date, view, onNavigate, onView }: ToolbarProps) => {
             type="button"
             onClick={() => onNavigate("NEXT")}
             aria-label="Next"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-heading transition hover:bg-input-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-heading transition hover:bg-input-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 cursor-pointer"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -189,7 +190,7 @@ const CalendarClient = ({
             setSelectedSlotDate(null);
             setOpenBooking((b) => !b);
           }}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-button px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-button px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
         >
           {openBooking ? (
             <X className="h-5 w-5" />
@@ -212,6 +213,7 @@ const CalendarClient = ({
       {selectedBooking && (
         <BookingDetails
           booking={selectedBooking}
+          venues={initialVenues}
           onClose={() => setSelectedBooking(null)}
         />
       )}
