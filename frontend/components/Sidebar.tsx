@@ -166,7 +166,17 @@ const Sidebar = () => {
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
 
+  if (!role) {
+    return null;
+  }
+
   const isStaff = role.name === "Staff";
+  const isAdmin = role.name === "IT Admin";
+
+  if (!isStaff && !isAdmin) {
+    return null;
+  }
+
   const navItems = isStaff ? StaffNav : AdminNav;
 
   const handleSignOut = (): void => {
