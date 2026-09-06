@@ -48,22 +48,6 @@ type Mode = "signin" | "signup";
 type Label = "Username" | "E-Mail" | "Department" | "Password";
 type Message = { type: "error" | "success"; text: string };
 
-const palette = {
-  ink: "#152922",
-  inkBorder: "#3E5C4E",
-  sage: "#93AC97",
-  cream: "#F3EEE1",
-  bullet: "#C7D0C4",
-  button: "#1F4A3B",
-  buttonHover: "#26593F",
-  surface: "#FFFFFF",
-  inputBg: "#F2EEE3",
-  border: "#E5E0D1",
-  headingDark: "#182620",
-  body: "#4B5650",
-  muted: "#8D8879",
-};
-
 const inputClass =
   "w-full rounded-xl border border-line bg-input-bg px-4 py-3 text-sm text-heading placeholder:text-muted outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
 
@@ -220,21 +204,25 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!showDoorTransition) return;
-
-    if (role.name === "") return;
+    if (!showDoorTransition || !role) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+
     const timer = setTimeout(
-      () =>
-        router.push(`${role.name === "Staff" ? "/staff/home" : "/admin/home"}`),
+      () => {
+        if (role.name === "Staff") {
+          router.push("/staff/home");
+        } else if (role.name === "Admin") {
+          router.push("/admin/home");
+        }
+      },
       prefersReducedMotion ? 150 : 1100,
     );
 
     return () => clearTimeout(timer);
-  }, [showDoorTransition, router, role.name]);
+  }, [showDoorTransition, router, role?.name]);
 
   const formPanelProps: FormPanelProps = {
     mode,
