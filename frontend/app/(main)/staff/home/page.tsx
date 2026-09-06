@@ -97,6 +97,15 @@ const StaffHomePage = async () => {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-line bg-white p-6 lg:col-span-2">
           <h3 className="font-serif text-xl text-heading">Recent requests</h3>
+
+          <Link
+            href="/staff/tickets"
+            className="group flex items-center gap-1.5 text-xs font-semibold text-body transition-colors hover:text-heading"
+          >
+            View all
+            <MoveRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+
           <div className="mt-4 space-y-3">
             <RealTimeTickets
               initialTickets={tickets}
