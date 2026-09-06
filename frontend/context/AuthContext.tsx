@@ -13,7 +13,7 @@ interface AuthContextValue {
   avatar: any;
   initials: string;
   displayName: string;
-  role: RoleType;
+  role: RoleType | null;
   handleSignout: () => void;
 }
 
@@ -22,29 +22,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [role, setRole] = useState<RoleType>({
-    id: 1,
-    name: "",
-    description: "",
-  });
+  const [role, setRole] = useState<RoleType | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
-
-  useEffect(() => {
-    const getRole = async (): Promise<void> => {
-      if (!user) {
-        return;
-      }
-      try {
-        const response = await api.get("/role");
-        setRole(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getRole();
-  }, [user]);
 
   useEffect(() => {
     const getUser = async (): Promise<void> => {
@@ -61,13 +42,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setLoading(false);
     });
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    const getRole = async (): Promise<void> => {
+      if (!user) {
+        setRole(null);
+        return;
+      }
+      try {
+        const response = await api.get("/role");
+        setRole(response.data);
+      } catch (error) {
+        console.error("Failed to get user role");
+        setRole(null);
+      }
+    };
+    getRole();
+  }, [user]);
 
   const handleSignout = async (): Promise<void> => {
     const { error } = await supabase.auth.signOut();
