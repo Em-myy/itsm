@@ -74,9 +74,9 @@ const Navbar = () => {
       </button>
 
       <div className="ml-auto flex shrink-0 items-center gap-3">
-        {role.name && (
+        {role?.name && (
           <span className="hidden rounded-full bg-input-bg px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] text-muted sm:inline-block">
-            {role.name}
+            {role?.name}
           </span>
         )}
 
