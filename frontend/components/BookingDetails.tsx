@@ -1,11 +1,13 @@
 "use client";
 
 import api from "@/lib/axios";
-import { BookingType } from "@/lib/types";
+import { BookingType, VenueType } from "@/lib/types";
 import { getStatusStyle } from "@/utils/status-styles";
-import { AlertCircle, Trash2, X } from "lucide-react";
+import { AlertCircle, Pencil, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import BookingForm, { BookingFormValues } from "./BookingForm";
+import { format } from "date-fns";
 
 const timeFormatOptions: Intl.DateTimeFormatOptions = {
   day: "numeric",
@@ -13,26 +15,29 @@ const timeFormatOptions: Intl.DateTimeFormatOptions = {
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
-  hour12: false,
+  hour12: true,
 };
 
 const BookingDetails = ({
   booking,
+  venues,
   onClose,
 }: {
   booking: BookingType;
+  venues: VenueType[] | null;
   onClose: () => void;
 }) => {
   const router = useRouter();
-  const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [confirmingCancel, setConfirmingCancel] = useState<boolean>(false);
+  const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const style = getStatusStyle(booking.status || "pending");
 
-  const handleDelete = async (bookingId: number): Promise<void> => {
+  const handleCancel = async (bookingId: number): Promise<void> => {
     setError(null);
-    setIsDeleting(true);
+    setIsCancelling(true);
 
     try {
       await api.patch("/bookings/cancel", { booking_id: bookingId });
@@ -44,9 +49,78 @@ const BookingDetails = ({
         error.response?.data?.message ||
           "Couldn't delete this booking. Please try again.",
       );
-      setIsDeleting(false);
+      setIsCancelling(false);
     }
   };
+
+  const handleEditSubmit = async (values: BookingFormValues): Promise<void> => {
+    const finalStartDate = new Date(`${values.date}T${values.startTime}:00`);
+    const finalEndDate = new Date(`${values.date}T${values.endTime}:00`);
+
+    const bookingPayload = {
+      booking_id: values.bookingId,
+      purpose: values.purpose,
+      venue_id: Number(values.venueId),
+      start_time: finalStartDate.toISOString(),
+      end_time: finalEndDate.toISOString(),
+      equipment_needed: values.equipmentNeeded,
+    };
+
+    await api.patch("/bookings/update", bookingPayload);
+    router.refresh();
+    onClose();
+  };
+
+  if (mode === "edit") {
+    const start = new Date(booking.start_time);
+    const end = new Date(booking.end_time);
+
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        onClick={onClose}
+      >
+        <div
+          className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-white p-6 shadow-xl"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-4 top-4 text-muted transition hover:text-heading cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="pr-8 font-serif text-2xl text-heading">
+            Edit booking
+          </h2>
+          <p className="mt-1 font-mono text-xs text-muted">
+            {booking.reference}
+          </p>
+          <div className="mt-6">
+            <BookingForm
+              venues={venues}
+              initialValues={{
+                bookingId: booking.id,
+                purpose: booking.purpose,
+                venueId: String(booking.venue_id),
+                date: format(start, "yyyy-MM-dd"),
+                startTime: format(start, "HH:mm"),
+                endTime: format(end, "HH:mm"),
+                equipmentNeeded: booking.equipment_needed ?? [],
+              }}
+              submitLabel="Save changes"
+              submittingLabel="Saving..."
+              onSubmit={handleEditSubmit}
+              onCancel={() => setMode("view")}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -60,7 +134,7 @@ const BookingDetails = ({
           onClick={onClose}
           type="button"
           aria-label="Close"
-          className="absolute right-4 top-4 text-muted transition hover:text-heading"
+          className="absolute right-4 top-4 text-muted transition hover:text-heading cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -124,43 +198,56 @@ const BookingDetails = ({
         )}
 
         <div className="mt-6 flex items-center justify-end gap-3">
-          {confirmingDelete ? (
+          {confirmingCancel && booking.status !== "Cancelled" ? (
             <>
               <span className="mr-auto text-sm text-body">
-                Delete this booking?
+                Cancel this booking?
               </span>
               <button
                 type="button"
-                onClick={() => setConfirmingDelete(false)}
-                disabled={isDeleting}
-                className="rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-heading transition hover:bg-input-bg disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={() => setConfirmingCancel(false)}
+                disabled={isCancelling}
+                className="rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-heading transition hover:bg-input-bg disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={() => handleDelete}
-                disabled={isDeleting}
-                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={() => handleCancel(booking.id)}
+                disabled={isCancelling}
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
               >
                 {" "}
-                {isDeleting ? "Deleting..." : "Confirm delete"}
+                {isCancelling ? "Cancelling..." : "Confirm cancel"}
               </button>
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
-              >
-                <Trash2 className="h-5 w-5" />
-                Delete booking
-              </button>
+              {booking.status !== "Cancelled" && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingCancel(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 cursor-pointer"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("edit")}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-heading transition hover:bg-input-bg cursor-pointer"
+                  >
+                    <Pencil className="w-5 h-5" />
+                    Edit
+                  </button>
+                </>
+              )}
+
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl bg-button px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-button-hover"
+                className="rounded-xl bg-button px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-button-hover cursor-pointer"
               >
                 Close
               </button>
