@@ -5,14 +5,18 @@ import { useSidebar } from "@/context/SidebarContext";
 import { SearchCategory } from "@/lib/types";
 import {
   Calendar,
+  ChevronDown,
   Edit2,
   Menu,
   Package,
   Search,
+  User,
   UsersRound,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchModal from "./SearchModal";
+import Image from "next/image";
+import Link from "next/link";
 
 const STAFF_SEARCH_CATEGORIES: SearchCategory[] = [
   { id: "tickets", label: "Tickets", icon: Edit2 },
@@ -30,6 +34,9 @@ const Navbar = () => {
   const { avatar, initials, displayName, role } = useAuth();
   const { openMobile } = useSidebar();
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState<boolean>(false);
+
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const isStaff = role?.name === "Staff";
   const categories = isStaff
@@ -49,6 +56,30 @@ const Navbar = () => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setProfileMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [profileMenuOpen]);
 
   return (
     <div className="flex w-full items-center gap-3 border-b border-line bg-white px-4 py-3 md:px-6">
@@ -80,17 +111,60 @@ const Navbar = () => {
           </span>
         )}
 
-        {avatar ? (
-          <img
-            src={avatar}
-            alt={displayName}
-            className="h-9 w-9 shrink-0 rounded-full border border-line object-cover"
-          />
-        ) : (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-button text-xs font-semibold uppercase text-white">
-            {initials}
-          </div>
-        )}
+        <div className="relative" ref={profileMenuRef}>
+          <button
+            type="button"
+            onClick={() => setProfileMenuOpen((open) => !open)}
+            aria-haspopup="menu"
+            aria-expanded={profileMenuOpen}
+            aria-label="Account menu"
+            className="flex items-center gap-1 rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
+          >
+            {avatar ? (
+              <Image
+                src={avatar}
+                alt={displayName}
+                className="h-9 w-9 shrink-0 rounded-full border border-line object-cover"
+              />
+            ) : (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-button text-xs font-semibold uppercase text-white">
+                {initials}
+              </div>
+            )}
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 text-muted transition-transform ${
+                profileMenuOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {profileMenuOpen && (
+            <div
+              role="menu"
+              className="absolute right-0 top-full z-20 mt-2 w-48 animate-fade-in rounded-xl border border-line bg-white p-1.5 shadow-xl motion-reduce:animate-none"
+            >
+              {displayName && (
+                <div className="border-b border-line px-3 py-2">
+                  <p className="truncate text-sm font-semibold text-heading">
+                    {displayName}
+                  </p>
+                  {role?.name && (
+                    <p className="text-xs text-muted">{role.name}</p>
+                  )}
+                </div>
+              )}
+              <Link
+                href="/profile"
+                role="menuitem"
+                onClick={() => setProfileMenuOpen(false)}
+                className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-heading transition hover:bg-input-bg"
+              >
+                <User className="w-5 h-5" />
+                Profile
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {searchOpen && (
