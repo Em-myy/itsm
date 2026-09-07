@@ -14,7 +14,7 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-ink px-6 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-ink-border text-xl font-semibold text-cream">
+      <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-ink-border text-xl font-semibold text-cream animate-badge-pulse">
         O
       </div>
 
