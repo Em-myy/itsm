@@ -1,11 +1,9 @@
 "use client";
 
-import TicketForm, { TicketFormValues } from "@/components/TicketForm";
+import TicketForm, { TicketFormValues } from "@/components/tickets/TicketForm";
 import api from "@/lib/axios";
-import { DEPARTMENTS, TicketType } from "@/lib/types";
+import { TicketType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
-import { fi } from "date-fns/locale";
-import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 

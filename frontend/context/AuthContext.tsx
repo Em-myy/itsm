@@ -10,6 +10,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  roleLoading: boolean;
   avatar: any;
   initials: string;
   displayName: string;
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [role, setRole] = useState<RoleType | null>(null);
+  const [roleLoading, setRoleLoading] = useState<boolean>(false);
 
   const supabase = createClient();
   const router = useRouter();
@@ -53,14 +55,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const getRole = async (): Promise<void> => {
       if (!user) {
         setRole(null);
+        setRoleLoading(false);
         return;
       }
+
+      setRoleLoading(true);
+
       try {
         const response = await api.get("/role");
         setRole(response.data);
       } catch (error) {
         console.error("Failed to get user role");
         setRole(null);
+      } finally {
+        setRoleLoading(false);
       }
     };
     getRole();
@@ -93,6 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         loading,
+        roleLoading,
         avatar,
         initials,
         displayName,

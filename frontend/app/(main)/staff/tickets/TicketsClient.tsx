@@ -1,7 +1,6 @@
 "use client";
 
-import TicketDetails from "@/components/TicketDetails";
-import api from "@/lib/axios";
+import TicketDetails from "@/components/tickets/TicketDetails";
 import { TicketType } from "@/lib/types";
 import { getPriorityColors } from "@/utils/priority-styles";
 import { getStatusStyle } from "@/utils/status-styles";

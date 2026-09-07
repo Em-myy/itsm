@@ -14,7 +14,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import SearchModal from "./SearchModal";
+import SearchModal from "../shared/SearchModal";
 import Image from "next/image";
 import Link from "next/link";
 
