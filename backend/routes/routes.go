@@ -44,7 +44,8 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux.Handle("PATCH /api/tickets/update", authMiddleware(http.HandlerFunc(ticketHandler.UpdateTicket)))
 	mux.Handle("PATCH /api/tickets/cancel", authMiddleware(http.HandlerFunc(ticketHandler.CancelTicket)))
 
-	mux.Handle("PATCH /api/users/profile", authMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
+	mux.Handle("PATCH /api/users/update-profile", authMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
+	mux.Handle("GET /api/user/profile", authMiddleware(http.HandlerFunc(userHandler.GetProfile)))
 	mux.Handle("GET /api/role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
 
 	mux.Handle("POST /api/bookings", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
