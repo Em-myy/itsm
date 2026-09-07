@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"itsm/middleware"
-	"itsm/models"
 	"itsm/repositories"
 	"log"
 	"net/http"
@@ -26,27 +25,26 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+	role, _ := r.Context().Value(middleware.UserRoleKey).(string)
+
+	var input struct {
+		Username   *string `json:"username"`
+		Department *string `json:"department"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	if user.Username == "" || user.Department == "" {
-		http.Error(w, "Username and Department are required", http.StatusBadRequest)
+	if role == "IT Admin" && input.Department != nil {
+		http.Error(w, "Admins cannot change their assigned department", http.StatusForbidden)
 		return
 	}
 
-	user.ID = userID
-
-	if err := repositories.UpdateUserProfile(r.Context(), h.DB, user); err != nil {
+	err := repositories.UpdateUserProfile(r.Context(), h.DB, userID, input.Username, input.Department)
+	if err != nil {
 		log.Println("Error updating profile:", err)
-
-		if err.Error() == "No user found with ID:"+userID {
-			http.Error(w, "User profile not found", http.StatusNotFound)
-			return
-		}
-
 		http.Error(w, "Could not update user profile", http.StatusInternalServerError)
 		return
 	}
@@ -54,4 +52,22 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User profile updated successfully"})
+}
+
+func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := repositories.GetUserProfile(r.Context(), h.DB, userID)
+	if err != nil {
+		log.Println("Error fetching user profile:", err)
+		http.Error(w, "Profile not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
