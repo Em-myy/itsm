@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 import { DEPARTMENTS, ProfileType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -61,8 +61,19 @@ const ProfileClient = ({
 
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
   const [isSavingPassword, setIsSavingPassword] = useState<boolean>(false);
   const [passwordMessage, setPasswordMessage] = useState<Message | null>(null);
+
+  const memberSince = initialProfile.created_at
+    ? new Date(initialProfile.created_at).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   const handleProfileSubmit = async (
     event: React.SubmitEvent<HTMLFormElement>,
@@ -165,6 +176,11 @@ const ProfileClient = ({
               <span className="mt-0.5 inline-block rounded-full bg-input-bg px-2.5 py-0.5 font-mono text-xs uppercase tracking-widest text-muted">
                 {role?.name}
               </span>
+              {memberSince && (
+                <p className="mt-1 text-xs text-muted">
+                  Member since {memberSince}
+                </p>
+              )}
             </div>
           </div>
 
@@ -217,7 +233,7 @@ const ProfileClient = ({
             <button
               type="submit"
               disabled={isSavingProfile}
-              className="w-full rounded-xl bg-button py-3 text-sm font-semibold text-white transition hover:bg-button-hover disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-xl bg-button py-3 text-sm font-semibold text-white transition hover:bg-button-hover disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
             >
               {isSavingProfile ? "Saving..." : "Save changes"}
             </button>
@@ -231,28 +247,61 @@ const ProfileClient = ({
               <label className="mb-2 block text-sm font-medium text-heading">
                 New password
               </label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-                placeholder="••••••••"
-                className={inputClass}
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  required
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  placeholder="••••••••"
+                  className={`${inputClass} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((show) => !show)}
+                  aria-label={
+                    showNewPassword ? "Hide password" : "Show password"
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-heading"
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-heading">
                 Confirm new password
               </label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="••••••••"
-                className={inputClass}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="••••••••"
+                  className={`${inputClass} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((show) => !show)}
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-heading"
+                >
+                  {" "}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {passwordMessage && <MessageBanner message={passwordMessage} />}
@@ -260,7 +309,7 @@ const ProfileClient = ({
             <button
               type="submit"
               disabled={isSavingPassword}
-              className="w-full rounded-xl bg-button py-3 text-sm font-semibold text-white transition hover:bg-button-hover disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-xl bg-button py-3 text-sm font-semibold text-white transition hover:bg-button-hover disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
             >
               {isSavingPassword ? "Updating..." : "Update password"}
             </button>

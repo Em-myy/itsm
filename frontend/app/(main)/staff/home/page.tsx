@@ -1,5 +1,5 @@
-import RealTimeBookings from "@/components/RealTimeBookings";
-import RealTimeTickets from "@/components/RealTimeTickets";
+import RealTimeBookings from "@/components/bookings/RealTimeBookings";
+import RealTimeTickets from "@/components/tickets/RealTimeTickets";
 import { fetchFromGo } from "@/lib/api-server";
 import { BookingType, cardType, TicketType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/server";
@@ -14,19 +14,15 @@ const StaffHomePage = async () => {
   } = await supabase.auth.getUser();
 
   const [ticketsResult, bookingsResult] = await Promise.allSettled([
-    fetchFromGo("/tickets/recent") as Promise<TicketType | TicketType[] | null>,
-    fetchFromGo("/bookings/next") as Promise<
-      BookingType | BookingType[] | null
-    >,
+    fetchFromGo("/tickets/recent") as Promise<TicketType[]>,
+    fetchFromGo("/bookings/next") as Promise<BookingType[]>,
   ]);
 
   const tickets =
-    ticketsResult.status === "fulfilled" ? ticketsResult.value : null;
-  const ticketsFailed = ticketsResult.status === "rejected";
+    ticketsResult.status === "fulfilled" ? ticketsResult.value || [] : [];
 
   const bookings =
-    bookingsResult.status === "fulfilled" ? bookingsResult.value : null;
-  const bookingsFailed = bookingsResult.status === "rejected";
+    bookingsResult.status === "fulfilled" ? bookingsResult.value || [] : [];
 
   const hour = new Date().getHours();
 

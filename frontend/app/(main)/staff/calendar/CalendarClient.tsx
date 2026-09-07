@@ -1,8 +1,7 @@
 "use client";
 
-import BookingComponent from "@/components/BookingComponent";
-import RealTimeBookings from "@/components/RealTimeBookings";
-import RealTimeVenues from "@/components/RealTimeVenues";
+import BookingComponent from "@/components/bookings/BookingComponent";
+import RealTimeVenues from "@/components/venues/RealTimeVenues";
 import { BookingType, VenueType } from "@/lib/types";
 import {
   format,
@@ -22,11 +21,9 @@ import {
   View,
 } from "react-big-calendar";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
-import { getStatusStyle } from "@/utils/status-styles";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./calendar-overrides.css";
-import BookingDetails from "@/components/BookingDetails";
-import { init } from "next/dist/compiled/webpack/webpack";
+import BookingDetails from "@/components/bookings/BookingDetails";
 
 interface ToolbarProps {
   date: Date;

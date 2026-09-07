@@ -1,7 +1,5 @@
-"use client";
-
-import { useAuth } from "@/context/AuthContext";
-import api from "@/lib/axios";
+import RealTimeActivityLog from "@/components/activity-log/RealTimeActivityLog";
+import { fetchFromGo } from "@/lib/api-server";
 import {
   AssetType,
   BookingType,
@@ -9,46 +7,61 @@ import {
   TicketType,
   VenueType,
 } from "@/lib/types";
-import { useEffect, useMemo, useState } from "react";
+import { formerTimeAgo } from "@/utils/format-date";
+import { createClient } from "@/utils/supabase/server";
 
-const AdminHomePage = () => {
-  const { user } = useAuth();
+interface ActivityLog {
+  id: number;
+  action_message: string;
+  created_at: string;
+}
 
-  const [tickets, setTickets] = useState<TicketType[]>([]);
-  const [bookings, setBookings] = useState<BookingType[]>([]);
-  const [assets, setAssets] = useState<AssetType[]>([]);
-  const [venues, setVenues] = useState<VenueType[]>([]);
+const AdminHomePage = async () => {
+  const supabase = await createClient();
 
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        const [ticketRes, assetRes, venueRes, bookingRes] = await Promise.all([
-          api.get("/tickets"),
-          api.get("/assets"),
-          api.get("/venues"),
-          api.get("/bookings"),
-        ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-        setTickets(ticketRes.data || []);
-        setAssets(assetRes.data || []);
-        setVenues(venueRes.data || []);
-        setBookings(bookingRes.data || []);
-      } catch (error) {
-        console.log(error);
-      }
-    };
+  const [
+    ticketResult,
+    bookingResult,
+    assetResult,
+    venueResult,
+    activityResult,
+  ] = await Promise.allSettled([
+    fetchFromGo("/tickets") as Promise<TicketType[]>,
+    fetchFromGo("/bookings") as Promise<BookingType[]>,
+    fetchFromGo("/assets") as Promise<AssetType[]>,
+    fetchFromGo("/venues") as Promise<VenueType[]>,
+    fetchFromGo("/activity") as Promise<ActivityLog[]>,
+  ]);
 
-    fetchData();
-  }, []);
+  const tickets =
+    ticketResult.status === "fulfilled" ? ticketResult.value || [] : [];
 
-  const departmentCounts = useMemo(() => {
-    return DEPARTMENTS.map((department) => ({
-      department,
-      count: tickets.filter((ticket) => ticket.department === department)
-        .length,
-    }));
-  }, [tickets]);
+  const bookings =
+    bookingResult.status === "fulfilled" ? bookingResult.value || [] : [];
 
+  const assets =
+    assetResult.status === "fulfilled" ? assetResult.value || [] : [];
+
+  const venues =
+    venueResult.status === "fulfilled" ? venueResult.value || [] : [];
+
+  const activities =
+    activityResult.status === "fulfilled" ? activityResult.value || [] : [];
+
+  const formattedActivities = activities.map((log) => ({
+    id: String(log.id),
+    action: <span dangerouslySetInnerHTML={{ __html: log.action_message }} />,
+    time: formerTimeAgo(log.created_at),
+  }));
+
+  const departmentCounts = DEPARTMENTS.map((department) => ({
+    department,
+    count: tickets.filter((ticket) => ticket.department === department).length,
+  }));
   const maxCount = Math.max(...departmentCounts.map((item) => item.count), 1);
 
   const hour = new Date().getHours();
@@ -74,7 +87,12 @@ const AdminHomePage = () => {
       <div>
         <div>
           <h1>
-            {tickets.filter((ticket) => ticket.status !== "Resolved").length}
+            {
+              tickets.filter(
+                (ticket) =>
+                  ticket.status !== "Resolved" && ticket.status !== "Cancelled",
+              ).length
+            }
           </h1>
           <p>Open tickets</p>
         </div>
@@ -115,6 +133,17 @@ const AdminHomePage = () => {
             <span className="w-6">{count}</span>
           </div>
         ))}
+      </div>
+
+      <div>
+        <RealTimeActivityLog
+          activities={formattedActivities}
+          emptyFallback={
+            <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center">
+              <p className="text-sm text-body">No activities recorded yet.</p>
+            </div>
+          }
+        />
       </div>
     </div>
   );
