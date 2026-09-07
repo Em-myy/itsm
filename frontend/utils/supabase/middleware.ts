@@ -38,7 +38,9 @@ export const createClient = async (request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   const isProtectedRoute =
-    pathname.startsWith("/admin") || pathname.startsWith("/staff");
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/staff") ||
+    pathname === "/profile";
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
