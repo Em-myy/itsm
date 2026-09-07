@@ -19,7 +19,7 @@ func UpdateUserProfile(
 		UPDATE users 
 		SET 
 			username = COALESCE($1, username),
-			department = COALESCE($2, department)
+			department = COALESCE($2, department),
 			updated_at = NOW()
 		WHERE id = $3
 		`
@@ -42,7 +42,7 @@ func UpdateUserProfile(
 
 func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, userID string) (*models.User, error) {
 	query := `
-		SELECT id, username, department, role, created_at, updated_at
+		SELECT id, username, department, created_at, updated_at
 		FROM users
 		WHERE id = $1;
 	`
@@ -51,7 +51,6 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, userID string) (*mo
 		&user.ID,
 		&user.Username,
 		&user.Department,
-		&user.RoleId,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
