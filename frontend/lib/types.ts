@@ -63,6 +63,12 @@ export interface AssetType {
   notes?: string;
 }
 
+export interface ProfileType {
+  email?: string;
+  username?: string;
+  department?: string;
+}
+
 export interface StatusStyle {
   pill: string;
   dot: string;
