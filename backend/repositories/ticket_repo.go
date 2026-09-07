@@ -162,7 +162,8 @@ func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 		UPDATE tickets
 		SET assignee_id = $1,
 			updated_at = CURRENT_TIMESTAMP,
-			status = 'In Progress'
+			status = 'In Progress',
+			updated_by = $1
 		WHERE id = $2;
 	`
 	commandTag, err := pool.Exec(ctx, query, userID, ticketID)
@@ -177,13 +178,15 @@ func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 	return nil
 }
 
-func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int) error {
+func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID string) error {
 	query := `
 		UPDATE tickets
-		SET status = 'Resolved'
-		WHERE id = $1;
+		SET 
+			status = 'Resolved',
+			updated_by = $1
+		WHERE id = $2;
 	`
-	commandTag, err := pool.Exec(ctx, query, ticketID)
+	commandTag, err := pool.Exec(ctx, query, userID, ticketID)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve ticket: %w", err)
 	}

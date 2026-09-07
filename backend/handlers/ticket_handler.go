@@ -199,7 +199,7 @@ func (h *TicketHandler) ResolveTicket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := repositories.ResolveTickets(r.Context(), h.DB, input.TicketID)
+	err := repositories.ResolveTickets(r.Context(), h.DB, input.TicketID, userID)
 	if err != nil {
 		log.Println("Error resolving ticket:", err)
 		http.Error(w, "Could not resolve ticket", http.StatusInternalServerError)
