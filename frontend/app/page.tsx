@@ -1,6 +1,6 @@
 "use client";
 
-import GoogleButton from "@/components/GoogleButton";
+import GoogleButton from "@/components/shared/GoogleButton";
 import { useAuth } from "@/context/AuthContext";
 import { DEPARTMENTS } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
@@ -214,7 +214,7 @@ export default function Home() {
       () => {
         if (role.name === "Staff") {
           router.push("/staff/home");
-        } else if (role.name === "Admin") {
+        } else if (role.name === "IT Admin") {
           router.push("/admin/home");
         }
       },

@@ -20,6 +20,7 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	bookingHandler := handlers.NewBookingHandler(db)
 	venueHandler := handlers.NewVenueHandler(db)
 	assetHandler := handlers.NewAssetHandler(db)
+	activityHandler := handlers.NewActivityHandler(db)
 
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	authMiddleware, err := middleware.SupabaseAuth(supabaseURL, db)
@@ -66,6 +67,8 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 
 	mux.Handle("POST /api/assets", authMiddleware(http.HandlerFunc(assetHandler.CreateAsset)))
 	mux.Handle("GET /api/assets", authMiddleware(http.HandlerFunc(assetHandler.GetAssets)))
+
+	mux.Handle("GET /api/activity", authMiddleware(http.HandlerFunc(activityHandler.GetActivityFeed)))
 
 	return middleware.CorsMiddleware(mux)
 }

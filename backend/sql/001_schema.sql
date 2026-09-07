@@ -343,3 +343,96 @@ EXECUTE FUNCTION set_venue_reference();
 ALTER TABLE tickets
 ADD COLUMN priority VARCHAR(50) NOT NULL DEFAULT 'Low'
 CHECK (priority IN ('Low', 'Normal', 'Urgent'));
+
+
+CREATE TABLE activity_logs (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    action_message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY
+
+CREATE POLICY "Activity logs viewable by IT Admins only"
+ON public.activity_logs
+FOR SELECT 
+USING (public.is_admin());
+
+CREATE OR REPLACE FUNCTION log_ticket_activity()
+RETURNS TRIGGER AS $$
+DECLARE
+    actor_id UUID;
+    actor_name VARCHAR;
+    assignee_name VARCHAR;
+BEGIN 
+    actor_id := COALESCE(NEW.updated_by, auth.uid());
+
+    SELECT username INTO actor_name FROM public.users WHERE id = actor_id;
+
+    IF TG_OP = 'INSERT' THEN 
+        INSERT INTO activity_logs (action_message)
+        VALUES (COALESCE(actor_name, 'Someone') || ' submitted ticket <strong>' || NEW.reference || '</strong>');
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF OLD.assignee_id IS DISTINCT FROM NEW.assignee_id AND NEW.assignee_id IS NOT NULL THEN
+            SELECT username INTO assignee_name FROM public.users WHERE id = NEW.assignee_id;
+
+            IF NEW.assignee_id = actor_id THEN 
+                INSERT INTO activity_logs (action_message)
+                VALUES (COALESCE(actor_name, 'Someone') || ' assigned <strong>' || NEW.reference || '</strong> to themselves');
+            ELSE 
+                INSERT INTO activity_logs (action_message)
+                VALUES (COALESCE(actor_name, 'Someone') || ' assigned <strong>' || NEW.reference || '</strong> to ' || COALESCE(assignee_name, 'a user'));
+            END IF;
+        END IF;
+
+        IF OLD.status IS DISTINCT FROM NEW.status THEN
+            INSERT INTO activity_logs (action_message)
+            VALUES (COALESCE(actor_name, 'Someone') || ' marked <strong>' || NEW.reference || '</strong> as ' || NEW.status);
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER ticket_activity_trigger
+AFTER INSERT OR UPDATE ON tickets
+FOR EACH ROW EXECUTE FUNCTION log_ticket_activity();
+
+CREATE OR REPLACE FUNCTION log_booking_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO activity_logs (action_message)
+        VALUES ('Booking <strong>' || NEW.reference || '</strong> was requested for ' || NEW.purpose);
+    ELSIF TG_OP = 'UPDATE' AND OLD.status IS DISTINCT FROM NEW.status THEN
+        INSERT INTO activity_logs (action_message)
+        VALUES ('Booking <strong>' || NEW.reference || '</strong> was ' || LOWER(NEW.status) || ' for ' || NEW.purpose);
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER booking_activity_trigger
+AFTER INSERT OR UPDATE ON bookings
+FOR EACH ROW EXECUTE FUNCTION log_booking_activity();
+
+CREATE OR REPLACE FUNCTION log_asset_activity()
+RETURNS TRIGGER AS $$
+BEGIN 
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO activity_logs (action_message)
+        VALUES ('Asset <strong>' || NEW.reference || '</strong> was added to inventory');
+    ELSIF TG_OP = 'UPDATE' AND OLD.status IS DISTINCT FROM NEW.status THEN
+        INSERT INTO activity_logs (action_message)
+        VALUES ('<strong>' || NEW.reference || '</strong> flagged under ' || LOWER(NEW.status));
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER asset_activity_trigger
+AFTER INSERT OR UPDATE ON assets
+FOR EACH ROW EXECUTE FUNCTION log_asset_activity();

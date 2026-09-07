@@ -1,6 +1,6 @@
 "use client";
 
-import AssetComponent from "@/components/AssetComponent";
+import AssetComponent from "@/components/assets/AssetComponent";
 import api from "@/lib/axios";
 import { AssetType } from "@/lib/types";
 import { useEffect, useState } from "react";
