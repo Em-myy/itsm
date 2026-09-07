@@ -12,13 +12,18 @@ const ProfilePage = async () => {
       data: { user },
     },
   ] = await Promise.all([
-    fetchFromGo("/profile"),
+    fetchFromGo("/user/profile"),
     (await supabase).auth.getUser(),
   ]);
 
   const profile = profileResponse as ProfileType;
   const email = user?.email || "";
-  return <ProfileClient />;
+  const avatar =
+    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
+
+  return (
+    <ProfileClient initialProfile={profile} email={email} avatar={avatar} />
+  );
 };
 
 export default ProfilePage;
