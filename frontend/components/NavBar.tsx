@@ -106,7 +106,13 @@ const Navbar = () => {
 
       <div className="ml-auto flex shrink-0 items-center gap-3">
         {role?.name && (
-          <span className="hidden rounded-full bg-input-bg px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] text-muted sm:inline-block">
+          <span
+            className={`hidden rounded-full px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] sm:inline-block ${
+              role?.name === "IT Admin"
+                ? "bg-[#F3E4CD] text-slate-700"
+                : "bg-input-bg text-muted"
+            }`}
+          >
             {role?.name}
           </span>
         )}
@@ -124,10 +130,14 @@ const Navbar = () => {
               <Image
                 src={avatar}
                 alt={displayName}
-                className="h-9 w-9 shrink-0 rounded-full border border-line object-cover"
+                className="h-10 w-10 shrink-0 rounded-full border border-line object-cover"
               />
             ) : (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-button text-xs font-semibold uppercase text-white">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase text-white ${
+                  role?.name === "IT Admin" ? "bg-[#795727]" : "bg-button"
+                }`}
+              >
                 {initials}
               </div>
             )}
@@ -149,7 +159,11 @@ const Navbar = () => {
                     {displayName}
                   </p>
                   {role?.name && (
-                    <p className="text-xs text-muted">{role.name}</p>
+                    <p
+                      className={`text-xs ${role?.name === "IT Admin" ? "text-[#795727]" : "text-muted"}`}
+                    >
+                      {role.name}
+                    </p>
                   )}
                 </div>
               )}
