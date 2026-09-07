@@ -64,9 +64,9 @@ export interface AssetType {
 }
 
 export interface ProfileType {
-  email?: string;
-  username?: string;
-  department?: string;
+  username: string;
+  department: string;
+  created_at: string;
 }
 
 export interface StatusStyle {
