@@ -67,6 +67,8 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 
 	mux.Handle("POST /api/assets", authMiddleware(http.HandlerFunc(assetHandler.CreateAsset)))
 	mux.Handle("GET /api/assets", authMiddleware(http.HandlerFunc(assetHandler.GetAssets)))
+	mux.Handle("PATCH /api/assets/update", authMiddleware(http.HandlerFunc(assetHandler.UpdateAsset)))
+	mux.Handle("PATCH /api/assets/cancel", authMiddleware(http.HandlerFunc(assetHandler.CancelAsset)))
 
 	mux.Handle("GET /api/activity", authMiddleware(http.HandlerFunc(activityHandler.GetActivityFeed)))
 
