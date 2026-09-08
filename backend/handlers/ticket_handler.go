@@ -237,7 +237,7 @@ func (h *TicketHandler) UpdateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if input.TicketID == 0 {
-		http.Error(w, "Booking id is required", http.StatusBadRequest)
+		http.Error(w, "Ticket id is required", http.StatusBadRequest)
 		return
 	}
 
@@ -261,6 +261,7 @@ func (h *TicketHandler) UpdateTicket(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		h.DB,
 		input.TicketID,
+		userID,
 		input.Title,
 		input.Category,
 		input.Department,
