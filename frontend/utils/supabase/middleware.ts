@@ -58,6 +58,16 @@ export const createClient = async (request: NextRequest) => {
     }
   }
 
+  if (pathname.startsWith("/staff") && user) {
+    const { data: isAdmin, error } = await supabase.rpc("is_admin");
+
+    if (error || isAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/home";
+      return NextResponse.redirect(url);
+    }
+  }
+
   if (pathname === "/" && user) {
     const { data: isAdmin } = await supabase.rpc("is_admin");
     const url = request.nextUrl.clone();
