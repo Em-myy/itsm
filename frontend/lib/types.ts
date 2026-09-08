@@ -55,7 +55,7 @@ export interface VenueType {
 export interface AssetType {
   id: number;
   reference: string;
-  type: string;
+  asset_type: string;
   department: string;
   status: string;
   assignee_name: string;
