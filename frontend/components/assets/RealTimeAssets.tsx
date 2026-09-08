@@ -47,7 +47,7 @@ const RealTimeAssets = ({
       {assetsArray.map((asset) => (
         <div key={asset.id}>
           <div>{asset.reference}</div>
-          <div>{asset.type}</div>
+          <div>{asset.asset_type}</div>
           <div>{asset.department}</div>
           <div>{asset.status}</div>
           <div>{asset.assignee_name}</div>
