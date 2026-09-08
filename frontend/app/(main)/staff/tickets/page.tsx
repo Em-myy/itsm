@@ -3,7 +3,7 @@ import { TicketType } from "@/lib/types";
 import TicketsClientPage from "./TicketsClient";
 
 const TicketsPage = async () => {
-  const tickets = (await fetchFromGo("/tickets/mine")) as TicketType[] | null;
+  const tickets = (await fetchFromGo("/tickets/mine")) as TicketType[] | [];
   return (
     <div>
       <TicketsClientPage initialTickets={tickets} />
