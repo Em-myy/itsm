@@ -202,6 +202,7 @@ func UpdateTicket(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	ticketID int,
+	userID string,
 	title *string,
 	category *string,
 	department *string,
@@ -220,7 +221,8 @@ func UpdateTicket(
 			related_asset = COALESCE($5, related_asset),
 			description = COALESCE($6, description),
             picture = COALESCE($7, picture),
-            updated_at = NOW()
+            updated_at = NOW(),
+			updated_by - $9
 		WHERE id = $8;
 	`
 
@@ -235,6 +237,7 @@ func UpdateTicket(
 		description,
 		picture,
 		ticketID,
+		userID,
 	)
 
 	if err != nil {
@@ -260,7 +263,7 @@ func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 				updated_At = NOW()
 			WHERE id = $1;
 		`
-		args = []any{ticketID}
+		args = []any{ticketID, userID}
 	} else {
 		query = `
 			UPDATE tickets
