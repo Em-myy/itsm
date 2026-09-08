@@ -370,6 +370,8 @@ BEGIN
     SELECT username INTO actor_name FROM public.users WHERE id = actor_id;
 
     IF TG_OP = 'INSERT' THEN 
+        SELECT username INTO actor_name FROM public.users WHERE id = NEW.requester_id;
+        
         INSERT INTO activity_logs (action_message)
         VALUES (COALESCE(actor_name, 'Someone') || ' submitted ticket <strong>' || NEW.reference || '</strong>');
     ELSIF TG_OP = 'UPDATE' THEN
