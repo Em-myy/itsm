@@ -1,7 +1,6 @@
 "use client";
 
 import GoogleButton from "@/components/shared/GoogleButton";
-import { useAuth } from "@/context/AuthContext";
 import { DEPARTMENTS } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -113,10 +112,10 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [showDoorTransition, setShowDoorTransition] = useState<boolean>(false);
+  const [targetRoute, setTargetRoute] = useState<string | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
-  const { role } = useAuth();
 
   const handleSwitch = (m: Mode): void => {
     setMode(m);
@@ -189,7 +188,7 @@ export default function Home() {
     setMessage(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: signInForm.email,
       password: signInForm.password,
     });
@@ -200,11 +199,25 @@ export default function Home() {
       return;
     }
 
+    if (authData?.user) {
+      const { data: user } = await supabase
+        .from("users")
+        .select("role_id")
+        .eq("id", authData.user.id)
+        .single();
+
+      if (user?.role_id === 2) {
+        setTargetRoute("/admin/home");
+      } else if (user?.role_id === 1) {
+        setTargetRoute("/staff/home");
+      }
+    }
+
     setShowDoorTransition(true);
   };
 
   useEffect(() => {
-    if (!showDoorTransition || !role) return;
+    if (!showDoorTransition || !targetRoute) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -212,17 +225,13 @@ export default function Home() {
 
     const timer = setTimeout(
       () => {
-        if (role.name === "Staff") {
-          router.push("/staff/home");
-        } else if (role.name === "IT Admin") {
-          router.push("/admin/home");
-        }
+        router.push(targetRoute);
       },
       prefersReducedMotion ? 150 : 1100,
     );
 
     return () => clearTimeout(timer);
-  }, [showDoorTransition, router, role?.name]);
+  }, [showDoorTransition, router, targetRoute]);
 
   const formPanelProps: FormPanelProps = {
     mode,
