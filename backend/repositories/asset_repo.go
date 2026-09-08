@@ -10,7 +10,7 @@ import (
 
 func CreateAsset(ctx context.Context, pool *pgxpool.Pool, asset models.Asset) (int, string, error) {
 	query := `
-		INSERT INTO assets (type, department, status, last_serviced, notes, assignee_name)
+		INSERT INTO assets (asset_type, department, status, last_serviced, notes, assignee_name)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, reference;
 	`
@@ -20,7 +20,7 @@ func CreateAsset(ctx context.Context, pool *pgxpool.Pool, asset models.Asset) (i
 	err := pool.QueryRow(
 		ctx,
 		query,
-		asset.Type,
+		asset.AssetType,
 		asset.Department,
 		asset.Status,
 		asset.LastServiced,
@@ -36,7 +36,7 @@ func CreateAsset(ctx context.Context, pool *pgxpool.Pool, asset models.Asset) (i
 
 func GetAsset(ctx context.Context, pool *pgxpool.Pool) ([]models.Asset, error) {
 	query := `
-		SELECT id, reference, type, department, status, last_serviced, notes, assignee_name, created_at, updated_at
+		SELECT id, reference, asset_type, department, status, last_serviced, notes, assignee_name, created_at, updated_at
 		FROM assets
 		ORDER BY created_at ASC;
 	`
@@ -52,7 +52,7 @@ func GetAsset(ctx context.Context, pool *pgxpool.Pool) ([]models.Asset, error) {
 		err := rows.Scan(
 			&a.ID,
 			&a.Reference,
-			&a.Type,
+			&a.AssetType,
 			&a.Department,
 			&a.Status,
 			&a.LastServiced,
@@ -73,4 +73,73 @@ func GetAsset(ctx context.Context, pool *pgxpool.Pool) ([]models.Asset, error) {
 	}
 
 	return assets, nil
+}
+
+func UpdateAsset(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	assetID int,
+	userID string,
+	assetType *string,
+	department *string,
+	status *string,
+	assigneeName *string,
+	lastServiced *string,
+	notes *string,
+) error {
+	query := `
+		UPDATE assets
+		SET
+			asset_type = COALESCE($1, asset_type),
+            department = COALESCE($2, department),
+            status = COALESCE($3, status),
+            assignee_name = COALESCE($4, assignee_name),
+			last_serviced = COALESCE($5, last_serviced),
+			notes = COALESCE($6, notes),
+            updated_at = NOW()
+		WHERE id = $7;
+	`
+
+	commandTag, err := pool.Exec(
+		ctx,
+		query,
+		assetType,
+		department,
+		status,
+		assigneeName,
+		lastServiced,
+		notes,
+		assetID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("Failed to update asset: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No asset found with ID: %d", assetID)
+	}
+
+	return nil
+}
+
+func CancelAsset(ctx context.Context, pool *pgxpool.Pool, assetID int, userID string) error {
+	query := `
+			UPDATE assets
+			SET
+				status = 'Retired',
+				updated_at = NOW()
+			WHERE id = $1;
+		`
+
+	commandTag, err := pool.Exec(ctx, query, assetID)
+	if err != nil {
+		return fmt.Errorf("Failed to cancel asset: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No asset found with ID: %d", assetID)
+	}
+
+	return nil
 }
