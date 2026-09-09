@@ -20,6 +20,8 @@
   --color-body: #4b5650;
   --color-muted: #8d8879;
 
+  --color-chart-amber: #b17a27;
+
   --animate-panel-fade: panel-fade 260ms ease-out both;
   --animate-door-swing: door-swing 450ms ease-in-out both;
   --animate-door-out-swing: door-out-swing 450ms ease-in-out both;
@@ -137,32 +139,40 @@ body {
 
 @keyframes timeline-ball {
   0%,
-  10% {
+  8% {
     top: var(--timeline-1);
   }
 
-  25% {
+  20% {
     top: var(--timeline-2);
   }
 
-  35% {
+  28% {
     top: var(--timeline-2);
   }
 
-  50% {
+  40% {
+    top: var(--timeline-3);
+  }
+
+  48% {
     top: var(--timeline-3);
   }
 
   60% {
-    top: var(--timeline-3);
-  }
-
-  75% {
     top: var(--timeline-4);
   }
 
-  90% {
+  68% {
     top: var(--timeline-4);
+  }
+
+  80% {
+    top: var(--timeline-5);
+  }
+
+  88% {
+    top: var(--timeline-5);
   }
 
   100% {
