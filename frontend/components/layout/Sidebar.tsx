@@ -123,8 +123,8 @@ const SidebarContent = ({
                 onClick={onNavigate}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
                   active
-                    ? "bg-button text-white"
-                    : "text-bullet hover:bg-white/5"
+                    ? "bg-button text-white hover:bg-button-hover"
+                    : "text-bullet hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <span
