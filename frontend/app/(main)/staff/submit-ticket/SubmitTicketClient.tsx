@@ -24,6 +24,10 @@ const NEXT_STEPS = [
     title: "Resolved",
     description: "You'll get a reference number immediately.",
   },
+  {
+    title: "Feedback",
+    description: "You can give feedback to the IT Admin",
+  },
 ];
 
 const SubmitTicketClient = ({
@@ -49,7 +53,11 @@ const SubmitTicketClient = ({
       const newPositions = holeRefs.current.map((hole) => {
         if (!hole) return 0;
 
-        return hole.getBoundingClientRect().top - timelineTop;
+        const holeRect = hole.getBoundingClientRect();
+
+        const holeCenter = holeRect.top - timelineTop + holeRect.height / 2;
+
+        return holeCenter - 6;
       });
 
       setPositions(newPositions);
@@ -81,6 +89,7 @@ const SubmitTicketClient = ({
           "--timeline-2": `${positions[1]}px`,
           "--timeline-3": `${positions[2]}px`,
           "--timeline-4": `${positions[3]}px`,
+          "--timeline-5": `${positions[4]}px`,
         } as React.CSSProperties)
       : undefined;
 
