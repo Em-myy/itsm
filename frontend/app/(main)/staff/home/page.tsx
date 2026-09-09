@@ -98,8 +98,10 @@ const StaffHomePage = async () => {
             href="/staff/tickets"
             className="group flex items-center gap-1.5 text-xs font-semibold text-body transition-colors hover:text-heading"
           >
-            View all
-            <MoveRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            <span className="mt-2 flex items-center gap-1.5 font-mono text-xs text-body transition group-hover:text-heading">
+              View all
+              <MoveRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </span>
           </Link>
 
           <div className="mt-4 space-y-3">
