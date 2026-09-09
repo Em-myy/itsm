@@ -33,7 +33,7 @@ const BookingsPage = () => {
 
   const isEquipUnderMaintenance = (equipLabel: string): boolean => {
     const matchedAsset = assets.find(
-      (a) => `${a.reference} - ${a.type}` === equipLabel,
+      (a) => `${a.reference} - ${a.asset_type}` === equipLabel,
     );
     return matchedAsset?.status === "Maintenance";
   };
