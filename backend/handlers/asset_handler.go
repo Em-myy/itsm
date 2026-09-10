@@ -168,7 +168,6 @@ func (h *AssetHandler) UpdateAsset(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		h.DB,
 		input.AssetID,
-		userID,
 		input.AssetType,
 		input.Department,
 		input.Status,
@@ -219,7 +218,7 @@ func (h *AssetHandler) CancelAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := repositories.CancelAsset(r.Context(), h.DB, input.AssetID, userID)
+	err := repositories.CancelAsset(r.Context(), h.DB, input.AssetID)
 	if err != nil {
 		log.Println("Error cancelling asset:", err)
 		http.Error(w, "Asset not found or not authorized to cancel", http.StatusForbidden)
