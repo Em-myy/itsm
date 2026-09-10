@@ -63,15 +63,10 @@ export interface AssetType {
   notes?: string;
 }
 
-export interface ProfileType {
-  username: string;
-  department: string;
-  created_at: string;
-}
-
 export interface UserType {
-  id: number;
+  id?: number;
   username: string;
+  email: string;
   department: string;
   role_id: number;
   role_name: string;
