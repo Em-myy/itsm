@@ -42,17 +42,21 @@ func UpdateUserProfile(
 
 func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, userID string) (*models.User, error) {
 	query := `
-		SELECT id, username, department, created_at, updated_at
-		FROM users
-		WHERE id = $1;
+		SELECT u.id, u.username, au.email, u.department, u.role_id, r.name, u.created_at
+		FROM users u
+		JOIN auth.users au ON u.id = au.id
+		JOIN roles r ON u.role_id = r.id
+		WHERE u.id = $1;
 	`
 	var user models.User
 	err := pool.QueryRow(ctx, query, userID).Scan(
 		&user.ID,
 		&user.Username,
+		&user.Email,
 		&user.Department,
+		&user.RoleId,
+		&user.RoleName,
 		&user.CreatedAt,
-		&user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -64,8 +68,9 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, userID string) (*mo
 
 func GetUsers(ctx context.Context, pool *pgxpool.Pool) ([]models.User, error) {
 	query := `
-		SELECT u.id, u.username, u.department, u.role_id, r.name, u.created_at
+		SELECT u.id, u.username, au.email, u.department, u.role_id, r.name, u.created_at
 		FROM users u
+		JOIN auth.users au ON u.id = au.id
 		JOIN roles r ON u.role_id = r.id
 		ORDER BY u.created_at ASC;
 	`
@@ -81,6 +86,7 @@ func GetUsers(ctx context.Context, pool *pgxpool.Pool) ([]models.User, error) {
 		err := rows.Scan(
 			&u.ID,
 			&u.Username,
+			&u.Email,
 			&u.Department,
 			&u.RoleId,
 			&u.RoleName,
