@@ -44,14 +44,8 @@ const AssetClientPage = ({ initialAssets }: { initialAssets: AssetType[] }) => {
   const handleCreate = async (data: AssetFormType) => {
     setIsSubmittingCreate(true);
 
-    const assetPayload = {
-      asset_type: data.asset_type,
-      department: data.department,
-      status: data.status,
-      assignee_name: data.assignee_name,
-    };
     try {
-      await api.post("/assets", assetPayload);
+      await api.post("/assets", data);
       console.log("Asset created successfully");
       setIsCreateOpen(false);
     } catch (error) {
