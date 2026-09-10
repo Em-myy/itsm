@@ -4,7 +4,7 @@ import ProfileClient from "./ProfileClient";
 import { createClient } from "@/utils/supabase/server";
 
 const ProfilePage = async () => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [
     profileResponse,
@@ -13,7 +13,7 @@ const ProfilePage = async () => {
     },
   ] = await Promise.all([
     fetchFromGo("/user/profile"),
-    (await supabase).auth.getUser(),
+    supabase.auth.getUser(),
   ]);
 
   const profile = profileResponse as ProfileType;
