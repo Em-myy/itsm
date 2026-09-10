@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
-import { DEPARTMENTS, ProfileType } from "@/lib/types";
+import { DEPARTMENTS, UserType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
@@ -38,19 +38,11 @@ const MessageBanner = ({
   );
 };
 
-const ProfileClient = ({
-  initialProfile,
-  email,
-  avatar,
-}: {
-  initialProfile: ProfileType;
-  email: string;
-  avatar: any;
-}) => {
+const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
   const router = useRouter();
   const supabase = createClient();
 
-  const { role, initials } = useAuth();
+  const { avatar, initials } = useAuth();
 
   const [username, setUsername] = useState<string>(initialProfile.username);
   const [department, setDepartment] = useState<string>(
@@ -174,7 +166,7 @@ const ProfileClient = ({
                 {initialProfile.username}
               </p>
               <span className="mt-0.5 inline-block rounded-full bg-input-bg px-2.5 py-0.5 font-mono text-xs uppercase tracking-widest text-muted">
-                {role?.name}
+                {initialProfile.role_name}
               </span>
               {memberSince && (
                 <p className="mt-1 text-xs text-muted">
@@ -205,7 +197,7 @@ const ProfileClient = ({
               <input
                 type="email"
                 disabled
-                value={email}
+                value={initialProfile.email}
                 className={`${inputClass} cursor-not-allowed opacity-70`}
               />
             </div>
@@ -217,8 +209,8 @@ const ProfileClient = ({
               <select
                 value={department}
                 onChange={(event) => setDepartment(event.target.value)}
-                disabled={role?.name === "IT Admin"}
-                className={`${inputClass} ${role?.name === "IT Admin" ? "cursor-not-allowed opacity-70" : ""}`}
+                disabled={initialProfile.role_name === "IT Admin"}
+                className={`${inputClass} ${initialProfile.role_name === "IT Admin" ? "cursor-not-allowed opacity-70" : ""}`}
               >
                 {DEPARTMENTS.map((dept) => (
                   <option key={dept} value={dept}>
