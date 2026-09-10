@@ -12,7 +12,7 @@ func CreateVenue(ctx context.Context, pool *pgxpool.Pool, venue models.Venue) (i
 	query := `
 		INSERT INTO venues (name, capacity, status, equipments)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id;
+		RETURNING id, reference;
 	`
 	var newId int
 	var newRef string
@@ -65,21 +65,65 @@ func GetVenues(ctx context.Context, pool *pgxpool.Pool) ([]models.Venue, error) 
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("Error iteration over assets: %w", err)
+		return nil, fmt.Errorf("Error iteration over venues: %w", err)
 	}
 
 	return venues, nil
 }
 
-func UpdateVenueStatus(ctx context.Context, pool *pgxpool.Pool, venueID int, newStatus string) error {
+func UpdateVenue(
+	ctx context.Context,
+	pool *pgxpool.Pool,
+	venueID int,
+	name *string,
+	capacity *int,
+	status *string,
+	equipments *[]string,
+) error {
 	query := `
 		UPDATE venues
-		SET status = $1
-		WHERE id = $2
+		SET
+			name = COALESCE($1, name),
+            capacity = COALESCE($2, capacity),
+            status = COALESCE($3, status),
+            equipments = COALESCE($4, equipments),
+            updated_at = NOW()
+		WHERE id = $5;
 	`
-	commandTag, err := pool.Exec(ctx, query, newStatus, venueID)
+
+	commandTag, err := pool.Exec(
+		ctx,
+		query,
+		name,
+		capacity,
+		status,
+		equipments,
+		venueID,
+	)
+
 	if err != nil {
-		return fmt.Errorf("Failed to update venue status: %w", err)
+		return fmt.Errorf("Failed to update venue: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("No venue found with ID: %d", venueID)
+	}
+
+	return nil
+}
+
+func CancelVenue(ctx context.Context, pool *pgxpool.Pool, venueID int) error {
+	query := `
+			UPDATE venues
+			SET
+				status = 'Retired',
+				updated_at = NOW()
+			WHERE id = $1;
+		`
+
+	commandTag, err := pool.Exec(ctx, query, venueID)
+	if err != nil {
+		return fmt.Errorf("Failed to cancel venue: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
