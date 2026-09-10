@@ -61,3 +61,39 @@ func GetUserProfile(ctx context.Context, pool *pgxpool.Pool, userID string) (*mo
 
 	return &user, nil
 }
+
+func GetUsers(ctx context.Context, pool *pgxpool.Pool) ([]models.User, error) {
+	query := `
+		SELECT u.id, u.username, u.department, u.role_id, r.name, u.created_at
+		FROM users u
+		JOIN roles r ON u.role_id = r.id
+		ORDER BY u.created_at ASC;
+	`
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get users: %w", err)
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var u models.User
+		err := rows.Scan(
+			&u.ID,
+			&u.Username,
+			&u.Department,
+			&u.RoleId,
+			&u.RoleName,
+			&u.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to scan user row: %w", err)
+		}
+		users = append(users, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("Error iterating over users: %w", err)
+	}
+	return users, nil
+}
