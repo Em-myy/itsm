@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"itsm/middleware"
+	"itsm/models"
 	"itsm/repositories"
 	"log"
 	"net/http"
@@ -70,4 +71,35 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+	role, _ := r.Context().Value(middleware.UserRoleKey).(string)
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	isAdmin := (role == "IT Admin")
+	if !isAdmin {
+		http.Error(w, "Forbidden: Only IT Admins can fetch all users", http.StatusForbidden)
+		return
+	}
+
+	users, err := repositories.GetUsers(r.Context(), h.DB)
+	if err != nil {
+		log.Println("Error fetching users:", err)
+		http.Error(w, "Could not fetch users", http.StatusInternalServerError)
+		return
+	}
+
+	if users == nil {
+		users = []models.User{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(users)
 }
