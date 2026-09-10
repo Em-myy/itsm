@@ -79,7 +79,6 @@ func UpdateAsset(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	assetID int,
-	userID string,
 	assetType *string,
 	department *string,
 	status *string,
@@ -123,7 +122,7 @@ func UpdateAsset(
 	return nil
 }
 
-func CancelAsset(ctx context.Context, pool *pgxpool.Pool, assetID int, userID string) error {
+func CancelAsset(ctx context.Context, pool *pgxpool.Pool, assetID int) error {
 	query := `
 			UPDATE assets
 			SET
