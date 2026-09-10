@@ -12,6 +12,7 @@ type Role struct {
 type User struct {
 	ID         string    `json:"id"`
 	Username   string    `json:"username"`
+	Email      string    `json:"email"`
 	Department string    `json:"department"`
 	RoleId     int       `json:"role_id"`
 	RoleName   string    `json:"role_name"`
