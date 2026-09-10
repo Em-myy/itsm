@@ -69,6 +69,15 @@ export interface ProfileType {
   created_at: string;
 }
 
+export interface UserType {
+  id: number;
+  username: string;
+  department: string;
+  role_id: number;
+  role_name: string;
+  created_at: string;
+}
+
 export interface StatusStyle {
   pill: string;
   dot: string;
