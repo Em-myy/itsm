@@ -438,3 +438,22 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER asset_activity_trigger
 AFTER INSERT OR UPDATE ON assets
 FOR EACH ROW EXECUTE FUNCTION log_asset_activity();
+
+CREATE OR REPLACE FUNCTION log_venue_activity()
+RETURNS TRIGGER AS $$
+BEGIN 
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO activity_logs (action_message)
+        VALUES ('Venue <strong>' || NEW.reference || '</strong> was added to records');
+    ELSIF TG_OP = 'UPDATE' AND OLD.status IS DISTINCT FROM NEW.status THEN
+        INSERT INTO activity_logs (action_message)
+        VALUES ('<strong>' || NEW.reference || '</strong> flagged under ' || LOWER(NEW.status));
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER venue_activity_trigger
+AFTER INSERT OR UPDATE ON venues
+FOR EACH ROW EXECUTE FUNCTION log_venue_activity();
