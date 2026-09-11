@@ -51,26 +51,6 @@ CREATE TABLE bookings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.users (id, username, department, role_id)
-    VALUES (
-        new.id,
-        COALESCE(new.raw_user_meta_data->>'username', 'Unknown'),
-        COALESCE(new.raw_user_meta_data->>'department', 'Unassigned'),
-        1
-    );
-    RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;    
 
@@ -163,21 +143,6 @@ INSERT INTO public.roles (name, description)
 VALUES
     ('Staff', 'Regular Staffs'),
     ('IT Admin', 'IT Staff');
-
-INSERT INTO public.venues (name, capacity, status, equipments)
-VALUES 
-    (
-    'Main Council Chamber', 
-    150, 
-    'Available', 
-    ARRAY['Projector', 'PA System', 'Microphones', 'Air Conditioning']
-  ),
-  (
-    'IT Training Room', 
-    30, 
-    'Available', 
-    ARRAY['Whiteboard', 'Smart TV', '20 Desktop Computers', 'High-Speed Router']
-  );
 
 
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -457,3 +422,36 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER venue_activity_trigger
 AFTER INSERT OR UPDATE ON venues
 FOR EACH ROW EXECUTE FUNCTION log_venue_activity();
+
+ALTER TABLE public.users
+ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending'
+CHECK (status IN ('Pending', 'Active', 'Suspended'));
+
+UPDATE public.users SET status = 'Active';
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+    assigned_status VARCHAR(50);
+BEGIN
+    IF new.raw_user_meta_data->>'username' IS NULL THEN
+        assigned_status = 'Pending';
+    ELSE
+        assigned_status = 'Active';
+    END IF;
+
+    INSERT INTO public.users (id, username, department, role_id, status)
+    VALUES (
+        new.id,
+        COALESCE(new.raw_user_meta_data->>'username', 'Unknown'),
+        COALESCE(new.raw_user_meta_data->>'department', 'Unassigned'),
+        1,
+        assigned_status
+    );
+    RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
