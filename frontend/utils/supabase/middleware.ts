@@ -34,6 +34,9 @@ export const createClient = async (request: NextRequest) => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const { pathname } = request.nextUrl;
 
@@ -46,6 +49,10 @@ export const createClient = async (request: NextRequest) => {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  if (session && request.nextUrl.pathname === "/invite") {
+    return NextResponse.next();
   }
 
   if (pathname.startsWith("/admin") && user) {
