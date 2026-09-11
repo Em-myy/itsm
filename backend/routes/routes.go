@@ -13,6 +13,7 @@ import (
 
 func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux := http.NewServeMux()
+	supabaseURL := os.Getenv("SUPABASE_URL")
 
 	ticketHandler := handlers.NewTicketHandler(db)
 	userHandler := handlers.NewUserHandler(db)
@@ -22,7 +23,6 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	assetHandler := handlers.NewAssetHandler(db)
 	activityHandler := handlers.NewActivityHandler(db)
 
-	supabaseURL := os.Getenv("SUPABASE_URL")
 	authMiddleware, err := middleware.SupabaseAuth(supabaseURL, db)
 	if err != nil {
 		log.Fatalf("Failed to initialize auth middleware: %v", err)
@@ -47,8 +47,9 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 
 	mux.Handle("PATCH /api/user/update-profile", authMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
 	mux.Handle("GET /api/user/profile", authMiddleware(http.HandlerFunc(userHandler.GetProfile)))
-	mux.Handle("GET /api/role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
 	mux.Handle("GET /api/users", authMiddleware(http.HandlerFunc(userHandler.GetUsers)))
+	mux.Handle("PATCH /api/user/update-admin", authMiddleware(http.HandlerFunc(userHandler.UpdateAdminProfile)))
+	mux.Handle("POST /api/user/invite-admin", authMiddleware(http.HandlerFunc(userHandler.InviteAdminHandler)))
 
 	mux.Handle("POST /api/bookings", authMiddleware(http.HandlerFunc(bookingHandler.CreateBooking)))
 	mux.Handle("GET /api/bookings", authMiddleware(http.HandlerFunc(bookingHandler.GetBookings)))
@@ -68,6 +69,8 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux.Handle("GET /api/assets", authMiddleware(http.HandlerFunc(assetHandler.GetAssets)))
 	mux.Handle("PATCH /api/assets/update", authMiddleware(http.HandlerFunc(assetHandler.UpdateAsset)))
 	mux.Handle("PATCH /api/assets/cancel", authMiddleware(http.HandlerFunc(assetHandler.CancelAsset)))
+
+	mux.Handle("GET /api/role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
 
 	mux.Handle("GET /api/activity", authMiddleware(http.HandlerFunc(activityHandler.GetActivityFeed)))
 
