@@ -70,6 +70,7 @@ export interface UserType {
   department: string;
   role_id: number;
   role_name: string;
+  status: "Pending" | "Active" | "Suspended";
   created_at: string;
 }
 
