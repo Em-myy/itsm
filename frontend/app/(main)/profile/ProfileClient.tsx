@@ -168,6 +168,7 @@ const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
               <span className="mt-0.5 inline-block rounded-full bg-input-bg px-2.5 py-0.5 font-mono text-xs uppercase tracking-widest text-muted">
                 {initialProfile.role_name}
               </span>
+              <span>{initialProfile.status}</span>
               {memberSince && (
                 <p className="mt-1 text-xs text-muted">
                   Member since {memberSince}
