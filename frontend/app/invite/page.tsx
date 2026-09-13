@@ -23,16 +23,41 @@ const AdminInvitePage = () => {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { error } = await supabase.auth.getSession();
-      if (error) {
-        setError(
-          "This invite link has expired or is invalid. Please request a new one.",
+    const handleAuth = async () => {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+
+      if (code) {
+        const { error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          setError("Failed to verify invite link and it might have expired");
+          return;
+        }
+
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
         );
+      } else {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+        if (
+          sessionError ||
+          (!session && !window.location.hash.includes("access_token"))
+        ) {
+          setError(
+            "This invite link has expired or is invalid. Please request a new one.",
+          );
+        }
       }
     };
 
-    checkSession();
+    handleAuth();
 
     const {
       data: { subscription },
@@ -56,17 +81,8 @@ const AdminInvitePage = () => {
   ): Promise<void> => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     try {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        throw new Error(
-          "Invite link has expired. Please check your mail for more information",
-        );
-      }
-
       const { error: authError } = await supabase.auth.updateUser({
         password: form.password,
       });
