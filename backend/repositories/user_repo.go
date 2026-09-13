@@ -149,6 +149,12 @@ func InviteAdmin(ctx context.Context, pool *pgxpool.Pool, email string) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode >= 400 {
+		var apiErr map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&apiErr)
+		return fmt.Errorf("supabase API rejected the invite (status %d): %v", resp.StatusCode, apiErr)
+	}
+
 	var user struct {
 		ID string `json:"id"`
 	}
