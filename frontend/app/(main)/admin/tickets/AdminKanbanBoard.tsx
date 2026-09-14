@@ -3,9 +3,209 @@
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 import { TicketType } from "@/lib/types";
+import { getPriorityColors } from "@/utils/priority-styles";
+import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
+import {
+  DragDropProvider,
+  DragEndEvent,
+  DragStartEvent,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/react";
+import { AlertCircle, Ban, CheckCircle2, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+type ColumnKey = "pending" | "inProgress" | "resolved" | "cancelled";
+
+interface TicketCardProps {
+  ticket: TicketType;
+  showClaim?: boolean;
+  showResolve?: boolean;
+  showCancel?: boolean;
+  onClaim?: () => void;
+  onResolve?: () => void;
+  onCancel?: () => void;
+}
+
+interface Column {
+  key: ColumnKey;
+  label: string;
+  status: string;
+  emptyText: string;
+}
+
+const COLUMNS: Column[] = [
+  {
+    key: "pending",
+    label: "New",
+    status: "Pending",
+    emptyText: "No new tickets",
+  },
+  {
+    key: "inProgress",
+    label: "In Progress",
+    status: "In Progress",
+    emptyText: "No tickets in progress",
+  },
+  {
+    key: "resolved",
+    label: "Resolved",
+    status: "Resolved",
+    emptyText: "No tickets resolved",
+  },
+  {
+    key: "cancelled",
+    label: "Cancelled",
+    status: "Cancelled",
+    emptyText: "No tickets cancelled",
+  },
+];
+
+const getValidTargets = (status: string): ColumnKey[] => {
+  if (status === "Pending") return ["inProgress", "cancelled"];
+  if (status === "In Progress") return ["resolved", "cancelled"];
+  return [];
+};
+
+const TicketCard = ({
+  ticket,
+  showClaim,
+  showResolve,
+  showCancel,
+  onClaim,
+  onResolve,
+  onCancel,
+}: TicketCardProps) => {
+  const { initials } = useAuth();
+
+  const style = getStatusStyle(ticket.status);
+  const hasAssignee =
+    ticket.assignee_name && ticket.assignee_name !== "Unassigned";
+
+  return (
+    <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-white">
+      <span className={`w-1 shrink-0 ${style.accent}`} />
+      <div className="min-w-0 flex-1 p-4">
+        <h3 className="text-sm font-semibold text-heading">{ticket.title}</h3>
+
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <p className="truncate text-xs text-body">
+            {ticket.department}
+            {ticket.priority && (
+              <>
+                {" "}
+                &middot;{" "}
+                <span
+                  className={`font-semibold ${getPriorityColors(ticket.priority)}`}
+                >
+                  {ticket.priority}
+                </span>
+              </>
+            )}
+          </p>
+          <span className="shrink-0 rounded-md bg-input-bg px-2 py-1 font-mono text-xs text-muted">
+            {ticket.reference.slice(12)}
+          </span>
+        </div>
+
+        {hasAssignee && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-button text-[10px] font-semibold uppercase text-white">
+              {initials}
+            </span>
+            <span className="truncate text-xs text-body">
+              {ticket.assignee_name}
+            </span>
+          </div>
+        )}
+
+        {(showClaim || showResolve || showCancel) && (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {showClaim && (
+              <button
+                type="button"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={onClaim}
+                className="rounded-lg border border-dashed border-line bg-input-bg px-3 py-1.5 text-xs font-semibold text-heading transition hover:bg-surface-hover cursor-pointer"
+              >
+                <span className="flex gap-1 items-center">
+                  <UserCheck className="w-3 h-3" />
+                  Claim
+                </span>
+              </button>
+            )}
+            {showResolve && (
+              <button
+                type="button"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={onResolve}
+                className="rounded-lg border border-dashed border-line bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-50 transition hover:bg-emerald-500 cursor-pointer"
+              >
+                <span className="flex gap-1 items-center">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Resolve
+                </span>
+              </button>
+            )}
+            {showCancel && (
+              <button
+                type="button"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={onCancel}
+                className="rounded-lg border border-dashed border-line bg-red-800 px-3 py-1.5 text-xs font-semibold text-red-50 transition hover:bg-red-700 cursor-pointer"
+              >
+                <span className="flex gap-1 items-center">
+                  <Ban className="w-3 h-3" />
+                  Cancel
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const DraggableCard = ({
+  ticket,
+  ...cardProps
+}: TicketCardProps): React.ReactElement => {
+  const { ref } = useDraggable({
+    id: String(ticket.id),
+  });
+  return (
+    <div ref={ref} className="cursor-pointer">
+      <TicketCard ticket={ticket} {...cardProps} />
+    </div>
+  );
+};
+
+const DroppableColumn = ({
+  id,
+  isValidTarget,
+  children,
+}: {
+  id: string;
+  isValidTarget: boolean;
+  children: React.ReactNode;
+}): React.ReactElement => {
+  const { ref } = useDroppable({
+    id,
+  });
+  return (
+    <div
+      ref={ref}
+      className={`min-h-32 space-y-3 rounded-xl transition ${
+        isValidTarget ? "bg-surface-hover ring-2 ring-button ring-offset-2" : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
+};
 
 const AdminKanbanBoard = ({
   initialTickets,
@@ -13,8 +213,15 @@ const AdminKanbanBoard = ({
   initialTickets: TicketType[];
 }) => {
   const supabase = createClient();
-  const { user, displayName } = useAuth();
   const router = useRouter();
+
+  const [tickets, setTickets] = useState<TicketType[]>(initialTickets);
+  const [activeTickets, setActiveTickets] = useState<TicketType | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTickets(initialTickets);
+  }, [initialTickets]);
 
   useEffect(() => {
     const channel = supabase
@@ -36,159 +243,192 @@ const AdminKanbanBoard = ({
   const handleClaimTicket = async (ticketId: number): Promise<void> => {
     try {
       await api.patch("/tickets/claim", { ticket_id: ticketId });
-
       router.refresh();
     } catch (error) {
-      console.log("Failed to claim ticket", error);
+      throw error;
     }
   };
 
   const handleResolveTicket = async (ticketId: number): Promise<void> => {
     try {
       await api.patch("/tickets/resolve", { ticket_id: ticketId });
-
       router.refresh();
     } catch (error) {
-      console.log(error);
+      throw error;
     }
   };
 
   const handleCancelTicket = async (ticketId: number): Promise<void> => {
     try {
       await api.patch("/tickets/cancel", { ticket_id: ticketId });
-
       router.refresh();
     } catch (error) {
-      console.log(error);
+      throw error;
     }
   };
 
-  const pendingTickets = initialTickets.filter((t) => t.status === "Pending");
-  const inProgressTickets = initialTickets.filter(
-    (t) => t.status === "In Progress",
-  );
-  const resolvedTickets = initialTickets.filter((t) => t.status === "Resolved");
-  const cancelledTickets = initialTickets.filter(
-    (t) => t.status === "Cancelled",
+  const runAction = async (
+    action: () => Promise<void>,
+    errorMessage: string,
+  ) => {
+    setActionError(null);
+    try {
+      await action();
+    } catch (error: any) {
+      console.error(error);
+      setActionError(errorMessage);
+    }
+  };
+
+  const handleDragStart = (event: DragStartEvent): void => {
+    const ticket = tickets.find(
+      (t) => String(t.id) === event.operation.source?.id,
+    );
+    setActiveTickets(ticket ?? null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent): Promise<void> => {
+    setActiveTickets(null);
+    if (event.canceled) return;
+
+    const { source, target } = event.operation;
+
+    if (!source || !target) return;
+
+    const ticketId = Number(source.id);
+    const targetKey = String(target?.id) as ColumnKey;
+
+    const ticket = tickets.find((t) => t.id === ticketId);
+    if (!ticket) return;
+
+    const validTargets = getValidTargets(ticket.status);
+    if (!validTargets.includes(targetKey)) return;
+
+    const targetColumn = COLUMNS.find((c) => c.key === targetKey);
+    if (!targetColumn) return;
+
+    const previousStatus = ticket.status;
+
+    try {
+      if (targetKey === "inProgress") {
+        await handleClaimTicket(ticketId);
+      } else if (targetKey === "resolved") {
+        await handleResolveTicket(ticketId);
+      } else if (targetKey === "cancelled") {
+        await handleCancelTicket(ticketId);
+      }
+    } catch (error: any) {
+      setActionError("Couldn't move that ticket. It's been put back.");
+      setTickets((prev) =>
+        prev.map((t) =>
+          t.id === ticketId ? { ...t, status: previousStatus } : t,
+        ),
+      );
+    }
+  };
+
+  const grouped = COLUMNS.reduce<Record<ColumnKey, TicketType[]>>(
+    (acc, column) => {
+      acc[column.key] = tickets.filter((t) => t.status === column.status);
+      return acc;
+    },
+    { pending: [], inProgress: [], resolved: [], cancelled: [] },
   );
 
   return (
     <div>
-      <div>
-        <div>
-          <div>
-            <h2>PENDING</h2>
-            <p>{pendingTickets.length}</p>
-            {pendingTickets.length < 1 ? (
-              <p>No tickets submitted</p>
-            ) : (
-              pendingTickets.map((ticket) => (
-                <div key={ticket.id}>
-                  <h3>{ticket.title}</h3>
-                  <h4>{ticket.reference.slice(9)}</h4>
-                  <p>{ticket.department}</p>
-                  <p>{ticket.priority}</p>
-                  {ticket.assignee_name === "Unassigned" &&
-                  ticket.status === "Pending" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleClaimTicket(ticket.id)}
-                      >
-                        Claim Ticket
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCancelTicket(ticket.id)}
-                      >
-                        Cancel Ticket
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </div>
-
-          <div>
-            <h2>IN PROGRESS</h2>
-            <p>{inProgressTickets.length}</p>
-            {inProgressTickets.length < 1 ? (
-              <p>No tickets is in progress</p>
-            ) : (
-              inProgressTickets.map((ticket) => (
-                <div key={ticket.id}>
-                  <h3>{ticket.title}</h3>
-                  <h4>{ticket.reference.slice(9)}</h4>
-                  <p>{ticket.department}</p>
-                  <p>{ticket.priority}</p>
-                  <p>{ticket.assignee_name}</p>
-                  {ticket.status === "In Progress" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleResolveTicket(ticket.id)}
-                      >
-                        Resolve Ticket
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCancelTicket(ticket.id)}
-                      >
-                        Cancel Ticket
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </div>
-
-          <div>
-            <h2>RESOLVED</h2>
-            <p>{resolvedTickets.length}</p>
-            {resolvedTickets.length < 1 ? (
-              <p>No tickets resolved</p>
-            ) : (
-              resolvedTickets.map((ticket) => (
-                <div key={ticket.id}>
-                  <h3>{ticket.title}</h3>
-                  <h4>{ticket.reference.slice(9)}</h4>
-                  <p>{ticket.department}</p>
-                  <p>{ticket.priority}</p>
-                  {ticket.status === "Resolved" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleCancelTicket(ticket.id)}
-                      >
-                        Cancel Ticket
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              ))
-            )}
-          </div>
-
-          <div>
-            <h2>Cancelled</h2>
-            <p>{cancelledTickets.length}</p>
-            {cancelledTickets.length < 1 ? (
-              <p>No tickets cancelled</p>
-            ) : (
-              cancelledTickets.map((ticket) => (
-                <div key={ticket.id}>
-                  <h3>{ticket.title}</h3>
-                  <h4>{ticket.reference.slice(9)}</h4>
-                  <p>{ticket.department}</p>
-                  <p>{ticket.priority}</p>
-                </div>
-              ))
-            )}
-          </div>
+      {actionError && (
+        <div
+          role="alert"
+          className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{actionError}</span>
         </div>
-      </div>
+      )}
+
+      <DragDropProvider onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {COLUMNS.map((column) => {
+            const columnTickets = grouped[column.key];
+            const draggableColumn =
+              column.key === "pending" || column.key === "inProgress";
+            return (
+              <div
+                key={column.key}
+                className="w-[calc(100vw-2rem)] sm:w-64 h-fit shrink-0 rounded-2xl border border-line bg-white p-4"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-body">
+                    {column.label}
+                  </h2>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-white text-xs font-semibold text-heading">
+                    {columnTickets.length}
+                  </span>
+                </div>
+
+                <DroppableColumn
+                  id={column.key}
+                  isValidTarget={
+                    activeTickets
+                      ? getValidTargets(activeTickets.status).includes(
+                          column.key,
+                        )
+                      : false
+                  }
+                >
+                  {columnTickets.length === 0 ? (
+                    <p className="py-6 text-center text-xs text-muted">
+                      {column.emptyText}
+                    </p>
+                  ) : (
+                    columnTickets.map((ticket) => {
+                      const cardProps = {
+                        showClaim: column.key === "pending",
+                        showResolve: column.key === "inProgress",
+                        showCancel:
+                          column.key === "pending" ||
+                          column.key === "inProgress",
+                        onClaim: () =>
+                          runAction(
+                            () => handleClaimTicket(ticket.id),
+                            "Couldn't claim this ticket.",
+                          ),
+                        onResolve: () =>
+                          runAction(
+                            () => handleResolveTicket(ticket.id),
+                            "Couldn't resolve this ticket.",
+                          ),
+                        onCancel: () =>
+                          runAction(
+                            () => handleCancelTicket(ticket.id),
+                            "Couldn't cancel this ticket.",
+                          ),
+                      };
+                      return draggableColumn ? (
+                        <DraggableCard
+                          key={ticket.id}
+                          ticket={ticket}
+                          {...cardProps}
+                        />
+                      ) : (
+                        <div
+                          key={ticket.id}
+                          className={
+                            column.key === "cancelled" ? "opacity-60" : ""
+                          }
+                        >
+                          <TicketCard ticket={ticket} {...cardProps} />
+                        </div>
+                      );
+                    })
+                  )}
+                </DroppableColumn>
+              </div>
+            );
+          })}
+        </div>
+      </DragDropProvider>
     </div>
   );
 };
