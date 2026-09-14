@@ -2,7 +2,6 @@
 
 import api from "@/lib/axios";
 import { createClient } from "@/utils/supabase/client";
-import { Session } from "inspector/promises";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -22,55 +21,37 @@ const AdminInvitePage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
+  const [isSessionReady, setIsSessionReady] = useState<boolean>(false);
+  const [authStatus, setAuthStatus] = useState<string>(
+    "Validating invite link...",
+  );
+
   useEffect(() => {
-    const handleAuth = async () => {
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get("code");
-
-      if (code) {
-        const { error: exchangeError } =
-          await supabase.auth.exchangeCodeForSession(code);
-
-        if (exchangeError) {
-          setError("Failed to verify invite link and it might have expired");
-          return;
-        }
-
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname,
-        );
-      } else {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-        if (
-          sessionError ||
-          (!session && !window.location.hash.includes("access_token"))
-        ) {
-          setError(
-            "This invite link has expired or is invalid. Please request a new one.",
-          );
-        }
-      }
-    };
-
-    handleAuth();
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
-        router.push("/");
+      console.log("Supabase auth event:", event);
+
+      if (session) {
+        setIsSessionReady(true);
+        setAuthStatus("");
+      } else if (event === "SIGNED_OUT" || event === "INITIAL_SESSION") {
+        setAuthStatus(
+          "This invite link has expired or is invalid. Please request a new one.",
+        );
+        setIsSessionReady(false);
       }
     });
-
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsSessionReady(true);
+        setAuthStatus("");
+      }
+    });
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, supabase]);
+  }, [supabase]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setForm({ ...form, [event.target.name]: event.target.value });
@@ -116,9 +97,17 @@ const AdminInvitePage = () => {
     }
   };
   return (
-    <div>
-      <h2>Complete Admin Setup</h2>
-      <p>Setup credentials for the Ojo local government ITSM portal</p>
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded">
+      <h2 className="text-xl font-bold mb-2">Complete Admin Setup</h2>
+      <p className="mb-6 text-gray-600">
+        Setup credentials for the Ojo local government ITSM portal
+      </p>
+
+      {!isSessionReady && (
+        <div className="bg-blue-50 text-blue-800 p-4 rounded text-center font-medium">
+          {authStatus}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
@@ -126,20 +115,23 @@ const AdminInvitePage = () => {
         </div>
       )}
 
-      <div>
-        <form onSubmit={handleSubmit}>
+      {isSessionReady && (
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label>Username</label>
+            <label className="block text-sm font-medium mb-1">Username</label>
             <input
               type="text"
               name="username"
               value={form.username}
               required
               onChange={handleChange}
+              className="w-full border-2 p-2 rounded"
             />
           </div>
           <div>
-            <label>Permanent Password</label>
+            <label className="block text-sm font-medium mb-1">
+              Permanent Password
+            </label>
             <input
               type="password"
               name="password"
@@ -147,13 +139,18 @@ const AdminInvitePage = () => {
               required
               minLength={8}
               onChange={handleChange}
+              className="w-full border p-2 rounded"
             />
           </div>
-          <button type="submit" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          >
             {loading ? "Completing Setup..." : "Save & Login"}
           </button>
         </form>
-      </div>
+      )}
     </div>
   );
 };
