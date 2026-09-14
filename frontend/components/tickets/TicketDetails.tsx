@@ -8,6 +8,7 @@ import { useState } from "react";
 import TicketForm, { TicketFormValues } from "./TicketForm";
 import { AlertCircle, Ban, Pencil, X } from "lucide-react";
 import { getPriorityColors } from "@/utils/priority-styles";
+import DownloadButton from "../layout/DownloadButton";
 
 const TicketDetails = ({
   ticket,
@@ -171,6 +172,19 @@ const TicketDetails = ({
             <p className="text-heading">
               {ticket.description || "No description provided."}
             </p>
+          </div>
+
+          <div className="pt-3 mt-3 border-t border-line">
+            <span className="mb-1 block font-medium text-body">Attachment</span>
+            {ticket.picture && ticket.picture.length > 0 ? (
+              <div className="pt-2">
+                <DownloadButton filePath={ticket.picture} onError={setError} />
+              </div>
+            ) : (
+              <p className="text-sm italic text-muted">
+                No attachment provided
+              </p>
+            )}
           </div>
         </div>
 
