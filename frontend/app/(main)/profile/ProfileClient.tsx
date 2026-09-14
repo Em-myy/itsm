@@ -168,7 +168,22 @@ const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
               <span className="mt-0.5 inline-block rounded-full bg-input-bg px-2.5 py-0.5 font-mono text-xs uppercase tracking-widest text-muted">
                 {initialProfile.role_name}
               </span>
-              <span>{initialProfile.status}</span>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                  initialProfile.status === "Active"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-red-50 text-red-700"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    initialProfile.status === "Active"
+                      ? "bg-emerald-500"
+                      : "bg-red-500"
+                  }`}
+                />
+                {initialProfile.status}
+              </span>
               {memberSince && (
                 <p className="mt-1 text-xs text-muted">
                   Member since {memberSince}
