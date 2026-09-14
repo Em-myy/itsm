@@ -1,15 +1,18 @@
 "use client";
 
+import TicketDetails from "@/components/tickets/TicketDetails";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 import { TicketType } from "@/lib/types";
 import { getPriorityColors } from "@/utils/priority-styles";
 import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
+import { PointerActivationConstraints } from "@dnd-kit/dom";
 import {
   DragDropProvider,
   DragEndEvent,
   DragStartEvent,
+  PointerSensor,
   useDraggable,
   useDroppable,
 } from "@dnd-kit/react";
@@ -27,6 +30,7 @@ interface TicketCardProps {
   onClaim?: () => void;
   onResolve?: () => void;
   onCancel?: () => void;
+  onCardClick?: () => void;
 }
 
 interface Column {
@@ -77,6 +81,7 @@ const TicketCard = ({
   onClaim,
   onResolve,
   onCancel,
+  onCardClick,
 }: TicketCardProps) => {
   const { initials } = useAuth();
 
@@ -85,7 +90,10 @@ const TicketCard = ({
     ticket.assignee_name && ticket.assignee_name !== "Unassigned";
 
   return (
-    <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-white">
+    <div
+      className="flex items-stretch overflow-hidden rounded-xl border border-line bg-white"
+      onClick={onCardClick}
+    >
       <span className={`w-1 shrink-0 ${style.accent}`} />
       <div className="min-w-0 flex-1 p-4">
         <h3 className="text-sm font-semibold text-heading">{ticket.title}</h3>
@@ -127,7 +135,10 @@ const TicketCard = ({
               <button
                 type="button"
                 onPointerDown={(event) => event.stopPropagation()}
-                onClick={onClaim}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (onClaim) onClaim();
+                }}
                 className="rounded-lg border border-dashed border-line bg-input-bg px-3 py-1.5 text-xs font-semibold text-heading transition hover:bg-surface-hover cursor-pointer"
               >
                 <span className="flex gap-1 items-center">
@@ -140,7 +151,10 @@ const TicketCard = ({
               <button
                 type="button"
                 onPointerDown={(event) => event.stopPropagation()}
-                onClick={onResolve}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (onResolve) onResolve();
+                }}
                 className="rounded-lg border border-dashed border-line bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-50 transition hover:bg-emerald-500 cursor-pointer"
               >
                 <span className="flex gap-1 items-center">
@@ -153,7 +167,10 @@ const TicketCard = ({
               <button
                 type="button"
                 onPointerDown={(event) => event.stopPropagation()}
-                onClick={onCancel}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (onCancel) onCancel();
+                }}
                 className="rounded-lg border border-dashed border-line bg-red-800 px-3 py-1.5 text-xs font-semibold text-red-50 transition hover:bg-red-700 cursor-pointer"
               >
                 <span className="flex gap-1 items-center">
@@ -171,13 +188,14 @@ const TicketCard = ({
 
 const DraggableCard = ({
   ticket,
+  onCardClick,
   ...cardProps
 }: TicketCardProps): React.ReactElement => {
   const { ref } = useDraggable({
     id: String(ticket.id),
   });
   return (
-    <div ref={ref} className="cursor-pointer">
+    <div ref={ref} onClick={onCardClick} className="cursor-pointer">
       <TicketCard ticket={ticket} {...cardProps} />
     </div>
   );
@@ -218,6 +236,15 @@ const AdminKanbanBoard = ({
   const [tickets, setTickets] = useState<TicketType[]>(initialTickets);
   const [activeTickets, setActiveTickets] = useState<TicketType | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
+
+  const sensors = [
+    PointerSensor.configure({
+      activationConstraints: [
+        new PointerActivationConstraints.Distance({ value: 5 }),
+      ],
+    }),
+  ];
 
   useEffect(() => {
     setTickets(initialTickets);
@@ -347,7 +374,11 @@ const AdminKanbanBoard = ({
         </div>
       )}
 
-      <DragDropProvider onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DragDropProvider
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <div className="flex gap-4 overflow-x-auto pb-2">
           {COLUMNS.map((column) => {
             const columnTickets = grouped[column.key];
@@ -384,6 +415,7 @@ const AdminKanbanBoard = ({
                   ) : (
                     columnTickets.map((ticket) => {
                       const cardProps = {
+                        onCardClick: () => setSelectedTicket(ticket),
                         showClaim: column.key === "pending",
                         showResolve: column.key === "inProgress",
                         showCancel:
@@ -429,6 +461,14 @@ const AdminKanbanBoard = ({
           })}
         </div>
       </DragDropProvider>
+
+      {selectedTicket && (
+        <TicketDetails
+          ticket={selectedTicket}
+          relatedTickets={[selectedTicket]}
+          onClose={() => setSelectedTicket(null)}
+        />
+      )}
     </div>
   );
 };
