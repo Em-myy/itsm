@@ -9,5 +9,5 @@ export const getPriorityColors = (priority: string): string => {
     return "text-emerald-600";
   }
 
-  return "text-amber-600";
+  return "text-blue-700";
 };
