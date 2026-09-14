@@ -122,7 +122,7 @@ func InviteAdmin(ctx context.Context, pool *pgxpool.Pool, email string) error {
 		return fmt.Errorf("Server configuration error: Frontend url is not set")
 	}
 
-	redirectTo := frontendURL + "/invite"
+	redirectTo := frontendURL + "/auth/confirm?next=/invite"
 	endpoint := fmt.Sprintf("%s/auth/v1/invite?redirect_to=%s", supabaseURL, url.QueryEscape(redirectTo))
 
 	payload := map[string]interface{}{
