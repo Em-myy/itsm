@@ -26,6 +26,7 @@ export interface TicketType {
   description: string;
   assignee_id?: string;
   assignee_name?: string;
+  picture?: string;
   created_at: string;
 }
 
