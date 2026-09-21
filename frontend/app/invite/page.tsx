@@ -14,7 +14,7 @@ const AdminInvitePage = () => {
   const router = useRouter();
   const supabase = createClient();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormType>({
     username: "",
     password: "",
   });
@@ -27,6 +27,16 @@ const AdminInvitePage = () => {
   );
 
   useEffect(() => {
+    if (
+      !window.location.hash.includes("access_token") &&
+      !window.location.hash.includes("type=invite")
+    ) {
+      setAuthStatus(
+        "Invalid or expired invite link. Please request a new one.",
+      );
+      return;
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -35,17 +45,11 @@ const AdminInvitePage = () => {
       if (session) {
         setIsSessionReady(true);
         setAuthStatus("");
-      } else if (event === "SIGNED_OUT" || event === "INITIAL_SESSION") {
+      } else if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
         setAuthStatus(
           "This invite link has expired or is invalid. Please request a new one.",
         );
         setIsSessionReady(false);
-      }
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsSessionReady(true);
-        setAuthStatus("");
       }
     });
     return () => {
@@ -76,22 +80,7 @@ const AdminInvitePage = () => {
       console.log("Admin username updated successfully");
       router.push("/admin/home");
     } catch (error: any) {
-      console.error("Full error:", error);
-
-      let errorMessage = "An unexpected error occurred.";
-
-      if (error.response?.data) {
-        errorMessage =
-          typeof error.response.data === "string"
-            ? error.response.data
-            : error.response.data.message ||
-              JSON.stringify(error.response.data);
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      setError(errorMessage);
-      return;
+      setError(error.message);
     } finally {
       setLoading(false);
     }
