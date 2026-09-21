@@ -31,11 +31,6 @@ const STATUS_STYLES: Record<string, StatusStyle> = {
     dot: "bg-emerald-500",
     accent: "bg-emerald-400",
   },
-  closed: {
-    pill: "bg-emerald-50 text-emerald-700",
-    dot: "bg-emerald-500",
-    accent: "bg-emerald-400",
-  },
   rejected: {
     pill: "bg-red-50 text-red-700",
     dot: "bg-red-500",
