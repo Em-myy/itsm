@@ -504,7 +504,7 @@ const FormPanel = ({
           <button
             type="submit"
             disabled={loading}
-            className={`mt-2 flex w-full items-center justify-center rounded-xl bg-button py-3.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed ${
+            className={`mt-2 flex w-full items-center justify-center rounded-xl bg-button py-3.5 text-sm font-semibold text-white transition hover:bg-button-hover focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:cursor-not-allowed cursor-pointer ${
               loading && !showDoorTransition ? "opacity-70" : ""
             }`}
           >
