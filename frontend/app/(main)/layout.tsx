@@ -1,23 +1,22 @@
-import type { Metadata } from "next";
+"use client";
+
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import { SidebarProvider } from "@/context/SidebarContext";
+import { useState } from "react";
 
-export const metadata: Metadata = {
-  title: "IT Service Management",
-  description: "A Web-App for the IT Department",
-};
-
-export default function MainLayout({ children }: LayoutProps<"/">) {
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden">
-        <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Navbar />
-          <main className="flex-1 overflow-y-auto bg-input-bg">{children}</main>
-        </div>
+    <div className="flex h-screen w-full overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Navbar onOpenSidebar={() => setIsSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto bg-input-bg">{children}</main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
