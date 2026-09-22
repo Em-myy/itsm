@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useSidebar } from "@/context/SidebarContext";
 import { SearchCategory } from "@/lib/types";
 import {
   Calendar,
@@ -18,6 +17,10 @@ import SearchModal from "../shared/SearchModal";
 import Image from "next/image";
 import Link from "next/link";
 
+interface NavbarProps {
+  onOpenSidebar: () => void;
+}
+
 const STAFF_SEARCH_CATEGORIES: SearchCategory[] = [
   { id: "tickets", label: "Tickets", icon: Edit2 },
   { id: "bookings", label: "Bookings", icon: Calendar },
@@ -30,9 +33,8 @@ const ADMIN_SEARCH_CATEGORIES: SearchCategory[] = [
   { id: "users", label: "Users", icon: UsersRound },
 ];
 
-const Navbar = () => {
+const Navbar = ({ onOpenSidebar }: NavbarProps) => {
   const { avatar, initials, displayName, role } = useAuth();
-  const { openMobile } = useSidebar();
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState<boolean>(false);
 
@@ -85,11 +87,11 @@ const Navbar = () => {
     <div className="flex w-full items-center gap-3 border-b border-line bg-white px-4 py-3 md:px-6">
       <button
         type="button"
-        onClick={openMobile}
+        onClick={onOpenSidebar}
         aria-label="Open menu"
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-heading transition hover:bg-input-bg md:hidden"
       >
-        <Menu size={18} />
+        <Menu className="w-5 h-5" />
       </button>
 
       <button
@@ -130,6 +132,8 @@ const Navbar = () => {
               <Image
                 src={avatar}
                 alt={displayName}
+                height={40}
+                width={40}
                 className="h-10 w-10 shrink-0 rounded-full border border-line object-cover"
               />
             ) : (
