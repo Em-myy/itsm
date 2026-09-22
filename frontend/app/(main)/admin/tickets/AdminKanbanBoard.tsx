@@ -1,7 +1,6 @@
 "use client";
 
 import TicketDetails from "@/components/tickets/TicketDetails";
-import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axios";
 import { TicketType } from "@/lib/types";
 import { getPriorityColors } from "@/utils/priority-styles";
@@ -83,11 +82,10 @@ const TicketCard = ({
   onCancel,
   onCardClick,
 }: TicketCardProps) => {
-  const { initials } = useAuth();
-
   const style = getStatusStyle(ticket.status);
   const hasAssignee =
     ticket.assignee_name && ticket.assignee_name !== "Unassigned";
+  const initials = ticket.assignee_name?.charAt(0).toUpperCase() || "?";
 
   return (
     <div
@@ -379,7 +377,7 @@ const AdminKanbanBoard = ({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="flex gap-3 overflow-x-auto pb-2">
           {COLUMNS.map((column) => {
             const columnTickets = grouped[column.key];
             const draggableColumn =
