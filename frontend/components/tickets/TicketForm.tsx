@@ -15,6 +15,16 @@ export interface TicketFormValues {
   file: File | null;
 }
 
+interface TicketFormType {
+  ticketId: number | string;
+  title: string;
+  category: string;
+  department: string;
+  priority: string;
+  relatedAsset: string;
+  description: string;
+}
+
 interface TicketFormProps {
   relatedTickets: TicketType[] | null;
   initialValues?: Partial<Omit<TicketFormValues, "file">>;
@@ -43,28 +53,30 @@ const TicketForm = ({
   onSubmit,
   onCancel,
 }: TicketFormProps) => {
-  const ticketId = initialValues?.ticketId ?? "";
-  const [title, setTitle] = useState<string>(initialValues?.title ?? "");
-  const [category, setCategory] = useState<string>(
-    initialValues?.category ?? "Hardware",
-  );
-  const [department, setDepartment] = useState<string>(
-    initialValues?.department ?? "Admin/HR",
-  );
-  const [priority, setPriority] = useState<string>(
-    initialValues?.priority ?? "",
-  );
-  const [relatedAsset, setRelatedAsset] = useState<string>(
-    initialValues?.relatedAsset ?? "None - not tied to a registered asset",
-  );
-  const [description, setDescription] = useState<string>(
-    initialValues?.description ?? "",
-  );
+  const [formData, setFormData] = useState<TicketFormType>({
+    ticketId: initialValues?.ticketId ?? "",
+    title: initialValues?.title ?? "",
+    category: initialValues?.category ?? "",
+    department: initialValues?.department ?? "",
+    priority: initialValues?.priority ?? "",
+    relatedAsset:
+      initialValues?.relatedAsset ?? "None - not tied to a registered asset",
+    description: initialValues?.description ?? "",
+  });
+
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFormChange = (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ): void => {
+    setFormData({ ...formData, [event.target.name]: event.target.value });
+  };
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -91,21 +103,17 @@ const TicketForm = ({
 
     try {
       await onSubmit({
-        ticketId: Number(ticketId),
-        title,
-        category,
-        department,
-        priority,
-        relatedAsset,
-        description,
+        ticketId: Number(formData.ticketId),
+        title: formData.title,
+        category: formData.category,
+        department: formData.department,
+        priority: formData.priority,
+        relatedAsset: formData.relatedAsset,
+        description: formData.description,
         file,
       });
     } catch (error: any) {
-      setError(
-        error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again.",
-      );
+      setError(error.response?.data?.message || error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -122,8 +130,8 @@ const TicketForm = ({
           required
           placeholder="e.g. Laptop won't turn on"
           name="title"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          value={formData.title}
+          onChange={handleFormChange}
           className={inputClass}
         />
       </div>
@@ -134,10 +142,14 @@ const TicketForm = ({
             Category
           </label>
           <select
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            className={inputClass}
+            value={formData.category}
+            name="category"
+            onChange={handleFormChange}
+            className={`${inputClass} cursor-pointer`}
           >
+            <option value="" disabled>
+              Select the category of the ticket
+            </option>
             <option value="Hardware">Hardware</option>
             <option value="Network">Network</option>
             <option value="Software">Software</option>
@@ -145,15 +157,20 @@ const TicketForm = ({
             <option value="Power / UPS">Power / UPS</option>
           </select>
         </div>
+
         <div>
           <label className="mb-2 block text-sm font-medium text-heading">
             Department
           </label>
           <select
-            value={department}
-            onChange={(event) => setDepartment(event.target.value)}
-            className={inputClass}
+            value={formData.department}
+            name="department"
+            onChange={handleFormChange}
+            className={`${inputClass} cursor-pointer`}
           >
+            <option value="" disabled>
+              Select a department
+            </option>
             {DEPARTMENTS.map((dept) => (
               <option value={dept} key={dept}>
                 {dept}
@@ -175,8 +192,8 @@ const TicketForm = ({
                 type="radio"
                 name="priority"
                 value={level}
-                checked={priority === level}
-                onChange={(event) => setPriority(event.target.value)}
+                checked={formData.priority === level}
+                onChange={handleFormChange}
                 className="sr-only"
               />
               {level}
@@ -191,9 +208,10 @@ const TicketForm = ({
         </label>
 
         <select
-          value={relatedAsset}
-          onChange={(event) => setRelatedAsset(event.target.value)}
-          className={inputClass}
+          value={formData.relatedAsset}
+          name="relatedAsset"
+          onChange={handleFormChange}
+          className={`${inputClass} cursor-pointer`}
         >
           <option value="None - not tied to a registered asset">
             None - not tied to a registered asset
@@ -212,8 +230,9 @@ const TicketForm = ({
         </label>
         <textarea
           placeholder="What did you expect to happen, and what happened instead?"
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          name="description"
+          value={formData.description}
+          onChange={handleFormChange}
           rows={5}
           className={`${inputClass} resize-y`}
         />
