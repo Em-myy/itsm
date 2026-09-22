@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useSidebar } from "@/context/SidebarContext";
 import {
   Calendar,
   CircleCheck,
@@ -25,40 +24,57 @@ interface NavType {
   path: string;
 }
 
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 const StaffNav: NavType[] = [
-  { icon: <HomeIcon size={18} />, name: "Dashboard", path: "/staff/home" },
   {
-    icon: <Edit2 size={18} />,
+    icon: <HomeIcon className="w-5 h-5" />,
+    name: "Dashboard",
+    path: "/staff/home",
+  },
+  {
+    icon: <Edit2 className="w-5 h-5" />,
     name: "Submit a ticket",
     path: "/staff/submit-ticket",
   },
-  { icon: <Menu size={18} />, name: "My tickets", path: "/staff/tickets" },
   {
-    icon: <Calendar size={18} />,
+    icon: <Menu className="w-5 h-5" />,
+    name: "My tickets",
+    path: "/staff/tickets",
+  },
+  {
+    icon: <Calendar className="w-5 h-5" />,
     name: "Bookings",
     path: "/staff/calendar",
   },
 ];
 
 const AdminNav: NavType[] = [
-  { icon: <House size={18} />, name: "Dashboard", path: "/admin/home" },
   {
-    icon: <Columns3 size={18} />,
+    icon: <House className="w-5 h-5" />,
+    name: "Dashboard",
+    path: "/admin/home",
+  },
+  {
+    icon: <Columns3 className="w-5 h-5" />,
     name: "Helpdesk board",
     path: "/admin/tickets",
   },
   {
-    icon: <Package size={18} />,
+    icon: <Package className="w-5 h-5" />,
     name: "Master inventory",
     path: "/admin/assets",
   },
   {
-    icon: <CircleCheck size={18} />,
+    icon: <CircleCheck className="w-5 h-5" />,
     name: "Booking approvals",
     path: "/admin/bookings",
   },
   {
-    icon: <UsersRound size={18} />,
+    icon: <UsersRound className="w-5 h-5" />,
     name: "User management",
     path: "/admin/users",
   },
@@ -90,7 +106,7 @@ const SidebarContent = ({
   pathname: string;
   isSigningOut: boolean;
   onSignOutClick: () => void;
-  onNavigate?: () => void;
+  onNavigate: () => void;
 }): React.ReactElement => {
   return (
     <>
@@ -151,7 +167,7 @@ const SidebarContent = ({
             <SignoutScene />
           ) : (
             <>
-              <LogOut size={18} /> Sign Out
+              <LogOut className="w-5 h-5" /> Sign Out
             </>
           )}
         </button>
@@ -160,9 +176,8 @@ const SidebarContent = ({
   );
 };
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { role, handleSignout } = useAuth();
-  const { mobileOpen, closeMobile } = useSidebar();
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
 
@@ -190,42 +205,35 @@ const Sidebar = () => {
 
   return (
     <>
-      <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between bg-ink px-4 py-6 md:flex">
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden animate-fade-in motion-reduce:animate-none"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col justify-between bg-ink px-4 py-6 shadow-xl transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-sage hover:bg-white/5 md:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
         <SidebarContent
           isStaff={isStaff}
           navItems={navItems}
           pathname={pathname}
           isSigningOut={isSigningOut}
           onSignOutClick={handleSignOut}
+          onNavigate={onClose}
         />
       </aside>
-
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 animate-fade-in bg-black/40 motion-reduce:animate-none"
-            onClick={closeMobile}
-          />
-          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] animate-drawer-in flex-col justify-between bg-ink px-4 py-6 shadow-xl motion-reduce:animate-none">
-            <button
-              type="button"
-              onClick={closeMobile}
-              aria-label="Close menu"
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-sage hover:bg-white/5"
-            >
-              <X size={26} />
-            </button>
-            <SidebarContent
-              isStaff={isStaff}
-              navItems={navItems}
-              pathname={pathname}
-              isSigningOut={isSigningOut}
-              onSignOutClick={handleSignOut}
-              onNavigate={closeMobile}
-            />
-          </aside>
-        </div>
-      )}
     </>
   );
 };
