@@ -5,7 +5,11 @@ export const metadata: Metadata = {
   description: "A Web-App for the IT Department",
 };
 
-export default function StaffLayout({ children }: LayoutProps<"/staff">) {
+export default function StaffLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div>{children}</div>
