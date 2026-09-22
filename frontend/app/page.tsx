@@ -23,6 +23,7 @@ interface FormType {
   username?: string;
   email: string;
   password: string;
+  department?: string;
 }
 
 interface FormPanelProps {
@@ -30,14 +31,14 @@ interface FormPanelProps {
   onSwitch: (m: Mode) => void;
   signUpForm: FormType;
   signInForm: FormType;
-  department: string;
   showPassword: boolean;
   loading: boolean;
   message: Message | null;
   showDoorTransition: boolean;
-  onSignUpChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSignUpChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => void;
   onSignInChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onDepartmentChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onTogglePassword: () => void;
   onSignUp: (e: React.SubmitEvent<HTMLFormElement>) => void;
   onSignIn: (e: React.SubmitEvent<HTMLFormElement>) => void;
@@ -101,8 +102,8 @@ export default function Home() {
     username: "",
     email: "",
     password: "",
+    department: "",
   });
-  const [department, setDepartment] = useState<string>("");
   const [signInForm, setSignInForm] = useState<FormType>({
     email: "",
     password: "",
@@ -123,7 +124,7 @@ export default function Home() {
   };
 
   const handleSignUpChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ): void => {
     setSignUpForm({ ...signUpForm, [event.target.name]: event.target.value });
   };
@@ -134,19 +135,13 @@ export default function Home() {
     setSignInForm({ ...signInForm, [event.target.name]: event.target.value });
   };
 
-  const handleDepartmentChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ): void => {
-    setDepartment(event.target.value);
-  };
-
   const handleSignUp = async (
     event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
     setMessage(null);
 
-    if (!department) {
+    if (!signUpForm.department) {
       setMessage({ type: "error", text: "Select a department to continue" });
       return;
     }
@@ -158,7 +153,7 @@ export default function Home() {
       options: {
         data: {
           username: signUpForm.username,
-          department: department,
+          department: signUpForm.department,
         },
       },
     });
@@ -177,8 +172,8 @@ export default function Home() {
       username: "",
       email: "",
       password: "",
+      department: "",
     });
-    setDepartment("");
   };
 
   const handleSignIn = async (
@@ -238,14 +233,12 @@ export default function Home() {
     onSwitch: handleSwitch,
     signUpForm,
     signInForm,
-    department,
     showPassword,
     loading,
     message,
     showDoorTransition,
     onSignUpChange: handleSignUpChange,
     onSignInChange: handleSignInChange,
-    onDepartmentChange: handleDepartmentChange,
     onTogglePassword: () => setShowPassword((p) => !p),
     onSignUp: handleSignUp,
     onSignIn: handleSignIn,
@@ -351,14 +344,12 @@ const FormPanel = ({
   onSwitch,
   signUpForm,
   signInForm,
-  department,
   showPassword,
   loading,
   message,
   showDoorTransition,
   onSignUpChange,
   onSignInChange,
-  onDepartmentChange,
   onTogglePassword,
   onSignUp,
   onSignIn,
@@ -447,8 +438,8 @@ const FormPanel = ({
             <Field label="Department">
               <select
                 className={`${inputClass} cursor-pointer`}
-                value={department}
-                onChange={onDepartmentChange}
+                value={signUpForm.department}
+                onChange={onSignUpChange}
                 required
               >
                 <option value="" disabled>
