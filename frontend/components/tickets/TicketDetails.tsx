@@ -28,21 +28,17 @@ const TicketDetails = ({
   const style = getStatusStyle(ticket.status);
   const isCancelled = ticket.status.toLowerCase() === "cancelled";
 
-  const handleCancelTicket = async (ticketId: number) => {
+  const handleCancelTicket = async (ticketId: number): Promise<void> => {
     setError(null);
     setIsCancelling(true);
 
     try {
       await api.patch("/tickets/cancel", { ticket_id: ticketId });
-      router.refresh();
       onClose();
     } catch (error: any) {
       console.error(error);
-      setError(
-        error.response?.data?.message ||
-          error.message ||
-          "Couldn't cancel this ticket. Please try again.",
-      );
+      setError(error.response?.data?.message || error.message);
+    } finally {
       setIsCancelling(false);
     }
   };
@@ -59,7 +55,6 @@ const TicketDetails = ({
     };
 
     await api.patch("/tickets/update", ticketPayload);
-    router.refresh();
     onClose();
   };
 
@@ -199,7 +194,7 @@ const TicketDetails = ({
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
-          {isCancelled ? (
+          {isCancelled || ticket.status === "Resolved" ? (
             <button
               onClick={onClose}
               type="button"
