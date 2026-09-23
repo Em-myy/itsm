@@ -27,34 +27,10 @@ const AdminInvitePage = () => {
   );
 
   useEffect(() => {
-    if (
-      !window.location.hash.includes("access_token") &&
-      !window.location.hash.includes("type=invite")
-    ) {
-      setAuthStatus(
-        "Invalid or expired invite link. Please request a new one.",
-      );
-      return;
-    }
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Supabase auth event:", event);
-
-      if (session) {
-        setIsSessionReady(true);
-        setAuthStatus("");
-      } else if (event === "INITIAL_SESSION" || event === "SIGNED_OUT") {
-        setAuthStatus(
-          "This invite link has expired or is invalid. Please request a new one.",
-        );
-        setIsSessionReady(false);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsSessionReady(!!session);
+      if (!session) setAuthStatus("Link expired or invalid.");
     });
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [supabase]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
