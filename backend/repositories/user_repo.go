@@ -129,6 +129,7 @@ func InviteAdmin(ctx context.Context, pool *pgxpool.Pool, email string) error {
 		"email": email,
 		"data": map[string]interface{}{
 			"department": "IT",
+			"role_id":    2,
 		},
 	}
 	bodyBytes, _ := json.Marshal(payload)
@@ -155,27 +156,5 @@ func InviteAdmin(ctx context.Context, pool *pgxpool.Pool, email string) error {
 		return fmt.Errorf("supabase API rejected the invite (status %d): %v", resp.StatusCode, apiErr)
 	}
 
-	var user struct {
-		ID string `json:"id"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return fmt.Errorf("Failed to parse supabase response: %w", err)
-	}
-
-	query := `
-		UPDATE users
-		SET
-			role_id = 2,
-			updated_at = NOW()
-		WHERE id = $1;
-	`
-	commandTag, err := pool.Exec(ctx, query, user.ID)
-	if err != nil {
-		return fmt.Errorf("Failed to upgrade user role to IT Admin: %w", err)
-	}
-
-	if commandTag.RowsAffected() == 0 {
-		return fmt.Errorf("Failed: Could not find any user with ID %s", user.ID)
-	}
 	return nil
 }
