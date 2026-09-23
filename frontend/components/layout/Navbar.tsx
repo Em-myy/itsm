@@ -134,7 +134,7 @@ const Navbar = ({ onOpenSidebar }: NavbarProps) => {
                 alt={displayName}
                 height={40}
                 width={40}
-                className="h-10 w-10 shrink-0 rounded-full border border-line object-cover"
+                className="shrink-0 rounded-full border border-line object-cover"
               />
             ) : (
               <div
