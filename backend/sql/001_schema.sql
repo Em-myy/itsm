@@ -430,14 +430,18 @@ CHECK (status IN ('Pending', 'Active', 'Suspended'));
 UPDATE public.users SET status = 'Active';
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
     assigned_status VARCHAR(50);
 BEGIN
     IF new.raw_user_meta_data->>'username' IS NULL THEN
-        assigned_status = 'Pending';
+        assigned_status := 'Pending';
     ELSE
-        assigned_status = 'Active';
+        assigned_status := 'Active';
     END IF;
 
     INSERT INTO public.users (id, username, department, role_id, status)
@@ -445,12 +449,17 @@ BEGIN
         new.id,
         COALESCE(new.raw_user_meta_data->>'username', 'Unknown'),
         COALESCE(new.raw_user_meta_data->>'department', 'Unassigned'),
-        1,
+        COALESCE(NULLIF(new.raw_user_meta_data->>'role_id', '')::int, 1),
         assigned_status
-    );
+    )
+    ON CONFLICT (id) DO UPDATE SET 
+        username = EXCLUDED.username,
+        department = EXCLUDED.department,
+        role_id = EXCLUDED.role_id,
+        status = EXCLUDED.status;
     RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
