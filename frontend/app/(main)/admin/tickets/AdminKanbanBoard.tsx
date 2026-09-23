@@ -377,7 +377,7 @@ const AdminKanbanBoard = ({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        <div className="flex gap-5 overflow-x-auto pb-2">
           {COLUMNS.map((column) => {
             const columnTickets = grouped[column.key];
             const draggableColumn =
