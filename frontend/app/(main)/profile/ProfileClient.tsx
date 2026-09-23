@@ -137,6 +137,10 @@ const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
       setIsSavingPassword(false);
     }
   };
+
+  if (department === "Unassigned") {
+    setDepartment("");
+  }
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div>
@@ -153,7 +157,9 @@ const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
               <Image
                 src={avatar}
                 alt={initialProfile.username}
-                className="h-14 w-14 rounded-full border border-line object-cover"
+                width={40}
+                height={40}
+                className="rounded-full border border-line object-cover"
               />
             ) : (
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-button text-lg font-semibold uppercase text-white">
@@ -165,25 +171,27 @@ const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
               <p className="font-serif text-lg text-heading">
                 {initialProfile.username}
               </p>
-              <span className="mt-0.5 inline-block rounded-full bg-input-bg px-2.5 py-0.5 font-mono text-xs uppercase tracking-widest text-muted">
-                {initialProfile.role_name}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                  initialProfile.status === "Active"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-700"
-                }`}
-              >
+              <div className="flex flex-col gap-2">
+                <span className="w-fit mt-0.5 inline-block rounded-full bg-input-bg px-2.5 py-0.5 font-mono text-xs uppercase tracking-widest text-muted">
+                  {initialProfile.role_name}
+                </span>
                 <span
-                  className={`h-1.5 w-1.5 rounded-full ${
+                  className={`w-fit inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
                     initialProfile.status === "Active"
-                      ? "bg-emerald-500"
-                      : "bg-red-500"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
                   }`}
-                />
-                {initialProfile.status}
-              </span>
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      initialProfile.status === "Active"
+                        ? "bg-emerald-500"
+                        : "bg-red-500"
+                    }`}
+                  />
+                  {initialProfile.status}
+                </span>
+              </div>
               {memberSince && (
                 <p className="mt-1 text-xs text-muted">
                   Member since {memberSince}
@@ -228,6 +236,9 @@ const ProfileClient = ({ initialProfile }: { initialProfile: UserType }) => {
                 disabled={initialProfile.role_name === "IT Admin"}
                 className={`${inputClass} ${initialProfile.role_name === "IT Admin" ? "cursor-not-allowed opacity-70" : ""}`}
               >
+                <option value="" disabled>
+                  Select a department
+                </option>
                 {DEPARTMENTS.map((dept) => (
                   <option key={dept} value={dept}>
                     {dept}
