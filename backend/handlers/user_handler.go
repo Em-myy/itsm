@@ -176,3 +176,32 @@ func (h *UserHandler) UpdateAdminProfile(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Profile username updated"})
 }
+
+func (h *UserHandler) SearchInventory(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	category := r.URL.Query().Get("category")
+	q := r.URL.Query().Get("q")
+
+	if category == "" || q == "" {
+		http.Error(w, "Missing search category or search query", http.StatusBadRequest)
+		return
+	}
+
+	results, err := repositories.SearchInventory(r.Context(), h.DB, category, q)
+	if err != nil {
+		log.Println("Error searching inventory:", err)
+		http.Error(w, "Failed to perform search", http.StatusForbidden)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data": results,
+	})
+}
