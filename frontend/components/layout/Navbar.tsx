@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { SearchCategory } from "@/lib/types";
 import {
+  Building2,
   Calendar,
   ChevronDown,
   Edit2,
@@ -29,8 +30,8 @@ const STAFF_SEARCH_CATEGORIES: SearchCategory[] = [
 const ADMIN_SEARCH_CATEGORIES: SearchCategory[] = [
   { id: "tickets", label: "Tickets", icon: Edit2 },
   { id: "assets", label: "Assets", icon: Package },
+  { id: "venues", label: "Venues", icon: Building2 },
   { id: "bookings", label: "Bookings", icon: Calendar },
-  { id: "users", label: "Users", icon: UsersRound },
 ];
 
 const Navbar = ({ onOpenSidebar }: NavbarProps) => {
@@ -97,7 +98,7 @@ const Navbar = ({ onOpenSidebar }: NavbarProps) => {
       <button
         type="button"
         onClick={() => setSearchOpen(true)}
-        className="flex max-w-sm flex-1 items-center gap-2 rounded-lg border border-line bg-input-bg px-3 py-2 text-sm text-muted transition hover:border-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+        className="flex max-w-md flex-1 items-center gap-2 rounded-lg border border-line bg-input-bg px-3 py-2 text-sm text-muted transition hover:border-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 cursor-pointer"
       >
         <Search className="h-5 w-5 shrink-0" />
         <span className="hidden sm:inline">Search {categoryLabels}</span>
