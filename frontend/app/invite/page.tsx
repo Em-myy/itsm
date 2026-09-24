@@ -27,11 +27,59 @@ const AdminInvitePage = () => {
   );
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsSessionReady(!!session);
-      if (!session) setAuthStatus("Link expired or invalid.");
-    });
-  }, [supabase]);
+    const handleInvite = async () => {
+      try {
+        const hash = window.location.hash;
+
+        if (!hash) {
+          setAuthStatus("Link expired or invalid.");
+          return;
+        }
+
+        const params = new URLSearchParams(hash.substring(1));
+
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        const type = params.get("type");
+
+        console.log("Invite type:", type);
+        console.log("Access token:", !!accessToken);
+        console.log("Refresh token:", !!refreshToken);
+
+        if (!accessToken || !refreshToken || type !== "invite") {
+          setAuthStatus("Link expired or invalid.");
+          return;
+        }
+
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error) {
+          console.error("setSession error:", error);
+          setAuthStatus("Link expired or invalid.");
+          return;
+        }
+
+        if (data.session) {
+          setIsSessionReady(true);
+          setAuthStatus("");
+
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname,
+          );
+        }
+      } catch (error) {
+        console.error("Invite processing error:", error);
+        setAuthStatus("Link expired or invalid.");
+      }
+    };
+
+    handleInvite();
+  }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setForm({ ...form, [event.target.name]: event.target.value });
