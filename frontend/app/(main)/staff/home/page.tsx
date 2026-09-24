@@ -92,17 +92,18 @@ const StaffHomePage = async () => {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-line bg-white p-6 lg:col-span-2">
-          <h3 className="font-serif text-xl text-heading">Recent requests</h3>
-
-          <Link
-            href="/staff/tickets"
-            className="group flex items-center gap-1.5 text-xs font-semibold text-body transition-colors hover:text-heading"
-          >
-            <span className="mt-2 flex items-center gap-1.5 font-mono text-xs text-body transition group-hover:text-heading">
-              View all
-              <MoveRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
+          <div className="flex justify-between">
+            <h3 className="font-serif text-xl text-heading">Recent requests</h3>
+            <Link
+              href="/staff/tickets"
+              className="group flex items-center gap-1.5 text-xs font-semibold text-body transition-colors hover:text-heading"
+            >
+              <span className="mt-2 flex items-center gap-1.5 font-mono text-xs text-body transition group-hover:text-heading">
+                View all
+                <MoveRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </Link>
+          </div>
 
           <div className="mt-4 space-y-3">
             <RealTimeTickets
@@ -122,7 +123,7 @@ const StaffHomePage = async () => {
           </div>
         </div>
 
-        <div className="flex flex-col rounded-2xl border border-line bg-white p-6">
+        <div className="flex flex-col rounded-2xl border border-line bg-white p-6 h-fit">
           <h3 className="font-serif text-xl text-heading">Upcoming Bookings</h3>
           <div className="mt-4 flex-1">
             <RealTimeBookings
