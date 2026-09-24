@@ -71,8 +71,8 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux.Handle("PATCH /api/assets/cancel", authMiddleware(http.HandlerFunc(assetHandler.CancelAsset)))
 
 	mux.Handle("GET /api/role", authMiddleware(http.HandlerFunc(roleHandler.GetRole)))
-
 	mux.Handle("GET /api/activity", authMiddleware(http.HandlerFunc(activityHandler.GetActivityFeed)))
+	mux.Handle("GET /api/search", authMiddleware(http.HandlerFunc(userHandler.SearchInventory)))
 
 	return middleware.CorsMiddleware(mux)
 }
