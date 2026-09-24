@@ -14,6 +14,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type SearchResult struct {
+	ID          string `json:"id"`
+	Reference   string `json:"reference"`
+	Description string `json:"description"`
+}
+
 func UpdateUserProfile(
 	ctx context.Context,
 	pool *pgxpool.Pool,
@@ -157,4 +163,44 @@ func InviteAdmin(ctx context.Context, pool *pgxpool.Pool, email string) error {
 	}
 
 	return nil
+}
+
+func SearchInventory(ctx context.Context, pool *pgxpool.Pool, category string, q string) ([]SearchResult, error) {
+	var query string
+
+	searchParam := "%" + q + "%"
+
+	switch category {
+	case "tickets":
+		query = `SELECT id, reference, title as description FROM tickets WHERE reference ILIKE $1 LIMIT 10`
+	case "assets":
+		query = `SELECT id, reference, asset_type as description FROM assets WHERE reference ILIKE $1 LIMIT 10`
+	case "venues":
+		query = `SELECT id, reference, name as description FROM venues WHERE reference ILIKE $1 LIMIT 10`
+	case "bookings":
+		query = `SELECT id, reference, purpose as description FROM bookings WHERE reference ILIKE $1 LIMIT 10`
+	default:
+		return nil, fmt.Errorf("Invalid search category: %s", category)
+	}
+
+	rows, err := pool.Query(ctx, query, searchParam)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to execute search query: %w", err)
+	}
+	defer rows.Close()
+
+	var results []SearchResult
+	for rows.Next() {
+		var res SearchResult
+		if err := rows.Scan(&res.ID, &res.Reference, &res.Description); err != nil {
+			return nil, fmt.Errorf("failed to scan search result row: %w", err)
+		}
+		results = append(results, res)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over search results: %w", err)
+	}
+
+	return results, nil
 }
