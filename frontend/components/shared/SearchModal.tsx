@@ -1,7 +1,8 @@
 "use client";
 
+import api from "@/lib/axios";
 import { SearchCategory } from "@/lib/types";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const SearchModal = ({
@@ -12,9 +13,12 @@ const SearchModal = ({
   onClose: () => void;
 }) => {
   const [query, setQuery] = useState<string>("");
+  const [debouncedQuery, setDebouncedQuery] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>(
     categories[0]?.id ?? "",
   );
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent): void => {
@@ -27,6 +31,37 @@ const SearchModal = ({
       document.body.style.overflow = "";
     };
   }, [onClose]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 500);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!debouncedQuery.trim()) {
+        setResults([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get("/search", {
+          params: {
+            category: activeCategory,
+            q: debouncedQuery,
+          },
+        });
+        setResults(response.data.data || []);
+      } catch (error: any) {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [debouncedQuery, activeCategory]);
 
   const activeLabel =
     categories.find((c) => c.id === activeCategory)?.label ?? "";
@@ -48,7 +83,7 @@ const SearchModal = ({
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={`Search ${categories.map((c) => c.label.toLowerCase()).join(", ")}...`}
+            placeholder={`Search ${categories.map((c) => c.label.toLowerCase()).join(", ")} using their reference...`}
             className="w-full bg-transparent text-sm text-heading outline-none placeholder:text-muted"
           />
           <button
@@ -69,8 +104,13 @@ const SearchModal = ({
               <button
                 key={category.id}
                 type="button"
-                onClick={() => setActiveCategory(category.id)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                onClick={() => {
+                  setActiveCategory(category.id);
+                  setQuery("");
+                  setDebouncedQuery("");
+                  setResults([]);
+                }}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                   active
                     ? "bg-button text-white"
                     : "bg-input-bg text-body hover:text-heading"
@@ -83,11 +123,32 @@ const SearchModal = ({
           })}
         </div>
 
-        <div className="px-4 py-10 text-center">
-          {query ? (
+        <div className="px-4 py-10 text-center max-h-96 overflow-y-auto">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-2 text-muted text-sm">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Searching...
+            </div>
+          ) : query && results.length === 0 ? (
             <p className="text-sm text-body">
               No results for &ldquo;{query}&rdquo; in {activeLabel}.
             </p>
+          ) : results.length > 0 ? (
+            <div className="text-left flex flex-col gap-2">
+              {results.map((result, idx) => (
+                <div
+                  key={idx}
+                  className="p-3 hover:bg-gray-50 rounded cursor-pointer border border-transparent hover:border-line transition"
+                >
+                  <p className="text-sm font-medium text-heading">
+                    {result.reference}
+                  </p>
+                  <p className="text-xs text-muted truncate">
+                    {result.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="text-sm text-muted">
               Start typing to search {activeLabel.toLowerCase()}.
