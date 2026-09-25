@@ -2,52 +2,73 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const ResetPage = () => {
-  const [newPassword, setNewPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const supabase = createClient();
   const router = useRouter();
 
-  const handleNewPassword = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    setNewPassword(event.target.value);
-  };
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [checkingSession, setCheckingSession] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
-  const handleConfirmPassword = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    setConfirmPassword(event.target.value);
-  };
+  useEffect(() => {
+    const checkSession = async (): Promise<void> => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.replace("/auth/auth-code-error");
+        return;
+      }
+
+      setCheckingSession(false);
+    };
+
+    checkSession();
+  }, []);
 
   const handleSubmit = async (
     event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
 
+    setError("");
+
     if (newPassword !== confirmPassword) {
       console.log("Passwords do not match");
       return;
     }
+
+    setLoading(true);
 
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
     if (error) {
-      console.log(error);
+      setError(error.message);
+      setLoading(false);
       return;
     }
 
     router.push("/");
   };
+
+  if (checkingSession) {
+    return <p>Validating password reset...</p>;
+  }
+
   return (
     <div>
       <h1>Reset Password</h1>
       <div>
         <p>Type in your new password and confirm it</p>
+
+        {error && <p>{error}</p>}
         <div>
           <form onSubmit={handleSubmit}>
             <div>
@@ -57,7 +78,7 @@ const ResetPage = () => {
                 name="newPassword"
                 value={newPassword}
                 required
-                onChange={handleNewPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
               />
             </div>
             <div>
@@ -67,10 +88,12 @@ const ResetPage = () => {
                 name="confirmPassword"
                 value={confirmPassword}
                 required
-                onChange={handleConfirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
               />
             </div>
-            <button>Reset Password</button>
+            <button type="submit" disabled={loading}>
+              {loading ? "Resetting..." : "Reset Password"}
+            </button>
           </form>
         </div>
       </div>
