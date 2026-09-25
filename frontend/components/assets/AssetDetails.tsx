@@ -154,7 +154,9 @@ const AssetDetails = ({
 
         <div className="pt-1">
           <span className="mb-1 block font-medium text-body">Notes</span>
-          <p className="text-heading">{asset.notes || "No notes available"}</p>
+          <p className="text-heading wrap-break-word">
+            {asset.notes || "No notes available"}
+          </p>
         </div>
       </div>
       <div className="mt-6 flex gap-3">
