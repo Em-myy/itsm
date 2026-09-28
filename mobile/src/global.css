@@ -3,3 +3,13 @@
 @import "tailwindcss/utilities.css";
 
 @import "nativewind/theme";
+
+@theme {
+  --font-sans: sans-regular;
+  --font-sans-light: sans-light;
+  --font-sans-medium: sans-medium;
+  --font-sans-semibold: sans-semibold;
+  --font-sans-bold: sans-bold;
+  --font-sans-extrabold: sans-extrabold;
+  --font-sans-italic: sans-italic;
+}
