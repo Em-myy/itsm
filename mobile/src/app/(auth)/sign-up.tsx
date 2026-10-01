@@ -1,6 +1,6 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Alert, Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 import { Picker } from "@react-native-picker/picker";
@@ -26,6 +26,7 @@ const SignUp = () => {
           username: username,
           department: department,
         },
+        emailRedirectTo: "itsm://auth/callback",
       },
     });
     if (error) {
@@ -33,6 +34,7 @@ const SignUp = () => {
       return;
     }
     if (!session) {
+      setLoading(false);
       Alert.alert("Please check your inbox for email verification!");
       return;
     }
@@ -82,6 +84,12 @@ const SignUp = () => {
             placeholder="Password"
             autoCapitalize="none"
           />
+        </View>
+
+        <View>
+          <TouchableOpacity onPress={handleSignUpWithEmail} disabled={loading}>
+            <Text>{loading ? "Signing Up..." : "Sign Up"}</Text>
+          </TouchableOpacity>
         </View>
       </View>
       <Link href="/sign-in">Login</Link>
