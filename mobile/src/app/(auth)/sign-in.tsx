@@ -13,18 +13,21 @@ const SignIn = () => {
 
   const handleSignInWithEmail = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-    if (error) {
-      Alert.alert(error.message);
-      return;
+      if (error) {
+        Alert.alert(error.message);
+        return;
+      }
+
+      router.replace("/staff");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-    router.push("/staff");
   };
 
   return (
@@ -55,7 +58,7 @@ const SignIn = () => {
 
         <View>
           <TouchableOpacity onPress={handleSignInWithEmail} disabled={loading}>
-            <Text>Sign In</Text>
+            <Text>{loading ? "Signing In..." : "Sign In"}</Text>
           </TouchableOpacity>
         </View>
       </View>
