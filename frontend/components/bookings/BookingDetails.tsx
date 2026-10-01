@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import BookingForm, { BookingFormValues } from "./BookingForm";
 import { format } from "date-fns";
+import { getEquipmentLabel } from "@/utils/format-helpers";
 
 const timeFormatOptions: Intl.DateTimeFormatOptions = {
   day: "numeric",
@@ -181,7 +182,7 @@ const BookingDetails = ({
             </span>
             <p className="text-heading">
               {booking.equipment_needed?.length > 0
-                ? booking.equipment_needed.join(", ")
+                ? booking.equipment_needed.map(getEquipmentLabel).join(", ")
                 : "None requested"}
             </p>
           </div>
