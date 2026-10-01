@@ -1,6 +1,7 @@
 "use client";
 
 import { VenueType } from "@/lib/types";
+import { getEquipmentLabel } from "@/utils/format-helpers";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
@@ -22,6 +23,8 @@ interface BookingFormProps {
   onSubmit: (values: BookingFormValues) => Promise<void>;
   onCancel: () => void;
 }
+
+const labelClass = "mb-2 block text-sm font-medium text-heading";
 
 const inputClass =
   "w-full rounded-xl border border-line bg-input-bg px-4 py-3 text-sm text-heading placeholder:text-muted outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
@@ -113,9 +116,7 @@ const BookingForm = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="mb-2 block text-sm font-medium text-heading">
-          Purpose
-        </label>
+        <label className={labelClass}>Purpose</label>
         <input
           type="text"
           required
@@ -127,9 +128,7 @@ const BookingForm = ({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-heading">
-          Venue
-        </label>
+        <label className={labelClass}>Venue</label>
         <select
           required
           value={selectedVenue}
@@ -148,9 +147,7 @@ const BookingForm = ({
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-heading">
-          Date
-        </label>
+        <label className={labelClass}>Date</label>
         <input
           type="date"
           required
@@ -162,9 +159,7 @@ const BookingForm = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-2 block text-sm font-medium text-heading">
-            Start time
-          </label>
+          <label className={labelClass}>Start time</label>
           <input
             type="time"
             required
@@ -174,9 +169,7 @@ const BookingForm = ({
           />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium text-heading">
-            End time
-          </label>
+          <label className={labelClass}>End time</label>
           <input
             type="time"
             required
@@ -211,7 +204,7 @@ const BookingForm = ({
                     onChange={handleEquipmentChange}
                     className="sr-only"
                   />
-                  {eq}
+                  {getEquipmentLabel(eq)}
                 </label>
               );
             })}
