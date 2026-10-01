@@ -12,15 +12,22 @@ export default function App() {
   const [claims, setClaims] = useState<JwtPayload | null>(null);
 
   useEffect(() => {
-    supabase.auth.getClaims().then(({ data }) => {
+    const loadClaims = async () => {
+      const { data } = await supabase.auth.getClaims();
       setClaims(data?.claims ?? null);
+    };
+
+    loadClaims();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      loadClaims();
     });
 
-    supabase.auth.onAuthStateChange(() => {
-      supabase.auth.getClaims().then(({ data }) => {
-        setClaims(data?.claims ?? null);
-      });
-    });
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSignOut = async () => {
@@ -41,7 +48,10 @@ export default function App() {
       }}
     >
       <Text className="text-7xl font-sans-extrabold text-green-500">Home</Text>
-      <View>{claims && <Text>{claims.user_metadata?.username}</Text>}</View>
+      <View>
+        <Text>{claims?.user_metadata?.username}</Text>
+        <Text>{claims?.user_metadata?.role_id}</Text>
+      </View>
       <TouchableOpacity onPress={handleSignOut}>
         <Text>Sign Out</Text>
       </TouchableOpacity>
