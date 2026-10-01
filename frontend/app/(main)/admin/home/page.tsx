@@ -7,7 +7,7 @@ import {
   TicketType,
   VenueType,
 } from "@/lib/types";
-import { formerTimeAgo } from "@/utils/format-date";
+import { formerTimeAgo } from "@/utils/format-helpers";
 import { createClient } from "@/utils/supabase/server";
 import DOMPurify from "isomorphic-dompurify";
 
