@@ -17,3 +17,10 @@ export const formerTimeAgo = (dateString: string | Date) => {
 
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 };
+
+export const getEquipmentLabel = (equipment: string): string => {
+  const separatorIndex = equipment.indexOf(" - ");
+  return separatorIndex === -1
+    ? equipment
+    : equipment.slice(separatorIndex + 3);
+};
