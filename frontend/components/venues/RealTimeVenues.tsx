@@ -1,6 +1,7 @@
 "use client";
 
 import { VenueType } from "@/lib/types";
+import { getEquipmentLabel } from "@/utils/format-helpers";
 import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -74,7 +75,7 @@ const RealTimeVenues = ({
                     key={eq}
                     className="rounded-full bg-input-bg px-2.5 py-1 text-xs text-body"
                   >
-                    {eq}
+                    {getEquipmentLabel(eq)}
                   </span>
                 ))}
               </div>
