@@ -5,7 +5,6 @@ import VenueForm, { VenueFormType } from "@/components/venues/VenueForm";
 import api from "@/lib/axios";
 import { AssetType, BookingType, VenueType } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
-import { Caprasimo } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
