@@ -1,6 +1,7 @@
 "use client";
 
 import { BookingType } from "@/lib/types";
+import { getEquipmentLabel } from "@/utils/format-helpers";
 import { getStatusStyle } from "@/utils/status-styles";
 import { createClient } from "@/utils/supabase/client";
 import { AlertCircle } from "lucide-react";
@@ -107,7 +108,7 @@ const RealTimeBookings = ({
                       key={eq}
                       className="-skew-y-2 rounded-[7px] border border-line px-2.5 py-1 text-xs text-body"
                     >
-                      {eq}
+                      {getEquipmentLabel(eq)}
                     </span>
                   ))}
                 </div>
