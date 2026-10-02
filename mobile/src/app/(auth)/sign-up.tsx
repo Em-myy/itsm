@@ -2,9 +2,9 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { supabase } from "../../../lib/supabase";
 import { Picker } from "@react-native-picker/picker";
-import { DEPARTMENTS } from "../../../utils/helpers";
+import { supabase } from "@/lib/supabase";
+import { DEPARTMENTS } from "@/utils/helpers";
 
 const SignUp = () => {
   const [username, onChangeUsername] = useState<string>("");
