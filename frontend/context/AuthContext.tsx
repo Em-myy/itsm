@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       console.log(error);
     }
-    router.push("/");
+    router.replace("/");
   };
 
   const avatar =
