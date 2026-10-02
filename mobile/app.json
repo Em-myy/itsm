@@ -47,7 +47,8 @@
             "./assets/fonts/PlusJakartaSans-Italic.ttf"
           ]
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
