@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import * as Linking from "expo-linking";
 import { ActivityIndicator, Alert, View } from "react-native";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 const AuthCallback = () => {
   const router = useRouter();
