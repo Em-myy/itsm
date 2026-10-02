@@ -1,8 +1,8 @@
 import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
-import { supabase } from "../../../lib/supabase";
 import { Link, useRouter } from "expo-router";
+import { supabase } from "@/lib/supabase";
 
 const SignIn = () => {
   const router = useRouter();
