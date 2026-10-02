@@ -1,26 +1,10 @@
-import { SplashScreen, Stack } from "expo-router";
+import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import "@/global.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
-import { useAuthContext } from "@/hooks/use-auth-context";
 import AuthProvider from "@/providers/auth-provider";
 import SplashScreenController from "@/components/splash-screen-controller";
 import { StatusBar } from "expo-status-bar";
-
-const RootNavigator = () => {
-  const { isLoggedIn } = useAuthContext();
-
-  return (
-    <Stack>
-      <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="staff/(tabs)" options={{ headerShown: false }} />
-      </Stack.Protected>
-      <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack.Protected>
-    </Stack>
-  );
-};
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -44,7 +28,11 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <SplashScreenController />
-      <RootNavigator />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="staff/(tabs)" />
+        <Stack.Screen name="admin/(tabs)" />
+        <Stack.Screen name="(auth)" />
+      </Stack>
       <StatusBar style="auto" />
     </AuthProvider>
   );
