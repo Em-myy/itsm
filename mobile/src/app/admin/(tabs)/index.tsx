@@ -1,9 +1,9 @@
 import "@/global.css";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { Button, Text, View } from "react-native";
+import { Button, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const StaffHomePage = () => {
+const AdminHomePage = () => {
   const { profile, handleSignout } = useAuthContext();
   return (
     <SafeAreaView
@@ -14,7 +14,9 @@ const StaffHomePage = () => {
         backgroundColor: "white",
       }}
     >
-      <Text className="text-7xl font-sans-extrabold text-green-500">Home</Text>
+      <Text className="text-7xl font-sans-extrabold text-green-500">
+        Admin Home
+      </Text>
       <View>
         <Text>{profile?.username}</Text>
         <Text>{profile?.role_name}</Text>
@@ -24,4 +26,4 @@ const StaffHomePage = () => {
   );
 };
 
-export default StaffHomePage;
+export default AdminHomePage;
