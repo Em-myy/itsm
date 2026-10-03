@@ -69,12 +69,22 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     router.replace("/sign-in");
   };
 
+  const avatar =
+    claims?.user_metadata?.avatar_url ?? claims?.user_metadata?.picture ?? null;
+
+  const initials =
+    profile?.username !== "Unknown User"
+      ? profile?.username.charAt(0).toUpperCase()
+      : "?";
+
   return (
     <AuthContext.Provider
       value={{
         claims,
         isLoading,
         profile,
+        avatar,
+        initials,
         isLoggedIn: !!claims,
         handleSignout,
       }}
