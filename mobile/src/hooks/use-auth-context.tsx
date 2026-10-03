@@ -6,6 +6,8 @@ export type AuthData = {
   profile?: UserType | null;
   isLoading: boolean;
   isLoggedIn: boolean;
+  avatar: any;
+  initials: string | undefined;
   handleSignout: () => void;
 };
 
@@ -14,6 +16,8 @@ export const AuthContext = createContext<AuthData>({
   profile: undefined,
   isLoading: true,
   isLoggedIn: false,
+  avatar: null,
+  initials: "",
   handleSignout: () => {},
 });
 
