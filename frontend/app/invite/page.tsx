@@ -2,6 +2,7 @@
 
 import api from "@/lib/axios";
 import { createClient } from "@/utils/supabase/client";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,6 +10,11 @@ interface FormType {
   username: string;
   password: string;
 }
+
+const labelClass = "mb-2 block text-sm font-medium text-heading";
+
+const inputClass =
+  "w-full rounded-xl border border-line bg-input-bg px-4 py-3 text-sm text-heading placeholder:text-muted outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2";
 
 const AdminInvitePage = () => {
   const router = useRouter();
@@ -22,17 +28,19 @@ const AdminInvitePage = () => {
   const [error, setError] = useState<string>("");
 
   const [isSessionReady, setIsSessionReady] = useState<boolean>(false);
+  const [inviteFailed, setInviteFailed] = useState<boolean>(false);
   const [authStatus, setAuthStatus] = useState<string>(
     "Validating invite link...",
   );
 
   useEffect(() => {
-    const handleInvite = async () => {
+    const handleInvite = async (): Promise<void> => {
       try {
         const hash = window.location.hash;
 
         if (!hash) {
           setAuthStatus("Link expired or invalid.");
+          setInviteFailed(true);
           return;
         }
 
@@ -42,12 +50,9 @@ const AdminInvitePage = () => {
         const refreshToken = params.get("refresh_token");
         const type = params.get("type");
 
-        console.log("Invite type:", type);
-        console.log("Access token:", !!accessToken);
-        console.log("Refresh token:", !!refreshToken);
-
         if (!accessToken || !refreshToken || type !== "invite") {
           setAuthStatus("Link expired or invalid.");
+          setInviteFailed(true);
           return;
         }
 
@@ -57,8 +62,8 @@ const AdminInvitePage = () => {
         });
 
         if (error) {
-          console.error("setSession error:", error);
           setAuthStatus("Link expired or invalid.");
+          setInviteFailed(true);
           return;
         }
 
@@ -73,8 +78,8 @@ const AdminInvitePage = () => {
           );
         }
       } catch (error) {
-        console.error("Invite processing error:", error);
         setAuthStatus("Link expired or invalid.");
+        setInviteFailed(true);
       }
     };
 
@@ -92,6 +97,8 @@ const AdminInvitePage = () => {
     setLoading(true);
     setError("");
     try {
+      await api.patch("/user/update-admin", { username: form.username });
+
       const { error: authError } = await supabase.auth.updateUser({
         password: form.password,
       });
@@ -100,70 +107,85 @@ const AdminInvitePage = () => {
         throw new Error(authError.message);
       }
 
-      await api.patch("/user/update-admin", { username: form.username });
-      console.log("Admin username updated successfully");
       router.push("/admin/home");
     } catch (error: any) {
-      setError(error.message);
+      setError(error.response.data.message || error.message);
     } finally {
       setLoading(false);
     }
   };
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded">
-      <h2 className="text-xl font-bold mb-2">Complete Admin Setup</h2>
-      <p className="mb-6 text-gray-600">
-        Setup credentials for the Ojo local government ITSM portal
-      </p>
+    <div className="flex min-h-screen w-full items-center justify-center bg-ink px-4">
+      <div className="w-full max-w-md rounded-2xl border border-ink-border bg-white p-8 shadow-xl">
+        <h1 className="font-serif text-2xl text-heading text-center">
+          Complete Admin Setup
+        </h1>
 
-      {!isSessionReady && (
-        <div className="bg-blue-50 text-blue-800 p-4 rounded text-center font-medium">
-          {authStatus}
-        </div>
-      )}
+        <p className="mt-1 text-sm text-body">
+          Setup credentials for the Ojo local government ITSM portal
+        </p>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
-          {error}
-        </div>
-      )}
-
-      {isSessionReady && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Username</label>
-            <input
-              type="text"
-              name="username"
-              value={form.username}
-              required
-              onChange={handleChange}
-              className="w-full border-2 p-2 rounded"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Permanent Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              required
-              minLength={8}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        {!isSessionReady && (
+          <div
+            className={`mt-6 rounded-lg px-4 py-3 text-center text-sm font-medium ${
+              inviteFailed ? "bg-red-50 text-red-700" : "bg-input-bg text-body"
+            }`}
           >
-            {loading ? "Completing Setup..." : "Save & Login"}
-          </button>
-        </form>
-      )}
+            {authStatus}
+            {inviteFailed && (
+              <p className="mt-2 text-xs text-muted">
+                Contact your IT administrator for a new invite link.
+              </p>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <div
+            role="alert"
+            className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {isSessionReady && (
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className={labelClass}>Username</label>
+              <input
+                type="text"
+                name="username"
+                value={form.username}
+                required
+                onChange={handleChange}
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Permanent Password</label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                required
+                minLength={8}
+                onChange={handleChange}
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-button py-3 text-sm font-semibold text-white transition hover:bg-button-hover disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+            >
+              {loading ? "Completing Setup..." : "Save & Login"}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 };
