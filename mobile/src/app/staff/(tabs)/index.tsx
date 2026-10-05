@@ -7,7 +7,6 @@ import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Button,
   ScrollView,
   Text,
   useWindowDimensions,
@@ -15,11 +14,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type CountType = {
+  count: number;
+};
+
 const StaffHomePage = () => {
   const { profile, avatar, initials } = useAuthContext();
 
-  const [tickets, setTickets] = useState<TicketType[]>([]);
-  const [bookings, setBookings] = useState<BookingType[]>([]);
+  const [ticketsCount, setTicketsCount] = useState<CountType | null>(null);
+  const [bookingsCount, setBookingsCount] = useState<CountType | null>(null);
   const [recentTickets, setRecentTickets] = useState<TicketType[]>([]);
   const [nextBooking, setNextBooking] = useState<BookingType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -30,14 +33,14 @@ const StaffHomePage = () => {
       try {
         const [ticketsResults, bookingsResults, recentTickets, nextBooking] =
           await Promise.all([
-            api.get<TicketType[]>("/tickets/mine"),
-            api.get<BookingType[]>("/bookings/mine"),
+            api.get<CountType>("/tickets/count"),
+            api.get<CountType>("/bookings/count"),
             api.get<TicketType[]>("/tickets/recent"),
             api.get<BookingType>("/bookings/next"),
           ]);
 
-        setTickets(ticketsResults.data);
-        setBookings(bookingsResults.data);
+        setTicketsCount(ticketsResults.data);
+        setBookingsCount(bookingsResults.data);
         setRecentTickets(recentTickets.data);
         setNextBooking(nextBooking.data);
       } catch (error) {
@@ -57,21 +60,12 @@ const StaffHomePage = () => {
     fetchData();
   }, []);
 
-  const pendingTickets = tickets.filter(
-    (ticket) => ticket.status === "Pending",
-  ).length;
-
-  const pendingBookings = bookings.filter(
-    (booking) => booking.status === "Pending",
-  ).length;
-
   const hour = new Date().getHours();
 
   const greeting =
     hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
   const { width } = useWindowDimensions();
-  const cardWidth = width - 32;
 
   return (
     <SafeAreaView
@@ -116,9 +110,11 @@ const StaffHomePage = () => {
             </View>
           ) : (
             <View>
-              <Text>{pendingTickets} Pending Tickets</Text>
+              <Text>{ticketsCount?.count ?? 0} Pending Tickets</Text>
               <Text>And</Text>
-              <Text>{pendingBookings} Bookings Awaiting Approval</Text>
+              <Text>
+                {bookingsCount?.count ?? 0} Bookings Awaiting Approval
+              </Text>
             </View>
           )}
         </View>
@@ -144,19 +140,17 @@ const StaffHomePage = () => {
                   setCurrentTicket(index);
                 }}
               >
-                {recentTickets.map((tickets) => (
-                  <View
-                    key={tickets.id}
-                    style={{ width: cardWidth }}
-                    className="mr-2 ml-2 rounded-2xl bg-white p-4"
-                  >
-                    <Text>{tickets.reference}</Text>
-                    <Text>{tickets.title}</Text>
-                    <Text>{tickets.status}</Text>
-                    <View>
-                      <Text>{tickets.department}</Text>
-                      <Text>{tickets.category}</Text>
-                      <Text>{tickets.priority}</Text>
+                {recentTickets.map((ticket) => (
+                  <View key={ticket.id} style={{ width }}>
+                    <View className="mx-4 rounded-2xl bg-white p-4">
+                      <Text>{ticket.reference}</Text>
+                      <Text>{ticket.title}</Text>
+                      <Text>{ticket.status}</Text>
+                      <View className="flex flex-row gap-2">
+                        <Text>{ticket.department}</Text>
+                        <Text>{ticket.category}</Text>
+                        <Text>{ticket.priority}</Text>
+                      </View>
                     </View>
                   </View>
                 ))}
@@ -170,7 +164,7 @@ const StaffHomePage = () => {
                     }`}
                   />
                 ))}
-              </View>{" "}
+              </View>
             </>
           )}
         </View>
