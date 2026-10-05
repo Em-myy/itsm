@@ -322,3 +322,24 @@ func (h *TicketHandler) CancelTicket(w http.ResponseWriter, r *http.Request) {
 		"message": "Ticket cancelled successfully",
 	})
 }
+
+func (h *TicketHandler) GetPendingTicketsCount(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	count, err := repositories.GetPendingTicketsCount(r.Context(), h.DB, userID)
+	if err != nil {
+		log.Println("Error getting tickets count:", err)
+		http.Error(w, "Failed to get pending tickets count", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"count": count,
+	})
+}
