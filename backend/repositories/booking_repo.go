@@ -2,10 +2,12 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"itsm/models"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -147,6 +149,11 @@ func GetNextBooking(ctx context.Context, pool *pgxpool.Pool, userId string) (*mo
 		&booking.CreatedAt,
 		&booking.UpdatedAt,
 	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get next booking: %w", err)
 	}
@@ -288,4 +295,21 @@ func CancelBooking(ctx context.Context, pool *pgxpool.Pool, bookingID int, userI
 	}
 
 	return nil
+}
+
+func GetPendingBookingsCount(ctx context.Context, pool *pgxpool.Pool, requesterID string) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM bookings
+		WHERE user_id = $1
+		AND status = 'Pending';
+	`
+	var count int
+
+	err := pool.QueryRow(ctx, query, requesterID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to get pending booking count: %w", err)
+	}
+
+	return count, nil
 }
