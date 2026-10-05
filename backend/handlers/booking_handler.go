@@ -374,3 +374,24 @@ func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 		"message": "Booking cancelled successfully",
 	})
 }
+
+func (h *BookingHandler) GetPendingBookingsCount(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	count, err := repositories.GetPendingBookingsCount(r.Context(), h.DB, userID)
+	if err != nil {
+		log.Println("Error getting bookings count:", err)
+		http.Error(w, "Failed to get pending bookings count", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"count": count,
+	})
+}
