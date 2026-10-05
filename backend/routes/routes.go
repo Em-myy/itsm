@@ -44,6 +44,7 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux.Handle("PATCH /api/tickets/resolve", authMiddleware(http.HandlerFunc(ticketHandler.ResolveTicket)))
 	mux.Handle("PATCH /api/tickets/update", authMiddleware(http.HandlerFunc(ticketHandler.UpdateTicket)))
 	mux.Handle("PATCH /api/tickets/cancel", authMiddleware(http.HandlerFunc(ticketHandler.CancelTicket)))
+	mux.Handle("GET /api/tickets/count", authMiddleware(http.HandlerFunc(ticketHandler.GetPendingTicketsCount)))
 
 	mux.Handle("PATCH /api/user/update-profile", authMiddleware(http.HandlerFunc(userHandler.UpdateProfile)))
 	mux.Handle("GET /api/user/profile", authMiddleware(http.HandlerFunc(userHandler.GetProfile)))
@@ -59,6 +60,7 @@ func SetupRouter(db *pgxpool.Pool) http.Handler {
 	mux.Handle("PATCH /api/bookings/reject", authMiddleware(http.HandlerFunc(bookingHandler.RejectBooking)))
 	mux.Handle("PATCH /api/bookings/update", authMiddleware(http.HandlerFunc(bookingHandler.UpdateBooking)))
 	mux.Handle("PATCH /api/bookings/cancel", authMiddleware(http.HandlerFunc(bookingHandler.CancelBooking)))
+	mux.Handle("GET /api/bookings/count", authMiddleware(http.HandlerFunc(bookingHandler.GetPendingBookingsCount)))
 
 	mux.Handle("POST /api/venues", authMiddleware(http.HandlerFunc(venueHandler.CreateVenue)))
 	mux.Handle("GET /api/venues", authMiddleware(http.HandlerFunc(venueHandler.GetVenues)))
