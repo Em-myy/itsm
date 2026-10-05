@@ -3,7 +3,7 @@ import "@/global.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import AuthProvider from "@/providers/auth-provider";
-import SplashScreenController from "@/components/splash-screen-controller";
+import SplashScreenController from "@/components/layout/splash-screen-controller";
 import { StatusBar } from "expo-status-bar";
 
 export default function RootLayout() {
