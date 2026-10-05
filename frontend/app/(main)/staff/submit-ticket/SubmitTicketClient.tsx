@@ -14,7 +14,7 @@ const NEXT_STEPS = [
   },
   {
     title: "Reviewed",
-    description: "An IT officer triggers it and sets a priority.",
+    description: "An IT officer triggers it according to the priority.",
   },
   {
     title: "In progress",
@@ -26,7 +26,7 @@ const NEXT_STEPS = [
   },
   {
     title: "Feedback",
-    description: "You can give feedback to the IT Admin",
+    description: "You will get feedback from the IT Admin",
   },
 ];
 
