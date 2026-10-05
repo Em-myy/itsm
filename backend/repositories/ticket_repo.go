@@ -157,7 +157,7 @@ func GetRecentTickets(ctx context.Context, pool *pgxpool.Pool, requesterID strin
 	return tickets, nil
 }
 
-func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID string) error {
+func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, requesterID string) error {
 	query := `
 		UPDATE tickets
 		SET assignee_id = $1,
@@ -166,7 +166,7 @@ func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 			updated_by = $1
 		WHERE id = $2;
 	`
-	commandTag, err := pool.Exec(ctx, query, userID, ticketID)
+	commandTag, err := pool.Exec(ctx, query, requesterID, ticketID)
 	if err != nil {
 		return fmt.Errorf("Failed to claim ticket: %w", err)
 	}
@@ -178,7 +178,7 @@ func ClaimTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 	return nil
 }
 
-func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID string) error {
+func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, requesterID string) error {
 	query := `
 		UPDATE tickets
 		SET 
@@ -186,7 +186,7 @@ func ResolveTickets(ctx context.Context, pool *pgxpool.Pool, ticketID int, userI
 			updated_by = $1
 		WHERE id = $2;
 	`
-	commandTag, err := pool.Exec(ctx, query, userID, ticketID)
+	commandTag, err := pool.Exec(ctx, query, requesterID, ticketID)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve ticket: %w", err)
 	}
@@ -202,7 +202,7 @@ func UpdateTicket(
 	ctx context.Context,
 	pool *pgxpool.Pool,
 	ticketID int,
-	userID string,
+	requesterID string,
 	title *string,
 	category *string,
 	department *string,
@@ -222,7 +222,7 @@ func UpdateTicket(
 			description = COALESCE($6, description),
             picture = COALESCE($7, picture),
             updated_at = NOW(),
-			updated_by - $9
+			updated_by = $9
 		WHERE id = $8;
 	`
 
@@ -237,7 +237,7 @@ func UpdateTicket(
 		description,
 		picture,
 		ticketID,
-		userID,
+		requesterID,
 	)
 
 	if err != nil {
@@ -251,7 +251,7 @@ func UpdateTicket(
 	return nil
 }
 
-func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID string, isAdmin bool) error {
+func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, requesterID string, isAdmin bool) error {
 	var query string
 	var args []any
 
@@ -263,7 +263,7 @@ func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 				updated_At = NOW()
 			WHERE id = $1;
 		`
-		args = []any{ticketID, userID}
+		args = []any{ticketID}
 	} else {
 		query = `
 			UPDATE tickets
@@ -272,7 +272,7 @@ func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 				updated_At = NOW()
 			WHERE id = $1 AND requester_id = $2;
 		`
-		args = []any{ticketID, userID}
+		args = []any{ticketID, requesterID}
 	}
 
 	commandTag, err := pool.Exec(ctx, query, args...)
@@ -285,4 +285,21 @@ func CancelTicket(ctx context.Context, pool *pgxpool.Pool, ticketID int, userID 
 	}
 
 	return nil
+}
+
+func GetPendingTicketsCount(ctx context.Context, pool *pgxpool.Pool, requesterID string) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM tickets
+		WHERE requester_id = $1
+		AND status = 'Pending';
+	`
+	var count int
+
+	err := pool.QueryRow(ctx, query, requesterID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to get pending ticket count: %w", err)
+	}
+
+	return count, nil
 }
