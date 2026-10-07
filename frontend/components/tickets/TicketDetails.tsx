@@ -3,7 +3,6 @@
 import api from "@/lib/axios";
 import { TicketType } from "@/lib/types";
 import { getStatusStyle } from "@/utils/status-styles";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import TicketForm, { TicketFormValues } from "./TicketForm";
 import { AlertCircle, Ban, Pencil, X } from "lucide-react";
@@ -19,7 +18,6 @@ const TicketDetails = ({
   relatedTickets: TicketType[] | null;
   onClose: () => void;
 }) => {
-  const router = useRouter();
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [confirmingCancel, setConfirmingCancel] = useState<boolean>(false);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
