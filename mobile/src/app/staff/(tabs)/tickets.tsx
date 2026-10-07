@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { TicketType } from "@/utils/helpers";
 import api from "@/utils/axios";
 import SubmitTicket from "@/components/tickets/submit-ticket";
+import TicketDetails from "@/components/tickets/ticket-details";
 
 const Tickets = () => {
   const [tickets, setTickets] = useState<TicketType[]>([]);
@@ -67,6 +68,13 @@ const Tickets = () => {
 
           {isSubmittingTicket && (
             <SubmitTicket initialTickets={tickets} onClose={closeSubmit} />
+          )}
+          {selectedTicket && (
+            <TicketDetails
+              ticket={selectedTicket}
+              relatedTickets={tickets}
+              onClose={() => setSelectedTicket(null)}
+            />
           )}
         </ScrollView>
       </KeyboardAvoidingView>
