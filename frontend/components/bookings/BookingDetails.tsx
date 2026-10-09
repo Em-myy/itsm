@@ -224,26 +224,28 @@ const BookingDetails = ({
             </>
           ) : (
             <>
-              {booking.status !== "Cancelled" && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingCancel(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 cursor-pointer"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode("edit")}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-heading transition hover:bg-input-bg cursor-pointer"
-                  >
-                    <Pencil className="w-5 h-5" />
-                    Edit
-                  </button>
-                </>
-              )}
+              {booking.status !== "Cancelled" &&
+                booking.status !== "Approved" &&
+                booking.status !== "Rejected" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingCancel(true)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 cursor-pointer"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode("edit")}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-heading transition hover:bg-input-bg cursor-pointer"
+                    >
+                      <Pencil className="w-5 h-5" />
+                      Edit
+                    </button>
+                  </>
+                )}
 
               <button
                 type="button"
