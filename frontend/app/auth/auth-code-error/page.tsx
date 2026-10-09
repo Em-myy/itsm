@@ -63,7 +63,7 @@ const AuthCodeErrorPage = () => {
               <div className="mx-auto w-full max-w-sm">
                 <div
                   aria-hidden="true"
-                  className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-700 animate-badge-pulse"
+                  className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-700 animate-badge-pulse"
                 >
                   <AlertCircle className="w-7 h-7 shrink-0" strokeWidth={1.5} />
                 </div>
