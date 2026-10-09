@@ -24,6 +24,9 @@ import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./calendar-overrides.css";
 import BookingDetails from "@/components/bookings/BookingDetails";
+import { getStatusStyle } from "@/utils/status-styles";
+import { getEquipmentLabel } from "@/utils/format-helpers";
+import { useAuth } from "@/context/AuthContext";
 
 interface ToolbarProps {
   date: Date;
@@ -132,6 +135,91 @@ const CustomEvent = ({
   );
 };
 
+const MY_BOOKING_FILTERS = [
+  "All",
+  "Pending",
+  "Approved",
+  "Rejected",
+  "Cancelled",
+] as const;
+type MyBookingFilter = (typeof MY_BOOKING_FILTERS)[number];
+
+const formatBookingWhen = (booking: BookingType): string => {
+  const start = new Date(booking.start_time);
+  const end = new Date(booking.end_time);
+  const time: Intl.DateTimeFormatOptions = {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  };
+  const day = start.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return `${day} · ${start.toLocaleTimeString("en-GB", time)} – ${end.toLocaleTimeString("en-GB", time)}`;
+};
+
+const MyBookingCard = ({
+  booking,
+  onSelect,
+}: {
+  booking: BookingType;
+  onSelect: (booking: BookingType) => void;
+}) => {
+  const style = getStatusStyle(booking.status);
+  const isCancelled = booking.status.toLowerCase() === "cancelled";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(booking)}
+      className={`relative flex w-full cursor-pointer flex-col gap-3 overflow-hidden rounded-xl border border-line bg-white p-4 pl-5 text-left transition hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${
+        isCancelled ? "opacity-60" : ""
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`absolute inset-y-0 left-0 w-1 ${style.accent}`}
+      />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-heading">
+            {booking.purpose}
+          </p>
+          <p className="truncate text-xs text-body">{booking.venue_name}</p>
+        </div>
+        <span className="shrink-0 -skew-x-6 rounded bg-input-bg px-2 py-1 font-mono text-[11px] text-muted">
+          {booking.reference}
+        </span>
+      </div>
+
+      <p className="text-xs text-body">{formatBookingWhen(booking)}</p>
+
+      {booking.equipment_needed && booking.equipment_needed.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {booking.equipment_needed.map((eq) => (
+            <span
+              key={eq}
+              className="rounded-full bg-input-bg px-2 py-0.5 text-[11px] text-body"
+            >
+              {getEquipmentLabel(eq)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <span
+        className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${style.pill}`}
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+        {booking.status}
+      </span>
+    </button>
+  );
+};
+
 const CalendarClient = ({
   initialBookings,
   initialVenues,
@@ -139,6 +227,8 @@ const CalendarClient = ({
   initialBookings: BookingType[] | null;
   initialVenues: VenueType[] | null;
 }) => {
+  const { displayName } = useAuth();
+
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentView, setCurrentView] = useState<View>("month");
   const [openBooking, setOpenBooking] = useState<boolean>(false);
@@ -146,6 +236,8 @@ const CalendarClient = ({
     null,
   );
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
+  const [myBookingsFilter, setMyBookingsFilter] =
+    useState<MyBookingFilter>("All");
 
   const calendarEvents =
     initialBookings?.map((booking) => ({
@@ -155,6 +247,25 @@ const CalendarClient = ({
       end: new Date(booking.end_time),
       resource: booking,
     })) ?? [];
+
+  const myBookings = (initialBookings ?? []).sort(
+    (a, b) =>
+      new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
+  );
+
+  const countFor = (filter: MyBookingFilter): number =>
+    filter === "All"
+      ? myBookings.length
+      : myBookings.filter(
+          (b) => b.status?.toLowerCase() === filter.toLowerCase(),
+        ).length;
+
+  const visibleMyBookings =
+    myBookingsFilter === "All"
+      ? myBookings
+      : myBookings.filter(
+          (b) => b.status?.toLowerCase() === myBookingsFilter.toLowerCase(),
+        );
 
   const handleSelectEvent = (event: any): void => {
     setSelectedBooking(event.resource);
@@ -251,6 +362,75 @@ const CalendarClient = ({
           </div>
         </div>
       </div>
+
+      <section aria-labelledby="my-bookings-heading" className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2
+              id="my-bookings-heading"
+              className="font-serif text-2xl text-heading"
+            >
+              My bookings
+            </h2>
+            <p className="mt-1 text-sm text-body">
+              Track the status of every hall you&apos;ve requested.
+            </p>
+          </div>
+
+          <div
+            role="tablist"
+            aria-label="Filter my bookings by status"
+            className="inline-flex flex-wrap items-center gap-1 rounded-full bg-white p-3 shadow-sm"
+          >
+            {MY_BOOKING_FILTERS.map((filter) => {
+              const active = myBookingsFilter === filter;
+              return (
+                <button
+                  key={filter}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setMyBookingsFilter(filter)}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${
+                    active
+                      ? "bg-button text-white"
+                      : "text-body hover:bg-input-bg hover:text-heading"
+                  }`}
+                >
+                  {filter}
+                  <span
+                    className={`rounded-full px-1.5 text-[10px] ${
+                      active ? "bg-white/20" : "bg-input-bg text-muted"
+                    }`}
+                  >
+                    {countFor(filter)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {visibleMyBookings.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-line bg-white px-4 py-10 text-center">
+            <p className="text-sm text-body">
+              {myBookings.length === 0
+                ? "You haven't made any bookings yet."
+                : `No ${myBookingsFilter.toLowerCase()} bookings.`}
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {visibleMyBookings.map((booking) => (
+              <MyBookingCard
+                key={booking.id}
+                booking={booking}
+                onSelect={setSelectedBooking}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
