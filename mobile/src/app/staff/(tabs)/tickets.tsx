@@ -52,7 +52,6 @@ const Tickets = () => {
               <Text>New Ticket</Text>
             </TouchableOpacity>
           </View>
-
           {tickets.map((ticket) => (
             <View key={ticket.id}>
               <Pressable onPress={() => setSelectedTicket(ticket)}>
@@ -65,7 +64,7 @@ const Tickets = () => {
               </Pressable>
             </View>
           ))}
-
+          hfjfj
           {isSubmittingTicket && (
             <SubmitTicket initialTickets={tickets} onClose={closeSubmit} />
           )}
