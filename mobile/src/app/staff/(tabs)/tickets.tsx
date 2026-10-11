@@ -64,7 +64,7 @@ const Tickets = () => {
               </Pressable>
             </View>
           ))}
-          hfjfj
+
           {isSubmittingTicket && (
             <SubmitTicket initialTickets={tickets} onClose={closeSubmit} />
           )}
