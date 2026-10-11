@@ -4,6 +4,7 @@ import { useState } from "react";
 import { View, Text, Pressable, Button } from "react-native";
 import TicketForm, { TicketFormValues } from "./ticket-form";
 import { AlertCircle } from "lucide-react-native";
+import DownloadButton from "../layout/download-button";
 
 const TicketDetails = ({
   ticket,
