@@ -1,7 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import TicketForm, { TicketFormValues } from "./ticket-form";
 import { TicketType } from "@/utils/helpers";
-import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import api from "@/utils/axios";
 
