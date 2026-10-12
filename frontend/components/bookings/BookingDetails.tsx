@@ -68,7 +68,6 @@ const BookingDetails = ({
     };
 
     await api.patch("/bookings/update", bookingPayload);
-    router.refresh();
     onClose();
   };
 
