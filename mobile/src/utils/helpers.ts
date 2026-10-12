@@ -47,3 +47,12 @@ export interface BookingType {
   status: string;
   equipment_needed: string[];
 }
+
+export interface VenueType {
+  id: number;
+  reference?: string;
+  name: string;
+  capacity: number;
+  status: string;
+  equipments: string[];
+}
