@@ -26,7 +26,6 @@ import "./calendar-overrides.css";
 import BookingDetails from "@/components/bookings/BookingDetails";
 import { getStatusStyle } from "@/utils/status-styles";
 import { getEquipmentLabel } from "@/utils/format-helpers";
-import { useAuth } from "@/context/AuthContext";
 
 interface ToolbarProps {
   date: Date;
@@ -227,8 +226,6 @@ const CalendarClient = ({
   initialBookings: BookingType[] | null;
   initialVenues: VenueType[] | null;
 }) => {
-  const { displayName } = useAuth();
-
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [currentView, setCurrentView] = useState<View>("month");
   const [openBooking, setOpenBooking] = useState<boolean>(false);
