@@ -348,11 +348,13 @@ const TicketForm = ({
 
           <View>
             {cancelLabel && (
-              <Pressable onPress={onCancel}>{cancelLabel}</Pressable>
+              <Pressable onPress={onCancel}>
+                <Text>{cancelLabel}</Text>
+              </Pressable>
             )}
 
             <Pressable onPress={handleSubmit} disabled={isSubmitting}>
-              <Text> {isSubmitting ? submittingLabel : submitLabel}</Text>
+              <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
             </Pressable>
           </View>
         </ScrollView>
