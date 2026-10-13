@@ -51,7 +51,7 @@ const SignIn = () => {
             onChangeText={onChangePassword}
             value={password}
             secureTextEntry={true}
-            placeholder="Password"
+            placeholder="••••••••"
             autoCapitalize="none"
           />
         </View>
