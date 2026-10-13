@@ -56,3 +56,14 @@ export interface VenueType {
   status: string;
   equipments: string[];
 }
+
+export interface UserType {
+  id?: number;
+  username: string;
+  email: string;
+  department: string;
+  role_id: number;
+  role_name: string;
+  status: "Pending" | "Active" | "Suspended";
+  created_at: string;
+}
