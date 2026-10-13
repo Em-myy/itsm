@@ -70,7 +70,7 @@ const SignUp = () => {
           <Picker onValueChange={onChangeDepartment} selectedValue={department}>
             <Picker.Item label="Select a department" value="" enabled={false} />
             {DEPARTMENTS.map((dept) => (
-              <Picker.Item label={dept} value={dept} />
+              <Picker.Item label={dept} value={dept} key={dept} />
             ))}
           </Picker>
         </View>
@@ -81,7 +81,7 @@ const SignUp = () => {
             onChangeText={onChangePassword}
             value={password}
             secureTextEntry={true}
-            placeholder="Password"
+            placeholder="••••••••"
             autoCapitalize="none"
           />
         </View>
