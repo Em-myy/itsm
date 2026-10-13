@@ -1,16 +1,23 @@
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { Redirect, Tabs } from "expo-router";
-import { Text } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const StaffLayout = () => {
   const { profile, isLoggedIn, isLoading } = useAuthContext();
 
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return (
+      <SafeAreaView>
+        <View>
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (!isLoggedIn || profile?.role_name !== "Staff") {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href="/sign-in" />;
   }
 
   return (
