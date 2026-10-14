@@ -1,13 +1,19 @@
 import { Redirect, Stack } from "expo-router";
-import "@/global.css";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { Text } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const AuthLayout = () => {
   const { profile, isLoggedIn, isLoading } = useAuthContext();
 
-  if (isLoading) {
-    return <Text>Loading...</Text>;
+  if (isLoading || (isLoggedIn && !profile)) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <View className="flex-1 items-center justify-center bg-cream">
+          <ActivityIndicator size="large" color="#1f4a3b" />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (isLoggedIn) {
@@ -20,7 +26,15 @@ const AuthLayout = () => {
     }
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        contentStyle: { backgroundColor: "#f3eee1" },
+      }}
+    />
+  );
 };
 
 export default AuthLayout;
