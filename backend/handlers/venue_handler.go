@@ -210,3 +210,30 @@ func (h *VenueHandler) CancelVenue(w http.ResponseWriter, r *http.Request) {
 		"message": "Venue cancelled successfully",
 	})
 }
+
+func (h *VenueHandler) GetAllActiveVenuesCount(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can get all active venues count", http.StatusForbidden)
+		return
+	}
+
+	count, err := repositories.GetAllActiveVenuesCount(r.Context(), h.DB)
+	if err != nil {
+		log.Println("Error getting venues count:", err)
+		http.Error(w, "Failed to get all active venues count", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"count": count,
+	})
+}
