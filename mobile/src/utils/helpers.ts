@@ -5,7 +5,22 @@ export const DEPARTMENTS = [
   "Tourism",
   "Finance",
   "ICT",
-];
+] as const;
+
+export const colors = {
+  cream: "#f3eee1",
+  button: "#1f4a3b",
+  heading: "#182620",
+  muted: "#8d8879",
+  danger: "#b4432f",
+  success: "#2f7d4f",
+  overlay: "rgba(21,41,34,0.5)",
+} as const;
+
+export type FormMessageData = {
+  type: "error" | "success";
+  text: string;
+} | null;
 
 export interface UserType {
   id?: number;
