@@ -132,3 +132,20 @@ func CancelVenue(ctx context.Context, pool *pgxpool.Pool, venueID int) error {
 
 	return nil
 }
+
+func GetAllActiveVenuesCount(ctx context.Context, pool *pgxpool.Pool) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM venues
+		WHERE status = 'Active';
+	`
+
+	var count int
+
+	err := pool.QueryRow(ctx, query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to get active venue count: %w", err)
+	}
+
+	return count, nil
+}
