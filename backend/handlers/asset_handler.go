@@ -231,3 +231,30 @@ func (h *AssetHandler) CancelAsset(w http.ResponseWriter, r *http.Request) {
 		"message": "Asset cancelled successfully",
 	})
 }
+
+func (h *AssetHandler) GetAllMaintainedAssetsCount(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	role, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	if !ok || role != "IT Admin" {
+		http.Error(w, "Forbidden. Only admins can get all maintained assets count", http.StatusForbidden)
+		return
+	}
+
+	count, err := repositories.GetAllMaintainedAssetsCount(r.Context(), h.DB)
+	if err != nil {
+		log.Println("Error getting assets count:", err)
+		http.Error(w, "Failed to get all maintained assets count", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{
+		"count": count,
+	})
+}
