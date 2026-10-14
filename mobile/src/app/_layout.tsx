@@ -1,13 +1,13 @@
-import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import "@/global.css";
 import { useFonts } from "expo-font";
-import { useEffect } from "react";
 import AuthProvider from "@/providers/auth-provider";
 import SplashScreenController from "@/components/layout/splash-screen-controller";
 import { StatusBar } from "expo-status-bar";
+import { colors } from "@/utils/helpers";
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontsError] = useFonts({
     "sans-regular": require("@/assets/fonts/PlusJakartaSans-Regular.ttf"),
     "sans-bold": require("@/assets/fonts/PlusJakartaSans-Bold.ttf"),
     "sans-medium": require("@/assets/fonts/PlusJakartaSans-Medium.ttf"),
@@ -17,21 +17,22 @@ export default function RootLayout() {
     "sans-italic": require("@/assets/fonts/PlusJakartaSans-Italic.ttf"),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && fontsError) {
+    return null;
+  }
 
   return (
     <AuthProvider>
       <SplashScreenController />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.cream },
+        }}
+      >
+        <Stack.Screen name="(auth)" />
         <Stack.Screen name="staff/(tabs)" />
         <Stack.Screen name="admin/(tabs)" />
-        <Stack.Screen name="(auth)" />
       </Stack>
       <StatusBar style="auto" />
     </AuthProvider>
