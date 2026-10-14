@@ -142,3 +142,20 @@ func CancelAsset(ctx context.Context, pool *pgxpool.Pool, assetID int) error {
 
 	return nil
 }
+
+func GetAllMaintainedAssetsCount(ctx context.Context, pool *pgxpool.Pool) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM assets
+		WHERE status = 'Maintenance';
+	`
+
+	var count int
+
+	err := pool.QueryRow(ctx, query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to get maintained assets count: %w", err)
+	}
+
+	return count, nil
+}
