@@ -313,3 +313,20 @@ func GetPendingBookingsCount(ctx context.Context, pool *pgxpool.Pool, requesterI
 
 	return count, nil
 }
+
+func GetAllPendingBookingsCount(ctx context.Context, pool *pgxpool.Pool) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM bookings
+		WHERE status = 'Pending';
+	`
+
+	var count int
+
+	err := pool.QueryRow(ctx, query).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to get pending booking count: %w", err)
+	}
+
+	return count, nil
+}
