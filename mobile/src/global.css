@@ -12,4 +12,30 @@
   --font-sans-bold: sans-bold;
   --font-sans-extrabold: sans-extrabold;
   --font-sans-italic: sans-italic;
+
+  --color-ink: #152922;
+  --color-ink-border: #3e5c4e;
+  --color-sage: #93ac97;
+  --color-cream: #f3eee1;
+  --color-bullet: #c7d0c4;
+  --color-button: #1f4a3b;
+  --color-button-hover: #26593f;
+  --color-surface-hover: #f7f4ea;
+  --color-input-bg: #f2eee3;
+  --color-line: #e5e0d1;
+  --color-heading: #182620;
+  --color-body: #4b5650;
+  --color-muted: #8d8879;
+  --color-chart-amber: #b17a27;
+
+  --color-success: #2f7d4f;
+  --color-warning: #b17a27;
+  --color-danger: #b4432f;
+  --color-info: #2f6f8f;
+
+  --color-danger-bg: #f8e6e1;
+  --color-success-bg: #e3f0e7;
+
+  --radius-card: 16px;
+  --radius-control: 12px;
 }
