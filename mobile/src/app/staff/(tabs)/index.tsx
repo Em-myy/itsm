@@ -29,29 +29,44 @@ const StaffHomePage = () => {
   const [currentTicket, setCurrentTicket] = useState<number>(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (): Promise<void> => {
       try {
         const [ticketsResults, bookingsResults, recentTickets, nextBooking] =
-          await Promise.all([
+          await Promise.allSettled([
             api.get<CountType>("/tickets/count"),
             api.get<CountType>("/bookings/count"),
             api.get<TicketType[]>("/tickets/recent"),
             api.get<BookingType>("/bookings/next"),
           ]);
 
-        setTicketsCount(ticketsResults.data);
-        setBookingsCount(bookingsResults.data);
-        setRecentTickets(recentTickets.data);
-        setNextBooking(nextBooking.data);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.log(
-            "API Error:",
-            error.response?.data?.message || error.message,
-          );
+        if (ticketsResults.status === "fulfilled") {
+          setTicketsCount(ticketsResults.value.data);
         } else {
-          console.log("Unexpected error:", error);
+          console.error("Failed to fetch ticket count:", ticketsResults.reason);
         }
+
+        if (bookingsResults.status === "fulfilled") {
+          setBookingsCount(bookingsResults.value.data);
+        } else {
+          console.error(
+            "Failed to fetch ticket count:",
+            bookingsResults.reason,
+          );
+        }
+
+        if (recentTickets.status === "fulfilled") {
+          setRecentTickets(recentTickets.value.data);
+        } else {
+          console.error("Failed to fetch ticket count:", recentTickets.reason);
+        }
+
+        if (nextBooking.status === "fulfilled") {
+          setNextBooking(nextBooking.value.data);
+        } else {
+          console.error("Failed to fetch ticket count:", nextBooking.reason);
+        }
+      } catch (error) {
+        console.log("Unexpected error during fetch:", error);
       } finally {
         setIsLoading(false);
       }
