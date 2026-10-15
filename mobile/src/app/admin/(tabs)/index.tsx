@@ -152,8 +152,8 @@ const AdminHomePage = () => {
         Admin Home
       </Text>
       <View>
-        <Text>{profile?.username}</Text>
-        <Text>{profile?.role_name}</Text>
+        <Text>{profile.username}</Text>
+        <Text>{profile.role_name}</Text>
       </View>
     </SafeAreaView>
   );
