@@ -1,30 +1,14 @@
-import "@/global.css";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import api from "@/utils/axios";
-import { DEPARTMENTS, formerTimeAgo, TicketType } from "@/utils/helpers";
+import { DEPARTMENTS, TicketType } from "@/utils/helpers";
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import RenderHtml from "@native-html/render";
-import DOMPurify from "dompurify";
-
-interface ActivityLog {
-  id: number;
-  action_message: string;
-  created_at: string;
-}
+import ActivityLog from "@/hooks/activity-log";
 
 type CountType = {
   count: number;
 };
-
-const { width } = useWindowDimensions();
 
 const StatCard = ({
   value,
@@ -56,24 +40,17 @@ const AdminHomePage = () => {
   const [bookingsCount, setBookingsCount] = useState<CountType | null>(null);
   const [venuesCount, setVenuesCount] = useState<CountType | null>(null);
   const [assetsCount, setAssetsCount] = useState<CountType | null>(null);
-  const [activities, setActivities] = useState<ActivityLog[]>([]);
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
-        const [
-          ticketResults,
-          bookingResults,
-          assetResults,
-          venueResults,
-          activityResults,
-        ] = await Promise.allSettled([
-          api.get<TicketType[]>("/tickets"),
-          api.get<CountType>("/admin/bookings/count"),
-          api.get<CountType>("/admin/assets/count"),
-          api.get<CountType>("/admin/venues/count"),
-          api.get<ActivityLog[]>("/activity"),
-        ]);
+        const [ticketResults, bookingResults, assetResults, venueResults] =
+          await Promise.allSettled([
+            api.get<TicketType[]>("/tickets"),
+            api.get<CountType>("/admin/bookings/count"),
+            api.get<CountType>("/admin/assets/count"),
+            api.get<CountType>("/admin/venues/count"),
+          ]);
 
         if (ticketResults.status === "fulfilled") {
           setTickets(ticketResults.value.data);
@@ -98,32 +75,12 @@ const AdminHomePage = () => {
         } else {
           console.error("Failed to fetch ticket count:", venueResults.reason);
         }
-
-        if (activityResults.status === "fulfilled") {
-          setActivities(activityResults.value.data);
-        } else {
-          console.error(
-            "Failed to fetch ticket count:",
-            activityResults.reason,
-          );
-        }
       } catch (error) {
         console.log("Unexpected error during fetch:", error);
       }
     };
     fetchData();
   }, []);
-
-  const formattedActivities = activities.map((log) => ({
-    id: String(log.id),
-    action: (
-      <RenderHtml
-        contentWidth={width}
-        source={{ html: DOMPurify.sanitize(log.action_message) }}
-      />
-    ),
-    time: formerTimeAgo(log.created_at),
-  }));
 
   const openTickets = tickets.filter(
     (ticket) => ticket.status !== "Resolved" && ticket.status !== "Cancelled",
@@ -140,21 +97,99 @@ const AdminHomePage = () => {
   const greeting =
     hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "white",
-      }}
-    >
-      <Text className="text-7xl font-sans-extrabold text-green-500">
-        Admin Home
-      </Text>
-      <View>
-        <Text>{profile.username}</Text>
-        <Text>{profile.role_name}</Text>
-      </View>
+    <SafeAreaView>
+      <ScrollView>
+        <Text className="text-7xl font-sans-extrabold text-green-500">
+          Admin Home
+        </Text>
+        <View>
+          <View>
+            <Text>
+              {greeting} {profile?.username}
+            </Text>
+
+            <Text>
+              <Text>
+                {new Date().toLocaleDateString("en-GB", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })}
+              </Text>
+              <Text>&middot;</Text>
+              <Text>{profile?.department}</Text>
+            </Text>
+          </View>
+
+          <View>
+            <StatCard
+              value={openTickets.length}
+              label={openTickets.length <= 1 ? "Open ticket" : "Open tickets"}
+            />
+            <StatCard
+              value={assetsCount?.count ?? 0}
+              label={
+                assetsCount?.count === 1
+                  ? "Asset under maintenance"
+                  : "Assets under maintenance"
+              }
+              tone="danger"
+            />
+            <StatCard
+              value={venuesCount?.count ?? 0}
+              label={
+                venuesCount?.count === 1 ? "Active venue" : "Active venues"
+              }
+            />
+            <StatCard
+              value={bookingsCount?.count ?? 0}
+              label={
+                bookingsCount?.count === 1
+                  ? "Booking awaiting approval"
+                  : "Bookings awaiting approval"
+              }
+            />
+          </View>
+
+          <View>
+            <View>
+              <Text>Tickets by department</Text>
+
+              <View>
+                {departmentCounts.map(({ department, count }) => (
+                  <View key={department} className="flex items-center gap-3">
+                    <Text className="w-24 shrink-0 truncate text-sm text-body sm:w-32 md:w-36">
+                      {department}
+                    </Text>
+
+                    <View className="h-3 flex-1 rounded-full bg-input-bg">
+                      <View
+                        className="h-full rounded-full bg-chart-amber"
+                        style={{ width: `${(count / maxCount) * 100}%` }}
+                      />
+                    </View>
+
+                    <Text className="w-6 shrink-0 text-right text-sm font-medium text-heading">
+                      {count}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View>
+              <View>
+                <Text>Recent activity</Text>
+                <Text>Live</Text>
+              </View>
+
+              <View>
+                <ActivityLog />
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
