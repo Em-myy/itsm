@@ -1,10 +1,11 @@
 import { useAuthContext } from "@/hooks/use-auth-context";
 import api from "@/utils/axios";
 import { DEPARTMENTS, TicketType } from "@/utils/helpers";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ActivityLog from "@/hooks/activity-log";
+import ActivityLog from "@/components/activities/activity-log";
+import { supabase } from "@/lib/supabase";
 
 type CountType = {
   count: number;
@@ -35,51 +36,94 @@ const StatCard = ({
 
 const AdminHomePage = () => {
   const { profile } = useAuthContext();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [bookingsCount, setBookingsCount] = useState<CountType | null>(null);
   const [venuesCount, setVenuesCount] = useState<CountType | null>(null);
   const [assetsCount, setAssetsCount] = useState<CountType | null>(null);
 
+  const fetchData = async (): Promise<void> => {
+    try {
+      const [ticketResults, bookingResults, assetResults, venueResults] =
+        await Promise.allSettled([
+          api.get<TicketType[]>("/tickets"),
+          api.get<CountType>("/admin/bookings/count"),
+          api.get<CountType>("/admin/assets/count"),
+          api.get<CountType>("/admin/venues/count"),
+        ]);
+
+      if (ticketResults.status === "fulfilled") {
+        setTickets(ticketResults.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", ticketResults.reason);
+      }
+
+      if (bookingResults.status === "fulfilled") {
+        setBookingsCount(bookingResults.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", bookingResults.reason);
+      }
+
+      if (assetResults.status === "fulfilled") {
+        setAssetsCount(assetResults.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", assetResults.reason);
+      }
+
+      if (venueResults.status === "fulfilled") {
+        setVenuesCount(venueResults.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", venueResults.reason);
+      }
+    } catch (error) {
+      console.log("Unexpected error during fetch:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        const [ticketResults, bookingResults, assetResults, venueResults] =
-          await Promise.allSettled([
-            api.get<TicketType[]>("/tickets"),
-            api.get<CountType>("/admin/bookings/count"),
-            api.get<CountType>("/admin/assets/count"),
-            api.get<CountType>("/admin/venues/count"),
-          ]);
+    fetchData();
 
-        if (ticketResults.status === "fulfilled") {
-          setTickets(ticketResults.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", ticketResults.reason);
-        }
+    const handleRealtimeUpdate = () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+      debounceTimer.current = setTimeout(() => {
+        fetchData();
+      }, 2000);
+    };
 
-        if (bookingResults.status === "fulfilled") {
-          setBookingsCount(bookingResults.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", bookingResults.reason);
-        }
+    const channel = supabase
+      .channel("realtime_admin_home_page")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tickets" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "venues" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "assets" },
+        handleRealtimeUpdate,
+      )
+      .subscribe();
 
-        if (assetResults.status === "fulfilled") {
-          setAssetsCount(assetResults.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", assetResults.reason);
-        }
+    return () => {
+      supabase.removeChannel(channel);
 
-        if (venueResults.status === "fulfilled") {
-          setVenuesCount(venueResults.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", venueResults.reason);
-        }
-      } catch (error) {
-        console.log("Unexpected error during fetch:", error);
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
       }
     };
-    fetchData();
   }, []);
 
   const openTickets = tickets.filter(
