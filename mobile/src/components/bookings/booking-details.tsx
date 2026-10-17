@@ -1,5 +1,5 @@
 import api from "@/utils/axios";
-import { BookingType, VenueType } from "@/utils/helpers";
+import { BookingType, getEquipmentLabel, VenueType } from "@/utils/helpers";
 import { useState } from "react";
 import { Button, Pressable, Text, View } from "react-native";
 import { format } from "date-fns";
@@ -120,7 +120,7 @@ const BookingDetails = ({
             })}
           </Text>
           {booking.equipment_needed.map((equip) => (
-            <Text id={equip}>{equip}</Text>
+            <Text id={equip}>{getEquipmentLabel(equip)}</Text>
           ))}
         </View>
 
