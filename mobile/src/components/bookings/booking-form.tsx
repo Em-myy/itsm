@@ -1,4 +1,4 @@
-import { VenueType } from "@/utils/helpers";
+import { getEquipmentLabel, VenueType } from "@/utils/helpers";
 import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
 import {
@@ -274,7 +274,7 @@ const BookingForm = ({
                         handleEquipmentChange(eq, checked)
                       }
                     />
-                    <Text key={eq}>{eq}</Text>
+                    <Text key={eq}>{getEquipmentLabel(eq)}</Text>
                   </View>
                 ))}
               </View>
