@@ -83,6 +83,17 @@ export interface UserType {
   created_at: string;
 }
 
+export interface AssetType {
+  id: number;
+  reference: string;
+  asset_type: string;
+  department: string;
+  status: string;
+  assignee_name: string;
+  last_serviced?: string;
+  notes?: string;
+}
+
 export const formerTimeAgo = (dateString: string | Date) => {
   const date = new Date(dateString);
   const now = new Date();
