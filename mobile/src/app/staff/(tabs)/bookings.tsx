@@ -1,10 +1,11 @@
 import BookingDetails from "@/components/bookings/booking-details";
 import SubmitBooking from "@/components/bookings/submit-booking";
+import { supabase } from "@/lib/supabase";
 import api from "@/utils/axios";
-import { BookingType, VenueType } from "@/utils/helpers";
+import { BookingType, getEquipmentLabel, VenueType } from "@/utils/helpers";
 import axios from "axios";
 import { Plus } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -16,7 +17,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const Bookings = () => {
+const StaffBookingPage = () => {
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [bookings, setBookings] = useState<BookingType[]>([]);
   const [venues, setVenues] = useState<VenueType[]>([]);
   const [isSubmittingBooking, setIsSubmittingBooking] =
@@ -24,31 +27,62 @@ const Bookings = () => {
   const [selectedBooking, setSelectedBooking] = useState<BookingType | null>(
     null,
   );
-  const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
+
+  const fetchData = async () => {
+    try {
+      const [bookingsResult, venuesResult] = await Promise.all([
+        api.get<BookingType[]>("/bookings/mine"),
+        api.get<VenueType[]>("/venues"),
+      ]);
+
+      setBookings(bookingsResult.data);
+      setVenues(venuesResult.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log(
+          "API Error:",
+          error.response?.data?.message || error.message,
+        );
+      } else {
+        console.log("Unexpected error:", error);
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [bookingsResult, venuesResult] = await Promise.all([
-          api.get<BookingType[]>("/bookings/mine"),
-          api.get<VenueType[]>("/venues"),
-        ]);
+    fetchData();
 
-        setBookings(bookingsResult.data);
-        setVenues(venuesResult.data);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.log(
-            "API Error:",
-            error.response?.data?.message || error.message,
-          );
-        } else {
-          console.log("Unexpected error:", error);
-        }
+    const handleRealtimeUpdate = () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
       }
+      debounceTimer.current = setTimeout(() => {
+        fetchData();
+      }, 2000);
     };
 
-    fetchData();
+    const channel = supabase
+      .channel("staff_bookings_page")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "venues" },
+        handleRealtimeUpdate,
+      )
+
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
   }, []);
 
   const closeSubmit = () => {
@@ -83,18 +117,14 @@ const Bookings = () => {
                 <Text>{booking.start_time}</Text>
                 <Text>{booking.end_time}</Text>
                 {booking.equipment_needed.map((equip) => (
-                  <Text key={equip}>{equip}</Text>
+                  <Text key={equip}>{getEquipmentLabel(equip)}</Text>
                 ))}
               </Pressable>
             </View>
           ))}
 
           {isSubmittingBooking && (
-            <SubmitBooking
-              venues={venues}
-              preSelectedDate={selectedSlotDate}
-              onClose={closeSubmit}
-            />
+            <SubmitBooking venues={venues} onClose={closeSubmit} />
           )}
           {selectedBooking && (
             <BookingDetails
@@ -109,4 +139,4 @@ const Bookings = () => {
   );
 };
 
-export default Bookings;
+export default StaffBookingPage;
