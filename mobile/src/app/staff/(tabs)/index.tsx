@@ -1,10 +1,9 @@
-import "@/global.css";
 import { useAuthContext } from "@/hooks/use-auth-context";
+import { supabase } from "@/lib/supabase";
 import api from "@/utils/axios";
 import { BookingType, TicketType } from "@/utils/helpers";
-import axios from "axios";
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -20,6 +19,7 @@ type CountType = {
 
 const StaffHomePage = () => {
   const { profile, avatar, initials } = useAuthContext();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [ticketsCount, setTicketsCount] = useState<CountType | null>(null);
   const [bookingsCount, setBookingsCount] = useState<CountType | null>(null);
@@ -28,51 +28,89 @@ const StaffHomePage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentTicket, setCurrentTicket] = useState<number>(0);
 
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        const [ticketsResults, bookingsResults, recentTickets, nextBooking] =
-          await Promise.allSettled([
-            api.get<CountType>("/tickets/count"),
-            api.get<CountType>("/bookings/count"),
-            api.get<TicketType[]>("/tickets/recent"),
-            api.get<BookingType>("/bookings/next"),
-          ]);
+  const fetchData = async (): Promise<void> => {
+    try {
+      const [ticketsResults, bookingsResults, recentTickets, nextBooking] =
+        await Promise.allSettled([
+          api.get<CountType>("/tickets/count"),
+          api.get<CountType>("/bookings/count"),
+          api.get<TicketType[]>("/tickets/recent"),
+          api.get<BookingType>("/bookings/next"),
+        ]);
 
-        if (ticketsResults.status === "fulfilled") {
-          setTicketsCount(ticketsResults.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", ticketsResults.reason);
-        }
-
-        if (bookingsResults.status === "fulfilled") {
-          setBookingsCount(bookingsResults.value.data);
-        } else {
-          console.error(
-            "Failed to fetch ticket count:",
-            bookingsResults.reason,
-          );
-        }
-
-        if (recentTickets.status === "fulfilled") {
-          setRecentTickets(recentTickets.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", recentTickets.reason);
-        }
-
-        if (nextBooking.status === "fulfilled") {
-          setNextBooking(nextBooking.value.data);
-        } else {
-          console.error("Failed to fetch ticket count:", nextBooking.reason);
-        }
-      } catch (error) {
-        console.log("Unexpected error during fetch:", error);
-      } finally {
-        setIsLoading(false);
+      if (ticketsResults.status === "fulfilled") {
+        setTicketsCount(ticketsResults.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", ticketsResults.reason);
       }
+
+      if (bookingsResults.status === "fulfilled") {
+        setBookingsCount(bookingsResults.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", bookingsResults.reason);
+      }
+
+      if (recentTickets.status === "fulfilled") {
+        setRecentTickets(recentTickets.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", recentTickets.reason);
+      }
+
+      if (nextBooking.status === "fulfilled") {
+        setNextBooking(nextBooking.value.data);
+      } else {
+        console.error("Failed to fetch ticket count:", nextBooking.reason);
+      }
+    } catch (error) {
+      console.log("Unexpected error during fetch:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    const handleRealtimeUpdate = () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+      debounceTimer.current = setTimeout(() => {
+        fetchData();
+      }, 2000);
     };
 
-    fetchData();
+    const channel = supabase
+      .channel("realtime_staff_home_page")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tickets" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "venues" },
+        handleRealtimeUpdate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "assets" },
+        handleRealtimeUpdate,
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
   }, []);
 
   const hour = new Date().getHours();
