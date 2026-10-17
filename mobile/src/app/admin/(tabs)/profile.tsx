@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -122,134 +123,140 @@ const AdminProfile = () => {
 
   return (
     <SafeAreaView>
-      <View>
-        <View>
-          <Text>Profile</Text>
-          <Text>Manage your account details and password.</Text>
-        </View>
-
+      <ScrollView>
         <View>
           <View>
+            <Text>Profile</Text>
+            <Text>Manage your account details and password.</Text>
+          </View>
+
+          <View>
             <View>
-              {avatar ? (
-                <Image
-                  source={avatar}
-                  alt={initialProfile?.username || "Avatar"}
-                  style={{ width: 80, height: 80, borderRadius: 40 }}
-                  contentFit="cover"
-                />
-              ) : (
-                <Text>{initials}</Text>
-              )}
+              <View>
+                {avatar ? (
+                  <Image
+                    source={avatar}
+                    alt={initialProfile?.username || "Avatar"}
+                    style={{ width: 80, height: 80, borderRadius: 40 }}
+                    contentFit="cover"
+                  />
+                ) : (
+                  <Text>{initials}</Text>
+                )}
+
+                <View>
+                  <Text>{initialProfile?.username}</Text>
+                  <View>
+                    <Text>{initialProfile?.role_name}</Text>
+                    <Text>
+                      <Text />
+                      {initialProfile?.status}
+                    </Text>
+                  </View>
+                  {memberSince && <Text>Member since {memberSince}</Text>}
+                  <View>
+                    <TouchableOpacity onPress={handleSignout}>
+                      <Text>Sign Out</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
 
               <View>
-                <Text>{initialProfile?.username}</Text>
-                <View>
-                  <Text>{initialProfile?.role_name}</Text>
-                  <Text>
-                    <Text />
-                    {initialProfile?.status}
-                  </Text>
-                </View>
-                {memberSince && <Text>Member since {memberSince}</Text>}
-                <View>
-                  <TouchableOpacity onPress={handleSignout}>
-                    <Text>Sign Out</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            <View>
-              <Text>Username</Text>
-              <TextInput
-                value={username}
-                placeholder="Famuyiwa Emmanuel"
-                onChangeText={setUsername}
-              />
-            </View>
-
-            <View>
-              <Text>Email</Text>
-              <TextInput
-                value={initialProfile?.email}
-                placeholder="email@address.com"
-                editable={false}
-              />
-            </View>
-
-            <View>
-              <Text>Department</Text>
-              <TextInput
-                value={initialProfile?.department}
-                placeholder="Select your department"
-                editable={false}
-              />
-              <Text>An IT Admin cannot change his or her department</Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleProfileSubmit}
-              disabled={isSavingProfile}
-            >
-              <Text>{isSavingProfile ? "Saving..." : "Save changes"}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View>
-            <Text>Change password</Text>
-
-            <View>
-              <Text>New password</Text>
-              <View className="relative">
+                <Text>Username</Text>
                 <TextInput
-                  value={newPassword}
-                  secureTextEntry={!showNewPassword}
-                  autoCapitalize="none"
-                  onChangeText={setNewPassword}
-                  placeholder="••••••••"
+                  value={username}
+                  placeholder="Famuyiwa Emmanuel"
+                  onChangeText={setUsername}
                 />
-                <Pressable onPress={() => setShowNewPassword((show) => !show)}>
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Pressable>
               </View>
+
+              <View>
+                <Text>Email</Text>
+                <TextInput
+                  value={initialProfile?.email}
+                  placeholder="email@address.com"
+                  editable={false}
+                />
+              </View>
+
+              <View>
+                <Text>Department</Text>
+                <TextInput
+                  value={initialProfile?.department}
+                  placeholder="Select your department"
+                  editable={false}
+                />
+                <Text>An IT Admin cannot change his or her department</Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleProfileSubmit}
+                disabled={isSavingProfile}
+              >
+                <Text>{isSavingProfile ? "Saving..." : "Save changes"}</Text>
+              </TouchableOpacity>
             </View>
 
             <View>
-              <Text>Confirm new password</Text>
-              <View className="relative">
-                <TextInput
-                  value={confirmPassword}
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                  onChangeText={setConfirmPassword}
-                  placeholder="••••••••"
-                />
-                <Pressable onPress={() => setShowNewPassword((show) => !show)}>
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Pressable>
-              </View>
-            </View>
+              <Text>Change password</Text>
 
-            <TouchableOpacity
-              onPress={handlePasswordSubmit}
-              disabled={isSavingPassword}
-            >
-              <Text>
-                {isSavingPassword ? "Updating..." : "Update password"}
-              </Text>
-            </TouchableOpacity>
+              <View>
+                <Text>New password</Text>
+                <View className="relative">
+                  <TextInput
+                    value={newPassword}
+                    secureTextEntry={!showNewPassword}
+                    autoCapitalize="none"
+                    onChangeText={setNewPassword}
+                    placeholder="••••••••"
+                  />
+                  <Pressable
+                    onPress={() => setShowNewPassword((show) => !show)}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+
+              <View>
+                <Text>Confirm new password</Text>
+                <View className="relative">
+                  <TextInput
+                    value={confirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                    onChangeText={setConfirmPassword}
+                    placeholder="••••••••"
+                  />
+                  <Pressable
+                    onPress={() => setShowNewPassword((show) => !show)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={handlePasswordSubmit}
+                disabled={isSavingPassword}
+              >
+                <Text>
+                  {isSavingPassword ? "Updating..." : "Update password"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
