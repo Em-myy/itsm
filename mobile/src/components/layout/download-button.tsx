@@ -1,5 +1,3 @@
-"use client";
-
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 import { Linking, Pressable, Text } from "react-native";
