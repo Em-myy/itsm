@@ -1,4 +1,3 @@
-import { Link } from "expo-router";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,24 +9,52 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Plus } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TicketType } from "@/utils/helpers";
 import api from "@/utils/axios";
 import SubmitTicket from "@/components/tickets/submit-ticket";
 import TicketDetails from "@/components/tickets/ticket-details";
+import { supabase } from "@/lib/supabase";
 
 const Tickets = () => {
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [isSubmittingTicket, setIsSubmittingTicket] = useState<boolean>(false);
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
 
-  useEffect(() => {
-    const fetchTickets = async (): Promise<void> => {
+  const fetchTickets = async (): Promise<void> => {
+    try {
       const response = await api.get("/tickets/mine");
       setTickets(response.data);
-    };
+    } catch (error) {
+      console.error("Failed to fetch data");
+    }
+  };
 
+  useEffect(() => {
     fetchTickets();
+
+    const channel = supabase
+      .channel("staff_tickets_page")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tickets" },
+        () => {
+          if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+          }
+
+          debounceTimer.current = setTimeout(() => {
+            fetchTickets();
+          }, 2000);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const closeSubmit = () => {
