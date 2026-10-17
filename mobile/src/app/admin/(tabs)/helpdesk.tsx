@@ -162,7 +162,7 @@ const HelpdeskBoard = ({}) => {
     fetchTickets();
 
     const channel = supabase
-      .channel("realtime_kanban_tickets")
+      .channel("admin_helpdesk_board")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tickets" },
@@ -232,11 +232,18 @@ const HelpdeskBoard = ({}) => {
     <SafeAreaView>
       <ScrollView>
         <View>
+          <Text className="font-serif text-3xl text-heading">
+            Helpdesk board
+          </Text>
+          <Text className="mt-1 text-sm text-body">
+            Unassigned tickets show{" "}
+            <Text className="font-semibold text-heading">+ Claim</Text> — use
+            the actions on each card.
+          </Text>
+        </View>
+        <View>
           {actionError && (
-            <View
-              role="alert"
-              className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-            >
+            <View className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{actionError}</span>
             </View>
