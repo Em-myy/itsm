@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type Message = { type: "error" | "success"; text: string };
 
-const Profile = () => {
+const StaffProfile = () => {
   const { avatar, initials, handleSignout } = useAuthContext();
 
   const [initialProfile, setInitialProfile] = useState<UserType | null>(null);
@@ -266,4 +266,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default StaffProfile;
