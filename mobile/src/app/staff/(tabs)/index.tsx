@@ -1,11 +1,21 @@
+import { PriorityTag, StatusBadge, Tag } from "@/components/layout/badges";
+import FormMessage from "@/components/layout/form-message";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { supabase } from "@/lib/supabase";
 import api from "@/utils/axios";
-import { BookingType, TicketType } from "@/utils/helpers";
+import {
+  BookingType,
+  colors,
+  formerTimeAgo,
+  getEquipmentLabel,
+  TicketType,
+} from "@/utils/helpers";
 import { Image } from "expo-image";
+import { CalendarClock, MapPin, Ticket } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   Text,
   useWindowDimensions,
@@ -17,6 +27,30 @@ type CountType = {
   count: number;
 };
 
+const StatCard = ({
+  icon,
+  value,
+  label,
+}: {
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+}) => (
+  <View className="flex-1 rounded-card border border-line bg-surface-hover p-4">
+    {icon}
+    <Text className="mt-3 font-sans-extrabold text-3xl text-heading">
+      {value}
+    </Text>
+    <Text className="mt-0.5 font-sans text-sm text-body">{label}</Text>
+  </View>
+);
+
+const SectionTitle = ({ children }: { children: string }) => (
+  <Text className="mb-3 px-5 font-sans-bold text-lg text-heading">
+    {children}
+  </Text>
+);
+
 const StaffHomePage = () => {
   const { profile, avatar, initials } = useAuthContext();
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -26,9 +60,12 @@ const StaffHomePage = () => {
   const [recentTickets, setRecentTickets] = useState<TicketType[]>([]);
   const [nextBooking, setNextBooking] = useState<BookingType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
   const [currentTicket, setCurrentTicket] = useState<number>(0);
 
   const fetchData = async (): Promise<void> => {
+    setIsLoading(true);
     try {
       const [ticketsResults, bookingsResults, recentTickets, nextBooking] =
         await Promise.allSettled([
@@ -63,9 +100,16 @@ const StaffHomePage = () => {
       }
     } catch (error) {
       console.log("Unexpected error during fetch:", error);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -117,6 +161,7 @@ const StaffHomePage = () => {
 
   const greeting =
     hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+  const equipment = nextBooking?.equipment_needed ?? [];
 
   const { width } = useWindowDimensions();
 
@@ -124,119 +169,212 @@ const StaffHomePage = () => {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: "#fee685",
+        backgroundColor: "#f3eee1",
       }}
+      edges={["top"]}
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.button}
+            colors={[colors.button]}
+          />
+        }
       >
-        <View className="flex flex-row justify-around">
+        <View className="flex-row items-center px-5 pb-5 pt-3">
           {avatar ? (
             <Image
               source={avatar}
-              style={{ width: 80, height: 80, borderRadius: 40 }}
+              style={{ width: 48, height: 48, borderRadius: 24 }}
               contentFit="cover"
               alt={profile?.username}
             />
           ) : (
             <View
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold uppercase text-white ${
-                profile?.role_name === "IT Admin" ? "bg-[#795727]" : "bg-button"
-              }`}
+              className="h-12 w-12 items-center justify-center rounded-full bg-button
+              "
             >
-              <Text>{initials}</Text>
-            </View>
-          )}
-
-          <Text>{profile?.department}</Text>
-
-          <Text>{profile?.role_name}</Text>
-        </View>
-
-        <View>
-          <Text>{greeting}</Text>
-          <Text>{profile?.username}</Text>
-          {isLoading ? (
-            <View className="py-5">
-              <ActivityIndicator size="small" />
-            </View>
-          ) : (
-            <View>
-              <Text>{ticketsCount?.count ?? 0} Pending Tickets</Text>
-              <Text>And</Text>
-              <Text>
-                {bookingsCount?.count ?? 0} Bookings Awaiting Approval
+              <Text className="font-sans-bold text-base uppercase text-cream">
+                {initials}
               </Text>
             </View>
           )}
+          <View className="ml-3 flex-1">
+            <Text className="font-sans text-sm text-body">{greeting}</Text>
+            <Text
+              className="font-sans-extrabold text-xl text-heading"
+              numberOfLines={1}
+            >
+              {profile?.username}
+            </Text>
+            <Text className="font-sans text-xs text-muted">
+              {[profile?.department, profile?.role_name]
+                .filter(Boolean)
+                .join(" · ")}
+            </Text>
+          </View>
         </View>
 
-        <View>
-          <Text>Recent Requests</Text>
-          {isLoading ? (
-            <View className="h-40 items-center justify-center">
-              <ActivityIndicator size="small" />
+        {hasError && (
+          <View className="px-5">
+            <FormMessage
+              message={{
+                type: "error",
+                text: "Some data couldn't be loaded. Pull down to try again.",
+              }}
+            />
+          </View>
+        )}
+
+        {isLoading ? (
+          <View className="items-center py-16">
+            <ActivityIndicator size="large" color={colors.button} />
+          </View>
+        ) : (
+          <>
+            <View className="mb-6 flex-row gap-3 px-5">
+              <StatCard
+                icon={<Ticket size={22} color={colors.button} />}
+                value={ticketsCount?.count ?? 0}
+                label="Pending tickets"
+              />
+              <StatCard
+                icon={<CalendarClock size={22} color={colors.button} />}
+                value={bookingsCount?.count ?? 0}
+                label="Bookings awaiting approval"
+              />
             </View>
-          ) : recentTickets.length < 1 ? (
-            <Text>No tickets submitted yet</Text>
-          ) : (
-            <>
-              <ScrollView
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={(event) => {
-                  const index = Math.round(
-                    event.nativeEvent.contentOffset.x / width,
-                  );
-                  setCurrentTicket(index);
-                }}
-              >
-                {recentTickets.map((ticket) => (
-                  <View key={ticket.id} style={{ width }}>
-                    <View className="mx-4 rounded-2xl bg-white p-4">
-                      <Text>{ticket.reference}</Text>
-                      <Text>{ticket.title}</Text>
-                      <Text>{ticket.status}</Text>
-                      <View className="flex flex-row gap-2">
-                        <Text>{ticket.department}</Text>
-                        <Text>{ticket.category}</Text>
-                        <Text>{ticket.priority}</Text>
+
+            <View className="mb-6">
+              <SectionTitle>Recent Requests</SectionTitle>
+              {recentTickets.length < 1 ? (
+                <Text className="px-5 font-sans text-sm text-muted">
+                  No tickets submitted yet
+                </Text>
+              ) : (
+                <>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={(event) => {
+                      const index = Math.round(
+                        event.nativeEvent.contentOffset.x / width,
+                      );
+                      setCurrentTicket(index);
+                    }}
+                  >
+                    {recentTickets.map((ticket) => (
+                      <View key={ticket.id} style={{ width }}>
+                        <View className="mx-5 rounded-card border border-line bg-surface-hover p-4">
+                          <View className="flex-row items-center justify-between">
+                            <Text className="font-sans-medium text-xs text-muted">
+                              {ticket.reference}
+                            </Text>
+                            <StatusBadge status={ticket.status} />
+                          </View>
+                          <Text
+                            className="mt-2 font-sans-bold text-base text-heading"
+                            numberOfLines={2}
+                          >
+                            {ticket.title}
+                          </Text>
+                          <View className="mt-3 flex-row flex-wrap gap-2">
+                            <Tag label={ticket.department} />
+                            <Tag label={ticket.category} />
+                            <PriorityTag priority={ticket.priority} />
+                          </View>
+                          <Text className="mt-3 font-sans text-xs text-muted">
+                            {formerTimeAgo(ticket.created_at)}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
+                    ))}
+                  </ScrollView>
+
+                  <View className="mt-3 flex-row justify-center gap-2">
+                    {recentTickets.map((ticket, index) => (
+                      <View
+                        key={ticket.id}
+                        className={`h-2 w-2 rounded-full ${
+                          currentTicket === index ? "bg-button" : "bg-bullet"
+                        }`}
+                      />
+                    ))}
                   </View>
-                ))}
-              </ScrollView>
-              <View className="mt-3 flex-row justify-center gap-2">
-                {recentTickets.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${
-                      currentTicket === index ? "bg-button" : "bg-gray-300"
-                    }`}
-                  />
-                ))}
-              </View>
-            </>
-          )}
-        </View>
+                </>
+              )}
+            </View>
+          </>
+        )}
 
         <View>
-          <Text>Upcoming Booking</Text>
+          <SectionTitle>Upcoming Booking</SectionTitle>
           {!nextBooking ? (
-            <Text>No upcoming booking</Text>
+            <Text className="px-5 font-sans text-sm text-muted">
+              No upcoming booking
+            </Text>
           ) : (
-            <View key={nextBooking.id}>
-              <Text>{nextBooking.reference}</Text>
-              <Text>{nextBooking.purpose}</Text>
-              <Text>{nextBooking.status}</Text>
-              <Text>{nextBooking.venue_name}</Text>
-              <View>
-                <Text>{nextBooking.start_time}</Text>
-                <Text>-</Text>
-                <Text>{nextBooking.end_time}</Text>
+            <View className="mx-5 rounded-card border border-line bg-surface-hover p-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-sans-medium text-xs text-muted">
+                  {nextBooking.reference}
+                </Text>
+                <StatusBadge status={nextBooking.status} />
               </View>
+              <Text
+                className="mt-2 font-sans-bold text-base text-heading"
+                numberOfLines={2}
+              >
+                {nextBooking.purpose}
+              </Text>
+              <View className="mt-3 flex-row items-center">
+                <MapPin size={16} color={colors.muted} />
+                <Text className="ml-2 font-sans text-sm text-body">
+                  {nextBooking.venue_name}
+                </Text>
+              </View>
+              <View className="mt-2 flex-row items-start">
+                <CalendarClock size={20} color={colors.muted} />
+                <View className="ml-2">
+                  <Text className="font-sans text-sm text-body">
+                    {new Date(nextBooking.start_time).toLocaleDateString(
+                      "en-GB",
+                      {
+                        weekday: "long",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )}
+                  </Text>
+                  <Text className="font-sans text-sm text-muted">
+                    {`${new Date(nextBooking.start_time).toLocaleTimeString(
+                      "en-GB",
+                      {
+                        hour: "numeric",
+                        hour12: true,
+                      },
+                    )} - ${new Date(nextBooking.end_time).toLocaleTimeString(
+                      "en-GB",
+                      {
+                        hour: "numeric",
+                        hour12: true,
+                      },
+                    )}`}
+                  </Text>
+                </View>
+              </View>
+              {equipment.length > 0 && (
+                <View className="mt-3 flex-row flex-wrap gap-2">
+                  {equipment.map((equip) => (
+                    <Tag key={equip} label={getEquipmentLabel(equip)} />
+                  ))}
+                </View>
+              )}
             </View>
           )}
         </View>
