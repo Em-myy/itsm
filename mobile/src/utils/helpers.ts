@@ -9,6 +9,8 @@ export const DEPARTMENTS = [
 
 export const colors = {
   cream: "#f3eee1",
+  surface: "#f7f4ea",
+  line: "#e5e0d1",
   button: "#1f4a3b",
   heading: "#182620",
   muted: "#8d8879",
