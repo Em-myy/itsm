@@ -2,18 +2,13 @@ import { Redirect, Stack } from "expo-router";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FullScreenLoader from "@/components/layout/full-screen-loader";
 
 const AuthLayout = () => {
   const { profile, isLoggedIn, isLoading } = useAuthContext();
 
   if (isLoading || (isLoggedIn && !profile)) {
-    return (
-      <SafeAreaView style={{ flex: 1 }}>
-        <View className="flex-1 items-center justify-center bg-cream">
-          <ActivityIndicator size="large" color="#1f4a3b" />
-        </View>
-      </SafeAreaView>
-    );
+    return <FullScreenLoader />;
   }
 
   if (isLoggedIn) {
