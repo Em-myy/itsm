@@ -318,9 +318,9 @@ const TicketForm = ({
           <Pressable
             onPress={onCancel}
             disabled={isSubmitting}
-            className="h-12 flex-1 items-center justify-center rounded-control border border-line bg-surface-hover active:opacity-80"
+            className="min-h-[48px] py-2 px-3 flex-1 items-center justify-center rounded-control border border-line bg-surface-hover active:opacity-80"
           >
-            <Text className="font-sans-semibold text-base text-heading">
+            <Text className="text-center font-sans-semibold text-base text-heading">
               {cancelLabel}
             </Text>
           </Pressable>
