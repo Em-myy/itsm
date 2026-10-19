@@ -1,19 +1,23 @@
-import { DEPARTMENTS, TicketType } from "@/utils/helpers";
-import { Picker } from "@react-native-picker/picker";
+import { colors, DEPARTMENTS, TicketType } from "@/utils/helpers";
 import { Image } from "expo-image";
-import { AlertCircle } from "lucide-react-native";
+import { Camera, ImageIcon, X } from "lucide-react-native";
 import { useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   TextInput,
   Pressable,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import SelectField, { FieldLabel } from "../layout/select-field";
+import FormMessage from "../layout/form-message";
+
+export interface SelectedImage {
+  uri: string;
+  name: string;
+  type: string;
+}
 
 export interface TicketFormValues {
   ticketId: number;
@@ -40,7 +44,6 @@ interface TicketFormProps {
   relatedTickets: TicketType[] | null;
   initialValues?: Partial<Omit<TicketFormValues, "file">>;
   showFileUpload?: boolean;
-
   submitLabel: string;
   submittingLabel: string;
   cancelLabel?: string;
@@ -48,13 +51,18 @@ interface TicketFormProps {
   onCancel?: () => void;
 }
 
-interface SelectedImage {
-  uri: string;
-  name: string;
-  type: string;
-}
+const NO_ASSET = "None - not tied to a registered asset";
+const PRIORITIES = ["Low", "Normal", "Urgent"] as const;
+const CATEGORIES = [
+  "Hardware",
+  "Network",
+  "Software",
+  "Printing",
+  "Power / UPS",
+];
 
-const PRIORITIES = ["Low", "Normal", "Urgent"];
+const inputClass =
+  "rounded-control border border-line bg-input-bg px-4 font-sans text-base text-heading focus:border-sage";
 
 const TicketForm = ({
   relatedTickets,
@@ -72,14 +80,21 @@ const TicketForm = ({
     category: initialValues?.category ?? "",
     department: initialValues?.department ?? "",
     priority: initialValues?.priority ?? "",
-    relatedAsset:
-      initialValues?.relatedAsset ?? "None - not tied to a registered asset",
+    relatedAsset: initialValues?.relatedAsset ?? NO_ASSET,
     description: initialValues?.description ?? "",
   });
 
   const [file, setFile] = useState<SelectedImage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const canSubmit =
+    formData.title.trim().length > 0 &&
+    formData.category !== "" &&
+    formData.department !== "" &&
+    formData.priority !== "" &&
+    formData.description.trim().length > 0 &&
+    !isSubmitting;
 
   const handleFormChange = (
     field: keyof TicketFormType,
@@ -91,82 +106,45 @@ const TicketForm = ({
     }));
   };
 
-  const handlePickImage = async (): Promise<void> => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const pickImage = async (source: "camera" | "library"): Promise<void> => {
+    setError(null);
 
-    if (!permission.granted) {
-      setError("Permission to access your photos is required.");
-      return;
+    if (source === "camera") {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permission.granted) {
+        setError("Permission to use the camera is required.");
+        return;
+      }
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const options: ImagePicker.ImagePickerOptions = {
       mediaTypes: ["images"],
       allowsEditing: true,
       quality: 0.8,
-    });
+    };
+
+    const result =
+      source === "camera"
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
 
     if (result.canceled) {
       return;
     }
 
     const asset = result.assets[0];
-
     setFile({
       uri: asset.uri,
       name: asset.fileName ?? `ticket-image-${Date.now()}.jpg`,
       type: asset.mimeType ?? "image/jpeg",
     });
-  };
-
-  const handleTakePhoto = async (): Promise<void> => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (!permission.granted) {
-      setError("Permission to use the camera is required.");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
-    if (result.canceled) {
-      return;
-    }
-
-    const asset = result.assets[0];
-
-    setFile({
-      uri: asset.uri,
-      name: asset.fileName ?? `ticket-image-${Date.now()}.jpg`,
-      type: asset.mimeType ?? "image/jpeg",
-    });
-  };
-
-  const handleChooseImage = (): void => {
-    Alert.alert("Add Image", "How would you like to add an image?", [
-      {
-        text: "Take Photo",
-        onPress: handleTakePhoto,
-      },
-      {
-        text: "Choose from Gallery",
-        onPress: handlePickImage,
-      },
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-    ]);
-  };
-
-  const handleClearImage = (): void => {
-    setFile(null);
   };
 
   const handleSubmit = async (): Promise<void> => {
+    if (!canSubmit) {
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
 
@@ -188,177 +166,181 @@ const TicketForm = ({
     }
   };
 
+  const assetOptions = [
+    { label: NO_ASSET, value: NO_ASSET },
+    ...(relatedTickets ?? []).map((ticket) => ({
+      label: `${ticket.reference} - ${ticket.title}`,
+      value: ticket.reference,
+    })),
+  ];
+
   return (
     <View>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView keyboardShouldPersistTaps="handled">
-          <View>
-            <Text>What&apos;s wrong?</Text>
-            <TextInput
-              placeholder="e.g. Laptop won't turn on"
-              value={formData.title}
-              onChangeText={(text) => handleFormChange("title", text)}
-            />
-          </View>
+      <View className="mb-4">
+        <FieldLabel>What&apos;s wrong?</FieldLabel>
+        <TextInput
+          placeholder="e.g. Laptop won't turn on"
+          placeholderTextColor={colors.muted}
+          value={formData.title}
+          onChangeText={(text) => handleFormChange("title", text)}
+          className={`h-12 ${inputClass}`}
+        />
+      </View>
 
-          <View>
-            <View>
-              <Text className="mb-2 block text-sm font-medium text-heading">
-                Category
-              </Text>
-              <Picker
-                selectedValue={formData.category}
-                onValueChange={(text) => handleFormChange("category", text)}
+      <SelectField
+        label="Category"
+        placeholder="Select a category"
+        options={CATEGORIES}
+        value={formData.category}
+        onChange={(v) => handleFormChange("category", v)}
+      />
+
+      <SelectField
+        label="Department"
+        placeholder="Select a department"
+        options={DEPARTMENTS}
+        value={formData.department}
+        onChange={(v) => handleFormChange("department", v)}
+      />
+
+      <View className="mb-4">
+        <FieldLabel>Priority</FieldLabel>
+        <View className="flex-row gap-2">
+          {PRIORITIES.map((level) => {
+            const selected = formData.priority === level;
+            return (
+              <Pressable
+                key={level}
+                onPress={() => handleFormChange("priority", level)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                className={`h-12 flex-1 items-center justify-center rounded-control border ${
+                  selected
+                    ? "border-button bg-button"
+                    : "border-line bg-input-bg"
+                }`}
               >
-                <Picker.Item
-                  label="Select the category of the ticket"
-                  value=""
-                  enabled={false}
-                />
-
-                <Picker.Item label="Hardware" value="Hardware" />
-                <Picker.Item label="Network" value="Network" />
-                <Picker.Item label="Software" value="Software" />
-                <Picker.Item label="Printing" value="Printing" />
-                <Picker.Item label="Power / UPS" value="Power / UPS" />
-              </Picker>
-            </View>
-
-            <View>
-              <Text>Department</Text>
-              <Picker
-                selectedValue={formData.department}
-                onValueChange={(text) => handleFormChange("department", text)}
-              >
-                <Picker.Item
-                  label="Select a department"
-                  value=""
-                  enabled={false}
-                />
-
-                {DEPARTMENTS.map((dept) => (
-                  <Picker.Item label={dept} value={dept} key={dept} />
-                ))}
-              </Picker>
-            </View>
-          </View>
-
-          <View>
-            <Text>Priority</Text>
-            <View>
-              {PRIORITIES.map((level) => (
-                <Pressable
-                  key={level}
-                  onPress={() => handleFormChange("priority", level)}
+                <Text
+                  className={`font-sans-semibold text-sm ${
+                    selected ? "text-cream" : "text-body"
+                  }`}
                 >
-                  <View
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 10,
-                      borderWidth: 2,
-                      borderColor:
-                        formData.priority === level ? "#4F6F52" : "#9CA3AF",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {formData.priority === level && (
-                      <View
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 5,
-                          backgroundColor: "#4F6F52",
-                        }}
-                      />
-                    )}
-                  </View>
-                  <Text>{level}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
+                  {level}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
 
-          <View>
-            <Text>
-              Related Asset <Text>(optional)</Text>
-            </Text>
+      <SelectField
+        label="Related asset"
+        optional
+        options={assetOptions}
+        value={formData.relatedAsset}
+        onChange={(v) => handleFormChange("relatedAsset", v)}
+      />
 
-            <Picker
-              selectedValue={formData.relatedAsset}
-              onValueChange={(text) => handleFormChange("relatedAsset", text)}
-            >
-              <Picker.Item
-                label="None - not tied to a registered asset"
-                value="None - not tied to a registered asset"
+      <View className="mb-4">
+        <FieldLabel>Describe what&apos;s happening</FieldLabel>
+        <TextInput
+          placeholder="What did you expect to happen, and what happened instead?"
+          placeholderTextColor={colors.muted}
+          value={formData.description}
+          onChangeText={(text) => handleFormChange("description", text)}
+          multiline
+          numberOfLines={5}
+          textAlignVertical="top"
+          className={`min-h-[120px] py-3 ${inputClass}`}
+        />
+      </View>
+
+      {showFileUpload && (
+        <View className="mb-4">
+          <FieldLabel optional>Attach a picture</FieldLabel>
+
+          {file ? (
+            <View className="overflow-hidden rounded-control border border-line bg-input-bg">
+              <Image
+                source={{ uri: file.uri }}
+                style={{ width: "100%", height: 180 }}
+                contentFit="cover"
               />
-
-              {relatedTickets?.map((ticket) => (
-                <Picker.Item
-                  label={ticket.reference + " - " + ticket.title}
-                  value={`${ticket.reference}`}
-                  key={ticket.reference}
-                />
-              ))}
-            </Picker>
-          </View>
-
-          <View>
-            <Text>Describe what&apos;s happening</Text>
-            <TextInput
-              placeholder="What did you expect to happen, and what happened instead?"
-              value={formData.description}
-              onChangeText={(text) => handleFormChange("description", text)}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {showFileUpload && (
-            <View>
-              <Text>
-                Attach a picture <Text>(optional)</Text>
-              </Text>
-              <Pressable onPress={handleChooseImage}>
-                <Text>Add Image</Text>
+              <View className="flex-row items-center justify-between px-3 py-2">
+                <Text
+                  className="mr-2 flex-1 font-sans text-xs text-muted"
+                  numberOfLines={1}
+                >
+                  {file.name}
+                </Text>
+                <Pressable
+                  onPress={() => setFile(null)}
+                  hitSlop={8}
+                  className="flex-row items-center active:opacity-70"
+                  accessibilityLabel="Remove image"
+                >
+                  <X size={16} className={colors.danger} />
+                  <Text className="ml-1 font-sans-medium text-xs text-danger">
+                    Remove
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <View className="flex-row gap-2">
+              <Pressable
+                onPress={() => pickImage("camera")}
+                className="h-12 flex-1 flex-row items-center justify-center rounded-control border border-line bg-input-bg active:opacity-80"
+              >
+                <Camera size={18} color={colors.button} />
+                <Text className="ml-2 font-sans-medium text-sm text-heading">
+                  Take Photo
+                </Text>
               </Pressable>
-
-              {file && (
-                <View>
-                  <Image source={{ uri: file.uri }} />
-                  <Text>{file.name}</Text>
-                  <Pressable onPress={handleClearImage}>
-                    <Text>Remove Image</Text>
-                  </Pressable>
-                </View>
-              )}
+              <Pressable
+                onPress={() => pickImage("library")}
+                className="h-12 flex-1 flex-row items-center justify-center rounded-control border border-line bg-input-bg active:opacity-80"
+              >
+                <ImageIcon size={18} color={colors.button} />
+                <Text className="ml-2 font-sans-medium text-sm text-heading">
+                  Gallery
+                </Text>
+              </Pressable>
             </View>
           )}
+        </View>
+      )}
 
-          {error && (
-            <View>
-              <AlertCircle />
-              <Text>{error}</Text>
-            </View>
+      {error && <FormMessage message={{ type: "error", text: error }} />}
+
+      <View className="flex-row gap-3">
+        {cancelLabel && (
+          <Pressable
+            onPress={onCancel}
+            disabled={isSubmitting}
+            className="h-12 flex-1 items-center justify-center rounded-control border border-line bg-surface-hover active:opacity-80"
+          >
+            <Text className="font-sans-semibold text-base text-heading">
+              {cancelLabel}
+            </Text>
+          </Pressable>
+        )}
+
+        <Pressable
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+          className={`h-12 flex-[2] flex-row items-center justify-center rounded-control bg-button active:bg-button-hover ${
+            canSubmit ? "" : "opacity-50"
+          }`}
+        >
+          {isSubmitting && (
+            <ActivityIndicator color={colors.cream} className="mr-2" />
           )}
-
-          <View>
-            {cancelLabel && (
-              <Pressable onPress={onCancel}>
-                <Text>{cancelLabel}</Text>
-              </Pressable>
-            )}
-
-            <Pressable onPress={handleSubmit} disabled={isSubmitting}>
-              <Text>{isSubmitting ? submittingLabel : submitLabel}</Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <Text className="font-sans-semibold text-base text-cream">
+            {isSubmitting ? submittingLabel : submitLabel}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
