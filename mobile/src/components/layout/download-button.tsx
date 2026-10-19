@@ -1,49 +1,45 @@
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
-import { Linking, Pressable, Text } from "react-native";
+import { ActivityIndicator, Pressable, Text } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import { colors } from "@/utils/helpers";
+import { Paperclip } from "lucide-react-native";
 
 const DownloadButton = ({
   filePath,
   onError,
 }: {
-  filePath: string;
+  filePath: string | string[] | undefined;
   onError: (msg: string | null) => void;
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleView = async (): Promise<void> => {
-    setLoading(true);
     onError(null);
 
-    const actualPath = Array.isArray(filePath) ? filePath[0] : filePath;
-    if (!actualPath || typeof actualPath !== "string") {
+    const path = Array.isArray(filePath) ? filePath[0] : filePath;
+    if (!path || typeof path !== "string") {
       onError("Invalid file path: No attachment was provided.");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
-      let url: string;
-      if (
-        actualPath.startsWith("http://") ||
-        actualPath.startsWith("https://")
-      ) {
-        url = actualPath;
-      } else {
+      let url = path;
+      if (!/^https?:\/\//.test(path)) {
         const { data, error } = await supabase.storage
           .from("ticket-attachments")
-          .createSignedUrl(actualPath, 60);
+          .createSignedUrl(path, 60);
 
         if (error) {
-          throw Error;
+          throw new Error(error.message);
         }
-
         url = data.signedUrl;
       }
 
-      await Linking.openURL(url);
+      await WebBrowser.openBrowserAsync(url);
     } catch (error) {
-      console.log("Download Error:", error);
+      console.log("Attachment Error:", error);
 
       onError(
         error instanceof Error
@@ -54,13 +50,23 @@ const DownloadButton = ({
       setLoading(false);
     }
   };
+
   return (
     <Pressable
       onPress={handleView}
       disabled={loading}
-      className={loading ? "opacity-50" : ""}
+      className={`h-11 flex-row items-center self-start rounded-control border border-line bg-input-bg px-4 active:opacity-80 ${
+        loading ? "opacity-60" : ""
+      }`}
+      accessibilityRole="button"
+      accessibilityLabel="View attachment"
     >
-      <Text className="text-sm font-medium text-emerald-600">
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.button} />
+      ) : (
+        <Paperclip size={16} color={colors.button} />
+      )}
+      <Text className="ml-2 font-sans-medium text-sm text-heading">
         {loading ? "Opening..." : "View Attachment"}
       </Text>
     </Pressable>
