@@ -1,8 +1,18 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Modal,
+  Platform,
+  Pressable,
+  KeyboardAvoidingView,
+  ScrollView,
+} from "react-native";
 import TicketForm, { TicketFormValues } from "./ticket-form";
-import { TicketType } from "@/utils/helpers";
+import { colors, TicketType } from "@/utils/helpers";
 import { supabase } from "@/lib/supabase";
 import api from "@/utils/axios";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { X } from "lucide-react-native";
 
 const BUCKET = "ticket-attachments";
 
@@ -58,20 +68,57 @@ const SubmitTicket = ({
   };
 
   return (
-    <View>
-      <Text>SubmitTicket</Text>
-      <TouchableOpacity onPress={onClose}>
-        <Text>Close</Text>
-      </TouchableOpacity>
-      <TicketForm
-        relatedTickets={initialTickets}
-        showFileUpload
-        submitLabel="Submit ticket"
-        submittingLabel="Submitting..."
-        onSubmit={handleSubmit}
-        onCancel={() => onClose()}
-      />
-    </View>
+    <Modal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <SafeAreaProvider>
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "#f3eee1" }}
+          edges={Platform.OS === "ios" ? ["bottom"] : ["top", "bottom"]}
+        >
+          <View className="flex-row items-center justify-between border-b border-line px-5 py-4">
+            <View className="mr-3 flex-1">
+              <Text className="font-sans-extrabold text-xl text-heading">
+                New ticket
+              </Text>
+              <Text className="mt-0.5 font-sans text-xs text-body">
+                Tell us what&apos;s wrong and we&apos;ll route it to IT.
+              </Text>
+            </View>
+            <Pressable
+              onPress={onClose}
+              hitSlop={8}
+              className="h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-hover active:opacity-80"
+              accessibilityLabel="Close"
+            >
+              <X size={20} color={colors.button} />
+            </Pressable>
+          </View>
+
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
+            <ScrollView
+              contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <TicketForm
+                relatedTickets={initialTickets}
+                showFileUpload
+                submitLabel="Submit ticket"
+                submittingLabel="Submitting..."
+                onSubmit={handleSubmit}
+                onCancel={() => onClose()}
+              />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </Modal>
   );
 };
 
