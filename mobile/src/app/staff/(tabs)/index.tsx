@@ -65,7 +65,6 @@ const StaffHomePage = () => {
   const [currentTicket, setCurrentTicket] = useState<number>(0);
 
   const fetchData = async (): Promise<void> => {
-    setIsLoading(true);
     try {
       const [ticketsResults, bookingsResults, recentTickets, nextBooking] =
         await Promise.allSettled([
