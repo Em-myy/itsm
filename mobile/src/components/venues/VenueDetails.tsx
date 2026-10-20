@@ -1,83 +1,110 @@
-import { getEquipmentLabel, VenueType } from "@/utils/helpers";
-import { AlertCircle, X } from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, getEquipmentLabel, VenueType } from "@/utils/helpers";
+import { X } from "lucide-react-native";
+import { ReactNode } from "react";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { StatusBadge, Tag } from "../layout/badges";
 
 interface VenueDetailsProps {
   venue: VenueType;
   onClose: () => void;
 }
 
+const Row = ({
+  label,
+  children,
+  last,
+}: {
+  label: string;
+  children: ReactNode;
+  last?: boolean;
+}) => (
+  <View className={`py-3 ${last ? "" : "border-b border-line"}`}>
+    <Text className="mb-1 font-sans-medium text-xs uppercase text-muted">
+      {label}
+    </Text>
+    {children}
+  </View>
+);
+
 const VenueDetails = ({ venue, onClose }: VenueDetailsProps) => {
-  const [error, setError] = useState<string | null>(null);
+  const equipments = venue.equipments ?? [];
 
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <View>
-          <View className="flex items-start justify-between">
-            <Text className="font-serif text-2xl text-heading">
-              Venue Details
-            </Text>
+    <Modal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <SafeAreaProvider>
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "#f3eee1" }}
+          edges={Platform.OS === "ios" ? ["bottom"] : ["top", "bottom"]}
+        >
+          <View className="flex-row items-start justify-between border-b border-line px-5 py-4">
+            <View className="mr-3 flex-1">
+              {venue.reference ? (
+                <Text className="mb-1 font-sans-medium text-xs text-muted">
+                  {venue.reference}
+                </Text>
+              ) : null}
+              <Text className="font-sans-extrabold text-xl text-heading">
+                {venue.name}
+              </Text>
+            </View>
             <Pressable
               onPress={onClose}
-              className="text-muted transition hover:text-heading cursor-pointer"
+              hitSlop={8}
+              className="h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-hover active:opacity-80"
+              accessibilityLabel="Close"
             >
-              <X className="w-5 h-5" />
+              <X size={20} color={colors.heading} />
             </Pressable>
           </View>
 
-          <Text className="mt-1 font-mono text-xs text-muted">
-            {venue.reference}
-          </Text>
+          <ScrollView
+            contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="rounded-card border border-line bg-surface-hover px-4">
+              <Row label="Capacity">
+                <Text className="font-sans-semibold text-base text-heading">
+                  {venue.capacity} seats
+                </Text>
+              </Row>
 
-          {error && (
-            <View className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <Text>{error}</Text>
-            </View>
-          )}
-
-          <View className="mt-6 space-y-3 text-sm">
-            <View className="flex justify-between border-b border-line pb-3">
-              <Text className="font-medium text-body">Name</Text>
-              <Text className="text-heading">{venue.name}</Text>
-            </View>
-
-            <View className="flex justify-between border-b border-line pb-3">
-              <Text className="font-medium text-body">Capacity</Text>
-              <Text className="text-heading">{venue.capacity}</Text>
-            </View>
-
-            <View className="flex items-center justify-between border-b border-line pb-3">
-              <Text className="font-medium text-body">Status</Text>
-              <Text>{venue.status}</Text>
-            </View>
-
-            <View className="pt-1">
-              <Text className="mb-2 block font-medium text-body">
-                Equipment
-              </Text>
-              {venue.equipments?.length ? (
-                <View className="flex flex-wrap gap-1.5">
-                  {venue.equipments.map((eq) => (
-                    <Text
-                      key={eq}
-                      className="rounded-full bg-input-bg px-2.5 py-1 text-xs text-body"
-                    >
-                      {getEquipmentLabel(eq)}
-                    </Text>
-                  ))}
+              <Row label="Status" last={false}>
+                <View className="flex-row">
+                  <StatusBadge status={venue.status} />
                 </View>
-              ) : (
-                <p className="text-muted">None</p>
-              )}
+              </Row>
+
+              <Row label="Equipment" last>
+                {equipments.length > 0 ? (
+                  <View className="flex-row flex-wrap gap-2">
+                    {equipments.map((eq) => (
+                      <Tag key={eq} label={getEquipmentLabel(eq)} />
+                    ))}
+                  </View>
+                ) : (
+                  <Text className="font-sans text-sm text-muted">
+                    No equipment listed
+                  </Text>
+                )}
+              </Row>
             </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          </ScrollView>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </Modal>
   );
 };
 
