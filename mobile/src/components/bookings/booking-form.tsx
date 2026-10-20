@@ -1,19 +1,19 @@
-import { getEquipmentLabel, VenueType } from "@/utils/helpers";
-import { Picker } from "@react-native-picker/picker";
+import { colors, getEquipmentLabel, VenueType } from "@/utils/helpers";
 import { useState } from "react";
 import {
-  KeyboardAvoidingView,
+  ActivityIndicator,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { AlertCircle } from "lucide-react-native";
+import { CalendarDays, Clock } from "lucide-react-native";
 import Checkbox from "expo-checkbox";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
+import SelectField, { FieldLabel } from "../layout/select-field";
+import FormMessage from "../layout/form-message";
 
 export interface BookingFormValues {
   bookingId: number;
@@ -42,6 +42,84 @@ interface BookingFormProps {
   onCancel: () => void;
 }
 
+const toDate = (date: string) => (date ? new Date(`${date}T12:00:00`) : null);
+const toTime = (time: string) =>
+  time ? new Date(`2000-01-01T${time}:00`) : null;
+
+const DateTimeField = ({
+  label,
+  mode,
+  date,
+  text,
+  placeholder,
+  minimumDate,
+  onPick,
+  className = "",
+}: {
+  label: string;
+  mode: "date" | "time";
+  date: Date | null;
+  text: string;
+  placeholder: string;
+  minimumDate?: Date;
+  onPick: (date: Date) => void;
+  className?: string;
+}) => {
+  const [open, setOpen] = useState<boolean>(false);
+  const isIOS = Platform.OS === "ios";
+  const Icon = mode === "date" ? CalendarDays : Clock;
+
+  const toggle = () => {
+    if (isIOS && !open && !date) {
+      onPick(new Date());
+    }
+
+    setOpen((v) => !v);
+  };
+
+  return (
+    <View className={`mb-4 ${className}`}>
+      <FieldLabel>{label}</FieldLabel>
+      <Pressable
+        onPress={toggle}
+        className="h-12 flex-row items-center justify-between rounded-control border border-line bg-input-bg px-4 active:opacity-80"
+      >
+        <Text
+          className={`mr-2 flex-1 font-sans text-base ${text ? "text-heading" : "text-muted"}`}
+          numberOfLines={1}
+        >
+          {text || placeholder}
+        </Text>
+        <Icon size={18} color={colors.muted} />
+      </Pressable>
+
+      {open && (
+        <DateTimePicker
+          value={date ?? new Date()}
+          mode={mode}
+          display={isIOS ? "spinner" : "default"}
+          minimumDate={minimumDate}
+          themeVariant="light"
+          onValueChange={(_event, selected) => {
+            if (!isIOS) setOpen(false);
+            if (selected) onPick(selected);
+          }}
+          onDismiss={() => setOpen(false)}
+        />
+      )}
+
+      {open && isIOS && (
+        <Pressable
+          onPress={() => setOpen(false)}
+          className="mt-2 h-10 items-center justify-center rounded-control bg-surface-hover active:opacity-80"
+        >
+          <Text className="font-sans-semibold text-sm text-button">Done</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+};
+
 const BookingForm = ({
   venues,
   initialValues,
@@ -67,10 +145,13 @@ const BookingForm = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [showStartTimePicker, setShowStartTimePicker] =
-    useState<boolean>(false);
-  const [showEndTimePicker, setShowEndTimePicker] = useState<boolean>(false);
+  const canSubmit =
+    formData.purpose.trim().length > 0 &&
+    selectedVenue !== "" &&
+    formData.date !== "" &&
+    formData.startTime !== "" &&
+    formData.endTime !== "" &&
+    !isSubmitting;
 
   const handleFormChange = (
     field: keyof BookingFormType,
@@ -85,27 +166,28 @@ const BookingForm = ({
   const handleVenueChange = (venueId: string): void => {
     setSelectedVenue(venueId);
     setEquipmentNeeded([]);
+    setError(null);
   };
 
-  const handleEquipmentChange = (equipment: string, checked: boolean): void => {
+  const toggleEquipment = (equipment: string): void => {
     setEquipmentNeeded((prev) =>
-      checked
-        ? prev.includes(equipment)
-          ? prev
-          : [...prev, equipment]
-        : prev.filter((item) => item !== equipment),
+      prev.includes(equipment)
+        ? prev.filter((item) => item !== equipment)
+        : [...prev, equipment],
     );
   };
 
   const handleSubmit = async (): Promise<void> => {
+    if (!canSubmit) {
+      return;
+    }
+
     setError(null);
 
-    const finalStartDate = new Date(
-      `${formData.date}T${formData.startTime}:00`,
-    );
-    const finalEndDate = new Date(`${formData.date}T${formData.endTime}:00`);
+    const start = new Date(`${formData.date}T${formData.startTime}:00`);
+    const end = new Date(`${formData.date}T${formData.endTime}:00`);
 
-    if (finalEndDate <= finalStartDate) {
+    if (end <= start) {
       setError("End time must be after start time.");
       return;
     }
@@ -138,167 +220,137 @@ const BookingForm = ({
       setIsSubmitting(false);
     }
   };
+
   const selectedVenueData = venues?.find((v) => String(v.id) === selectedVenue);
+  const equipments = selectedVenueData?.equipments ?? [];
+
+  const startDate = toTime(formData.startTime);
+  const endDate = toTime(formData.endTime);
+  const pickedDate = toDate(formData.date);
 
   return (
     <View>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView keyboardShouldPersistTaps="handled">
-          <View>
-            <Text>Purpose</Text>
-            <TextInput
-              placeholder="e.g. Q3 budget review"
-              value={formData.purpose}
-              onChangeText={(text) => handleFormChange("purpose", text)}
-            />
+      <View className="mb-4">
+        <FieldLabel>Purpose</FieldLabel>
+        <TextInput
+          placeholder="e.g. Q3 budget review"
+          placeholderTextColor={colors.muted}
+          value={formData.purpose}
+          onChangeText={(text) => handleFormChange("purpose", text)}
+          className="h-12 rounded-control border border-line bg-input-bg px-4 font-sans text-base text-heading focus:border-sage"
+        />
+      </View>
+
+      <SelectField
+        label="Venue"
+        placeholder="Select a venue"
+        options={(venues ?? []).map((v) => ({
+          label: `${v.name} - seats ${v.capacity}`,
+          value: String(v.id),
+        }))}
+        value={selectedVenue}
+        onChange={handleVenueChange}
+      />
+
+      <DateTimeField
+        label="Date"
+        mode="date"
+        date={pickedDate}
+        text={pickedDate ? format(pickedDate, "EEE d MMM yyyy") : ""}
+        placeholder="Select booking date"
+        minimumDate={new Date()}
+        onPick={(d) => handleFormChange("date", format(d, "yyyy-MM-dd"))}
+      />
+
+      <View className="flex-row gap-3">
+        <DateTimeField
+          className="flex-1"
+          label="Start time"
+          mode="time"
+          date={startDate}
+          text={startDate ? format(startDate, "h:mm a") : ""}
+          placeholder="Start"
+          onPick={(d) => handleFormChange("startTime", format(d, "HH:mm"))}
+        />
+
+        <DateTimeField
+          className="flex-1"
+          label="End time"
+          mode="time"
+          date={endDate}
+          text={endDate ? format(endDate, "h:mm a") : ""}
+          placeholder="End"
+          onPick={(d) => handleFormChange("endTime", format(d, "HH:mm"))}
+        />
+      </View>
+
+      {equipments.length > 0 && (
+        <View className="mb-4">
+          <FieldLabel optional>Equipment needed</FieldLabel>
+          <View className=" gap-2">
+            {equipments.map((eq) => {
+              const checked = equipments.includes(eq);
+              return (
+                <Pressable
+                  key={eq}
+                  onPress={() => toggleEquipment(eq)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked }}
+                  className={`min-h-12 flex-row items-center rounded-control border px-4 py-3 active:opacity-80 ${
+                    checked
+                      ? "border-button bg-surface-hover"
+                      : "border-line bg-input-bg"
+                  }`}
+                >
+                  <Checkbox
+                    value={checked}
+                    onValueChange={() => toggleEquipment(eq)}
+                    color={checked ? colors.button : undefined}
+                  />
+                  <Text
+                    className={`ml-3 flex-1 text-base ${
+                      checked
+                        ? "font-sans-semibold text-heading"
+                        : "font-sans text-body"
+                    }`}
+                  >
+                    {getEquipmentLabel(eq)}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
+        </View>
+      )}
 
-          <View>
-            <Text className="mb-2 block text-sm font-medium text-heading">
-              Venue
-            </Text>
-            <Picker
-              selectedValue={selectedVenue}
-              onValueChange={(venueId) => handleVenueChange(String(venueId))}
-            >
-              <Picker.Item label="Select a venue" value="" enabled={false} />
+      {error && <FormMessage message={{ type: "error", text: error }} />}
 
-              {venues?.map((venue) => (
-                <Picker.Item
-                  key={venue.id}
-                  value={String(venue.id)}
-                  label={`${venue.name} - seats ${venue.capacity}`}
-                />
-              ))}
-            </Picker>
-          </View>
+      <View className="flex-row gap-3">
+        <Pressable
+          onPress={onCancel}
+          disabled={isSubmitting}
+          className="h-12 flex-1 items-center justify-center rounded-control border border-line bg-surface-hover active:opacity-80"
+        >
+          <Text className="font-sans-semibold text-base text-heading">
+            Cancel
+          </Text>
+        </Pressable>
 
-          <View>
-            <Pressable onPress={() => setShowDatePicker(true)}>
-              <Text>{formData.date || "Select booking date"}</Text>
-            </Pressable>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={
-                  formData.date
-                    ? new Date(`${formData.date}T12:00:00`)
-                    : new Date()
-                }
-                mode="date"
-                minimumDate={new Date()}
-                onValueChange={(_event, selectedDate) => {
-                  setShowDatePicker(false);
-
-                  if (selectedDate) {
-                    handleFormChange(
-                      "date",
-                      format(selectedDate, "yyyy-MM-dd"),
-                    );
-                  }
-                }}
-                onDismiss={() => setShowDatePicker(false)}
-              />
-            )}
-          </View>
-
-          <View>
-            <Pressable onPress={() => setShowStartTimePicker(true)}>
-              <Text>{formData.startTime || "Select booking start time"}</Text>
-            </Pressable>
-
-            {showStartTimePicker && (
-              <DateTimePicker
-                value={
-                  formData.startTime
-                    ? new Date(`2000-01-01T${formData.startTime}:00`)
-                    : new Date()
-                }
-                mode="time"
-                is24Hour
-                onValueChange={(_event, selectedStartTime) => {
-                  setShowStartTimePicker(false);
-
-                  if (selectedStartTime) {
-                    handleFormChange(
-                      "startTime",
-                      format(selectedStartTime, "HH:MM"),
-                    );
-                  }
-                }}
-                onDismiss={() => setShowStartTimePicker(false)}
-              />
-            )}
-          </View>
-
-          <View>
-            <Pressable onPress={() => setShowEndTimePicker(true)}>
-              <Text>{formData.endTime || "Select booking end time"}</Text>
-            </Pressable>
-
-            {showEndTimePicker && (
-              <DateTimePicker
-                value={
-                  formData.endTime
-                    ? new Date(`2000-01-01T${formData.endTime}:00`)
-                    : new Date()
-                }
-                mode="time"
-                is24Hour
-                onValueChange={(_event, selectedEndTime) => {
-                  setShowEndTimePicker(false);
-
-                  if (selectedEndTime) {
-                    handleFormChange(
-                      "endTime",
-                      format(selectedEndTime, "HH:mm"),
-                    );
-                  }
-                }}
-                onDismiss={() => setShowEndTimePicker(false)}
-              />
-            )}
-          </View>
-
-          {selectedVenueData && selectedVenueData.equipments.length > 0 && (
-            <View>
-              <Text>Equipment needed</Text>
-              <View className="flex flex-wrap gap-2">
-                {selectedVenueData.equipments.map((eq) => (
-                  <View key={eq}>
-                    <Checkbox
-                      value={equipmentNeeded.includes(eq)}
-                      onValueChange={(checked) =>
-                        handleEquipmentChange(eq, checked)
-                      }
-                    />
-                    <Text key={eq}>{getEquipmentLabel(eq)}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
+        <Pressable
+          onPress={handleSubmit}
+          disabled={!canSubmit}
+          className={`h-12 flex-[2] flex-row items-center justify-center rounded-control bg-button active:bg-button-hover ${
+            canSubmit ? "" : "opacity-50"
+          }`}
+        >
+          {isSubmitting && (
+            <ActivityIndicator color={colors.cream} className="mr-2" />
           )}
-
-          {error && (
-            <View>
-              <AlertCircle />
-              <Text>{error}</Text>
-            </View>
-          )}
-
-          <View>
-            <Pressable onPress={onCancel}>
-              <Text>Cancel</Text>
-            </Pressable>
-
-            <Pressable onPress={handleSubmit} disabled={isSubmitting}>
-              <Text> {isSubmitting ? submittingLabel : submitLabel}</Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <Text className="font-sans-semibold text-base text-cream">
+            {isSubmitting ? submittingLabel : submitLabel}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
