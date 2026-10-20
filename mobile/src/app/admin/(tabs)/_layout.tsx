@@ -1,32 +1,99 @@
-import { ActivityIndicator, Text } from "react-native";
 import { Redirect, Tabs } from "expo-router";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { View } from "lucide-react-native";
+import {
+  CalendarCheck,
+  ClipboardList,
+  House,
+  UserRound,
+} from "lucide-react-native";
+import FullScreenLoader from "@/components/layout/full-screen-loader";
+import { colors } from "@/utils/helpers";
 
 const AdminLayout = () => {
   const { profile, isLoggedIn, isLoading } = useAuthContext();
 
-  if (isLoading) {
-    return (
-      <SafeAreaView>
-        <View>
-          <ActivityIndicator size="large" />
-        </View>
-      </SafeAreaView>
-    );
+  if (isLoading || (isLoggedIn && !profile)) {
+    return <FullScreenLoader />;
   }
 
-  if (!isLoggedIn || profile?.role_name !== "IT Admin") {
+  if (!isLoggedIn) {
+    return <Redirect href="/sign-in" />;
+  }
+
+  if (profile?.role_name === "Staff") {
+    return <Redirect href="/staff" />;
+  }
+
+  if (profile?.role_name !== "IT Admin") {
     return <Redirect href="/sign-in" />;
   }
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="helpdesk" options={{ title: "Helpdesk Board" }} />
-      <Tabs.Screen name="bookings" options={{ title: "Booking Approvals" }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        sceneStyle: { backgroundColor: colors.cream },
+        tabBarActiveTintColor: colors.button,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.line,
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontFamily: "sans-medium",
+          fontSize: 11,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size, focused }) => (
+            <House size={size} color={color} strokeWidth={focused ? 2.5 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="helpdesk"
+        options={{
+          title: "Helpdesk Board",
+          tabBarIcon: ({ color, size, focused }) => (
+            <ClipboardList
+              size={size}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="bookings"
+        options={{
+          title: "Approvals",
+          tabBarIcon: ({ color, size, focused }) => (
+            <CalendarCheck
+              size={size}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size, focused }) => (
+            <UserRound
+              size={size}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
+        }}
+      />
     </Tabs>
   );
 };
