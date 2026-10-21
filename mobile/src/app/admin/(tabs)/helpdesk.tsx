@@ -1,25 +1,22 @@
+import { PriorityTag, Tag } from "@/components/layout/badges";
+import FormMessage from "@/components/layout/form-message";
 import TicketDetails from "@/components/tickets/ticket-details";
 import { supabase } from "@/lib/supabase";
 import api from "@/utils/axios";
-import { TicketType } from "@/utils/helpers";
-import { AlertCircle, Ban, CheckCircle2, UserCheck } from "lucide-react-native";
+import {
+  colors,
+  formerTimeAgo,
+  getStatusStyle,
+  TicketType,
+} from "@/utils/helpers";
+import { Ban, CircleCheck, UserCheck } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, RefreshControl } from "react-native";
 import { ScrollView, Text, View } from "react-native";
 import { Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type ColumnKey = "pending" | "inProgress" | "resolved" | "cancelled";
-
-interface TicketCardProps {
-  ticket: TicketType;
-  showClaim?: boolean;
-  showResolve?: boolean;
-  showCancel?: boolean;
-  onClaim?: () => void;
-  onResolve?: () => void;
-  onCancel?: () => void;
-  onCardClick?: () => void;
-}
 
 interface Column {
   key: ColumnKey;
@@ -57,83 +54,164 @@ const COLUMNS: Column[] = [
 
 const TicketCard = ({
   ticket,
-  showClaim,
-  showResolve,
-  showCancel,
+  columnKey,
+  busy,
+  confirmingCancel,
+  onPress,
   onClaim,
   onResolve,
-  onCancel,
-  onCardClick,
-}: TicketCardProps) => {
+  onAskCancel,
+  onKeep,
+  onConfirmCancel,
+}: {
+  ticket: TicketType;
+  columnKey: ColumnKey;
+  busy: boolean;
+  confirmingCancel: boolean;
+  onPress: () => void;
+  onClaim: () => void;
+  onResolve: () => void;
+  onAskCancel: () => void;
+  onKeep: () => void;
+  onConfirmCancel: () => void;
+}) => {
+  const status = getStatusStyle(ticket.status);
   const hasAssignee =
-    ticket.assignee_name && ticket.assignee_name !== "Unassigned";
+    !!ticket.assignee_name && ticket.assignee_name !== "Unassigned";
   const initials = ticket.assignee_name?.charAt(0).toUpperCase() || "?";
 
-  return (
-    <Pressable onPress={onCardClick}>
-      <View>
-        <Text>{ticket.title}</Text>
+  const showClaim = columnKey === "pending";
+  const showResolve = columnKey === "inProgress";
+  const showCancel = columnKey === "pending" || columnKey === "inProgress";
 
-        <View>
-          <Text>
-            {ticket.department}
-            {ticket.priority && (
-              <>
-                {" "}
-                &middot; <Text>{ticket.priority}</Text>
-              </>
-            )}
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`flex-row overflow-hidden rounded-card border border-line bg-surface-hover active:opacity-80 ${
+        columnKey === "cancelled" ? "opacity-60" : ""
+      }`}
+    >
+      <View className={`w-1.5 ${status.accent}`} />
+      <View className="flex-1 p-4">
+        <View className="flex-row items-center justify-between">
+          <Text className="font-sans-medium text-xs text-muted">
+            {ticket.reference.slice(12) || ticket.reference}
           </Text>
-          <Text>{ticket.reference.slice(12)}</Text>
+          <Text className="font-sans text-xs text-muted">
+            {formerTimeAgo(ticket.created_at)}
+          </Text>
+        </View>
+
+        <Text
+          className="mt-2 font-sans-bold text-base text-heading"
+          numberOfLines={2}
+        >
+          {ticket.title}
+        </Text>
+
+        <View className="mt-3 flex-row flex-wrap gap-2">
+          <Tag label={ticket.department} />
+          <PriorityTag priority={ticket.priority} />
         </View>
 
         {hasAssignee && (
-          <View>
-            <Text>{initials}</Text>
-            <Text>{ticket.assignee_name}</Text>
+          <View className="mt-3 flex-row items-center">
+            <View className="h-6 w-6 items-center justify-center rounded-full bg-button">
+              <Text className="font-sans-bold text-xs text-cream">
+                {initials}
+              </Text>
+            </View>
+            <Text
+              className="ml-2 flex-1 font-sans text-sm text-body"
+              numberOfLines={1}
+            >
+              {ticket.assignee_name}
+            </Text>
           </View>
         )}
 
         {(showClaim || showResolve || showCancel) && (
-          <View>
-            {showClaim && (
-              <Pressable
-                onPress={() => {
-                  if (onClaim) onClaim();
-                }}
-                className="rounded-lg border border-dashed border-line bg-input-bg px-3 py-1.5 text-xs font-semibold text-heading transition hover:bg-surface-hover cursor-pointer"
-              >
-                <Text className="flex gap-1 items-center">
-                  <UserCheck className="w-3 h-3" />
-                  Claim
+          <View className="mt-4">
+            {confirmingCancel ? (
+              <View>
+                <Text className="mb-2 font-sans-medium text-sm text-heading">
+                  Cancel this ticket?
                 </Text>
-              </Pressable>
-            )}
-            {showResolve && (
-              <Pressable
-                onPress={() => {
-                  if (onResolve) onResolve();
-                }}
-                className="rounded-lg border border-dashed border-line bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-50 transition hover:bg-emerald-500 cursor-pointer"
-              >
-                <Text className="flex gap-1 items-center">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Resolve
-                </Text>
-              </Pressable>
-            )}
-            {showCancel && (
-              <Pressable
-                onPress={() => {
-                  if (onCancel) onCancel();
-                }}
-                className="rounded-lg border border-dashed border-line bg-red-800 px-3 py-1.5 text-xs font-semibold text-red-50 transition hover:bg-red-700 cursor-pointer"
-              >
-                <Text className="flex gap-1 items-center">
-                  <Ban className="w-3 h-3" />
-                  Cancel
-                </Text>
-              </Pressable>
+                <View className="flex-row gap-2">
+                  <Pressable
+                    onPress={onKeep}
+                    disabled={busy}
+                    className="h-10 flex-1 items-center justify-center rounded-control border border-line bg-input-bg active:opacity-80"
+                  >
+                    <Text className="font-sans-semibold text-sm text-heading">
+                      No
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={onConfirmCancel}
+                    disabled={busy}
+                    className={`h-10 flex-1 flex-row items-center justify-center rounded-control bg-danger active:opacity-80 ${
+                      busy ? "opacity-60" : ""
+                    }`}
+                  >
+                    {busy && (
+                      <ActivityIndicator
+                        size="small"
+                        color={colors.cream}
+                        className="mr-2"
+                      />
+                    )}
+                    <Text className="font-sans-semibold text-sm text-cream">
+                      Yes, cancel
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View className="flex-row gap-2">
+                {showClaim && (
+                  <Pressable
+                    onPress={onClaim}
+                    disabled={busy}
+                    className={`h-10 flex-1 flex-row items-center justify-center rounded-control border border-button bg-input-bg active:opacity-80 ${
+                      busy ? "opacity-50" : ""
+                    }`}
+                  >
+                    <UserCheck size={16} color={colors.button} />
+                    <Text className="ml-1.5 font-sans-semibold text-sm text-button">
+                      Claim
+                    </Text>
+                  </Pressable>
+                )}
+                {showResolve && (
+                  <Pressable
+                    onPress={onResolve}
+                    disabled={busy}
+                    className={`h-10 flex-1 flex-row items-center justify-center rounded-control bg-button active:bg-button-hover ${
+                      busy ? "opacity-50" : ""
+                    }`}
+                  >
+                    <CircleCheck size={16} color={colors.cream} />
+                    <Text className="ml-1.5 font-sans-semibold text-sm text-cream">
+                      Resolve
+                    </Text>
+                  </Pressable>
+                )}
+                {showCancel && (
+                  <Pressable
+                    onPress={onAskCancel}
+                    disabled={busy}
+                    className={`h-10 flex-1 flex-row items-center justify-center rounded-control border border-danger bg-danger-bg active:opacity-80 ${
+                      busy ? "opacity-50" : ""
+                    }`}
+                  >
+                    <Ban size={16} color={colors.danger} />
+                    <Text className="ml-1.5 font-sans-semibold text-sm text-danger">
+                      Cancel
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             )}
           </View>
         )}
@@ -146,16 +224,34 @@ const HelpdeskBoard = ({}) => {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [activeKey, setActiveKey] = useState<ColumnKey>("pending");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [hasError, setHasError] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [confirmingCancelId, setConfirmingCancelId] = useState<number | null>(
+    null,
+  );
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
 
   const fetchTickets = async (): Promise<void> => {
     try {
       const response = await api.get("/tickets");
       setTickets(response.data);
+      setHasError(false);
     } catch (error) {
       console.error("Failed to fetch tickets", error);
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchTickets();
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -180,143 +276,178 @@ const HelpdeskBoard = ({}) => {
 
     return () => {
       supabase.removeChannel(channel);
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
     };
   }, []);
 
-  const handleClaimTicket = async (ticketId: number): Promise<void> => {
-    try {
-      await api.patch("/tickets/claim", { ticket_id: ticketId });
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleResolveTicket = async (ticketId: number): Promise<void> => {
-    try {
-      await api.patch("/tickets/resolve", { ticket_id: ticketId });
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleCancelTicket = async (ticketId: number): Promise<void> => {
-    try {
-      await api.patch("/tickets/cancel", { ticket_id: ticketId });
-    } catch (error) {
-      throw error;
-    }
-  };
-
   const runAction = async (
-    action: () => Promise<void>,
+    ticketId: number,
+    path: string,
     errorMessage: string,
-  ) => {
+  ): Promise<void> => {
     setActionError(null);
+    setBusyId(ticketId);
+
     try {
-      await action();
+      await api.patch(path, { ticket_id: ticketId });
+      await fetchTickets();
     } catch (error: any) {
-      console.error(error);
-      setActionError(errorMessage);
+      console.log(error);
+      setActionError(error.response?.data?.message || errorMessage);
+    } finally {
+      setBusyId(null);
+      setConfirmingCancelId(null);
     }
   };
 
-  const grouped = COLUMNS.reduce<Record<ColumnKey, TicketType[]>>(
-    (acc, column) => {
-      acc[column.key] = tickets.filter((t) => t.status === column.status);
-      return acc;
-    },
-    { pending: [], inProgress: [], resolved: [], cancelled: [] },
+  const activeColumn = COLUMNS.find((c) => c.key === activeKey)!;
+  const visibleTickets = tickets.filter(
+    (t) => t.status === activeColumn.status,
+  );
+  const countFor = (status: string) =>
+    tickets.filter((t) => t.status === status).length;
+
+  const message =
+    actionError ??
+    (hasError ? "Couldn't load tickets. Pull down to try again." : null);
+
+  const header = (
+    <View className="mb-4">
+      <Text className="font-sans-extrabold text-2xl text-heading">
+        Helpdesk board
+      </Text>
+      <Text className="mt-1 font-sans text-sm text-body">
+        Claim new tickets, resolve them, or cancel them.
+      </Text>
+
+      {message && (
+        <View className="mt-4">
+          <FormMessage message={{ type: "error", text: message }} />
+        </View>
+      )}
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="-mx-5 mt-4"
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+      >
+        {COLUMNS.map((column) => {
+          const active = column.key === activeKey;
+          return (
+            <Pressable
+              key={column.key}
+              onPress={() => {
+                setActiveKey(column.key);
+                setActionError(null);
+                setConfirmingCancelId(null);
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              className={`h-10 flex-row items-center rounded-full border px-4 ${
+                active
+                  ? "border-button bg-button"
+                  : "border-line bg-surface-hover"
+              }`}
+            >
+              <Text
+                className={`font-sans-semibold text-sm ${active ? "text-cream" : "text-body"}`}
+              >
+                {column.label}
+              </Text>
+              <View
+                className={`ml-2 min-w-[22px] items-center rounded-full px-1.5 py-0.5 ${
+                  active ? "bg-cream" : "bg-input-bg"
+                }`}
+              >
+                <Text
+                  className={`font-sans-bold text-xs ${active ? "text-button" : "text-body"}`}
+                >
+                  {countFor(column.status)}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+
+  const empty = isLoading ? (
+    <View className="items-center py-16">
+      <ActivityIndicator size="large" color={colors.button} />
+    </View>
+  ) : (
+    <Text className="py-12 text-center font-sans text-sm text-muted">
+      {activeColumn.emptyText}
+    </Text>
   );
 
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <View>
-          <Text className="font-serif text-3xl text-heading">
-            Helpdesk board
-          </Text>
-          <Text className="mt-1 text-sm text-body">
-            Unassigned tickets show{" "}
-            <Text className="font-semibold text-heading">+ Claim</Text> — use
-            the actions on each card.
-          </Text>
-        </View>
-        <View>
-          {actionError && (
-            <View className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{actionError}</span>
-            </View>
-          )}
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "#f3eee1" }}
+      edges={["top"]}
+    >
+      <FlatList
+        data={visibleTickets}
+        keyExtractor={(ticket) => String(ticket.id)}
+        renderItem={({ item }) => (
+          <TicketCard
+            ticket={item}
+            columnKey={activeKey}
+            busy={busyId === item.id}
+            confirmingCancel={confirmingCancelId === item.id}
+            onPress={() => setSelectedTicket(item)}
+            onClaim={() =>
+              runAction(
+                item.id,
+                "/tickets/claim",
+                "Couldn't claim this ticket.",
+              )
+            }
+            onResolve={() =>
+              runAction(
+                item.id,
+                "/tickets/resolve",
+                "Couldn't resolve this ticket.",
+              )
+            }
+            onAskCancel={() => setConfirmingCancelId(item.id)}
+            onKeep={() => setConfirmingCancelId(null)}
+            onConfirmCancel={() =>
+              runAction(
+                item.id,
+                "/tickets/cancel",
+                "Couldn't cancel this ticket.",
+              )
+            }
+          />
+        )}
+        ItemSeparatorComponent={() => <View className="h-3" />}
+        ListHeaderComponent={header}
+        ListEmptyComponent={empty}
+        contentContainerStyle={{ padding: 20, paddingBottom: 30, flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.button}
+            colors={[colors.button]}
+          />
+        }
+      />
 
-          <View>
-            <View>
-              {COLUMNS.map((column) => {
-                const columnTickets = grouped[column.key];
-
-                return (
-                  <View key={column.key}>
-                    <View>
-                      <Text>{column.label}</Text>
-                      <Text>{columnTickets.length}</Text>
-                    </View>
-
-                    <View id={column.key}>
-                      {columnTickets.length === 0 ? (
-                        <Text>{column.emptyText}</Text>
-                      ) : (
-                        columnTickets.map((ticket) => {
-                          const cardProps = {
-                            onCardClick: () => setSelectedTicket(ticket),
-                            showClaim: column.key === "pending",
-                            showResolve: column.key === "inProgress",
-                            showCancel:
-                              column.key === "pending" ||
-                              column.key === "inProgress",
-                            onClaim: () =>
-                              runAction(
-                                () => handleClaimTicket(ticket.id),
-                                "Couldn't claim this ticket.",
-                              ),
-                            onResolve: () =>
-                              runAction(
-                                () => handleResolveTicket(ticket.id),
-                                "Couldn't resolve this ticket.",
-                              ),
-                            onCancel: () =>
-                              runAction(
-                                () => handleCancelTicket(ticket.id),
-                                "Couldn't cancel this ticket.",
-                              ),
-                          };
-                          return (
-                            <View
-                              key={ticket.id}
-                              className={
-                                column.key === "cancelled" ? "opacity-60" : ""
-                              }
-                            >
-                              <TicketCard ticket={ticket} {...cardProps} />
-                            </View>
-                          );
-                        })
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-
-          {selectedTicket && (
-            <TicketDetails
-              ticket={selectedTicket}
-              relatedTickets={[selectedTicket]}
-              onClose={() => setSelectedTicket(null)}
-            />
-          )}
-        </View>
-      </ScrollView>
+      {selectedTicket && (
+        <TicketDetails
+          ticket={selectedTicket}
+          relatedTickets={[selectedTicket]}
+          onClose={() => setSelectedTicket(null)}
+        />
+      )}
     </SafeAreaView>
   );
 };
