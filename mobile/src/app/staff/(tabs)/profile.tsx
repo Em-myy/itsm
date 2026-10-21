@@ -230,7 +230,7 @@ const StaffProfile = () => {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#f3eee1" }}
+      style={{ flex: 1, backgroundColor: colors.cream }}
       edges={["top"]}
     >
       <KeyboardAvoidingView
@@ -353,7 +353,7 @@ const StaffProfile = () => {
 
               <View className="mb-6 rounded-card border border-line bg-surface-hover p-5">
                 <Text className="mb-4 font-sans-bold text-lg text-heading">
-                  Change passsword
+                  Change password
                 </Text>
 
                 <FormMessage message={passwordMessage} />
