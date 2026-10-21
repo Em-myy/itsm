@@ -171,7 +171,7 @@ const AdminHomePage = () => {
   const bookings = bookingsCount?.count ?? 0;
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#f3eee1" }}
+      style={{ flex: 1, backgroundColor: colors.cream }}
       edges={["top"]}
     >
       <ScrollView
