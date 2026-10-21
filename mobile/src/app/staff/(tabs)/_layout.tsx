@@ -3,8 +3,6 @@ import { useAuthContext } from "@/hooks/use-auth-context";
 import { colors } from "@/utils/helpers";
 import { Redirect, Tabs } from "expo-router";
 import { CalendarDays, House, Ticket, UserRound } from "lucide-react-native";
-import { ActivityIndicator, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const StaffLayout = () => {
   const { profile, isLoggedIn, isLoading } = useAuthContext();
