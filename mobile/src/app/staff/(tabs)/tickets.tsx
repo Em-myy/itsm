@@ -192,7 +192,7 @@ const Tickets = () => {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: "#f3eee1",
+        backgroundColor: colors.cream,
       }}
       edges={["top"]}
     >
