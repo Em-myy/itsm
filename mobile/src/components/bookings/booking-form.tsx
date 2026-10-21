@@ -8,8 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { CalendarDays, Clock } from "lucide-react-native";
-import Checkbox from "expo-checkbox";
+import { CalendarDays, Check, Clock } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
 import SelectField, { FieldLabel } from "../layout/select-field";
@@ -262,34 +261,32 @@ const BookingForm = ({
         onPick={(d) => handleFormChange("date", format(d, "yyyy-MM-dd"))}
       />
 
-      <View className="flex-row gap-3">
-        <DateTimeField
-          className="flex-1"
-          label="Start time"
-          mode="time"
-          date={startDate}
-          text={startDate ? format(startDate, "h:mm a") : ""}
-          placeholder="Start"
-          onPick={(d) => handleFormChange("startTime", format(d, "HH:mm"))}
-        />
+      <DateTimeField
+        className="flex-1"
+        label="Start time"
+        mode="time"
+        date={startDate}
+        text={startDate ? format(startDate, "h:mm a") : ""}
+        placeholder="Start"
+        onPick={(d) => handleFormChange("startTime", format(d, "HH:mm"))}
+      />
 
-        <DateTimeField
-          className="flex-1"
-          label="End time"
-          mode="time"
-          date={endDate}
-          text={endDate ? format(endDate, "h:mm a") : ""}
-          placeholder="End"
-          onPick={(d) => handleFormChange("endTime", format(d, "HH:mm"))}
-        />
-      </View>
+      <DateTimeField
+        className="flex-1"
+        label="End time"
+        mode="time"
+        date={endDate}
+        text={endDate ? format(endDate, "h:mm a") : ""}
+        placeholder="End"
+        onPick={(d) => handleFormChange("endTime", format(d, "HH:mm"))}
+      />
 
       {equipments.length > 0 && (
         <View className="mb-4">
           <FieldLabel optional>Equipment needed</FieldLabel>
-          <View className=" gap-2">
+          <View className="gap-2">
             {equipments.map((eq) => {
-              const checked = equipments.includes(eq);
+              const checked = equipmentNeeded.includes(eq);
               return (
                 <Pressable
                   key={eq}
@@ -302,11 +299,17 @@ const BookingForm = ({
                       : "border-line bg-input-bg"
                   }`}
                 >
-                  <Checkbox
-                    value={checked}
-                    onValueChange={() => toggleEquipment(eq)}
-                    color={checked ? colors.button : undefined}
-                  />
+                  <View
+                    className={`h-6 w-6 items-center justify-center rounded-md border-2 ${
+                      checked
+                        ? "border-button bg-button"
+                        : "border-muted bg-input-bg"
+                    }`}
+                  >
+                    {checked && (
+                      <Check size={16} color={colors.cream} strokeWidth={3} />
+                    )}
+                  </View>
                   <Text
                     className={`ml-3 flex-1 text-base ${
                       checked
