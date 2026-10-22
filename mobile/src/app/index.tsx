@@ -9,7 +9,7 @@ const RootIndex = () => {
   if (isLoading || (isLoggedIn && !profile)) {
     return (
       <SafeAreaView style={{ flex: 1 }} className="bg-cream">
-        <View className="flex-1 items-center justify-center bg-cream">
+        <View ="flex-1 items-center justify-center bg-cream">
           <ActivityIndicator size="large" color="#1f4a3b" />
         </View>
       </SafeAreaView>
