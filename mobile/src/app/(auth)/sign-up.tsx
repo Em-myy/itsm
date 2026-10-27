@@ -28,7 +28,6 @@ const SignUp = () => {
   const [department, setDepartment] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [pickerOpen, setPickerOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<FormMessageData>(null);
 
