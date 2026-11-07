@@ -1,11 +1,17 @@
+import "server-only";
 import { createClient } from "@/utils/supabase/server";
 
-const GO_API_URL = process.env.NEXT_PUBLIC_GO_API_URL;
+const GO_API_URL =
+  process.env.GO_API_INTERNAL_URL || process.env.NEXT_PUBLIC_GO_API_URL;
 
 export const fetchFromGo = async (
   endpoint: string,
   options: RequestInit = {},
 ) => {
+  if (!GO_API_URL) {
+    throw new Error("GO_API_INTERNAL_URL is not configured");
+  }
+
   const supabase = await createClient();
 
   const {
