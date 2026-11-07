@@ -1,0 +1,5 @@
+.env
+.env.*
+.git/
+*.exe
+itsm-backend
