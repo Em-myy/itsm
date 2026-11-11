@@ -70,9 +70,7 @@ const UserClientPage = ({ initialUsers }: { initialUsers: UserType[] }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-serif text-3xl text-heading">
-          This is the users page
-        </h1>
+        <h1 className="font-serif text-3xl text-heading">Users page</h1>
         <p className="mt-1 text-sm text-body">
           {" "}
           Everyone with access to the platform, and a way to add new IT admins.
